@@ -59,7 +59,7 @@ export function Sidebar({ userRole, userName, panchayatName }: SidebarProps) {
   const navItems = getNavItems()
 
   return (
-    <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border">
+    <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-sidebar-border">
         <Link href="/" className="flex items-center space-x-2 mb-4">
@@ -75,7 +75,7 @@ export function Sidebar({ userRole, userName, panchayatName }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href

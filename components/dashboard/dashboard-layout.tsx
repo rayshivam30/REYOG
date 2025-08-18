@@ -66,11 +66,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="w-64 flex-shrink-0">
+    <div className="min-h-screen flex overflow-hidden">
+      {/* Fixed Sidebar */}
+      <div className="w-64 h-screen fixed top-0 left-0 z-10">
         <Sidebar userRole={user.role} userName={user.name} panchayatName={user.panchayat?.name} />
       </div>
-      <main className="flex-1 bg-background">{children}</main>
+      
+      {/* Main Content */}
+      <main className="flex-1 bg-background ml-64 overflow-y-auto h-screen">
+        {children}
+      </main>
     </div>
   )
 }
