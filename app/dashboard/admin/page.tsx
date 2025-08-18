@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { Bell, Users, FileText, Building2, AlertTriangle } from "lucide-react"
 
 async function getAdminStats() {
@@ -140,7 +141,9 @@ export default async function AdminDashboard() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
         <div className="flex items-center space-x-2">
-          <Button>Create User</Button>
+          <Link href="/dashboard/admin/users">
+            <Button>Manage Users</Button>
+          </Link>
         </div>
       </div>
 

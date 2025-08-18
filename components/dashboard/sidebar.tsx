@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
-import { Building2, FileText, MapPin, Star, MessageSquare, BarChart3, Users, Bell, Phone, Home } from "lucide-react"
+import { SOSModal } from "@/components/sos-modal"
+import { Building2, FileText, MapPin, Star, MessageSquare, BarChart3, Users, Bell, Phone, Home, AlertTriangle } from "lucide-react"
 import type { UserRole } from "@prisma/client"
 
 interface SidebarProps {
@@ -18,7 +19,7 @@ const voterNavItems = [
   { href: "/dashboard/voter", label: "Dashboard", icon: Home },
   { href: "/dashboard/voter/queries", label: "All Queries", icon: FileText },
   { href: "/dashboard/voter/queries/new", label: "Raise Query", icon: FileText },
-  { href: "/dashboard/voter/map", label: "Location Tracker", icon: MapPin },
+  { href: "/dashboard/voter/location", label: "Location Tracker", icon: MapPin },
   { href: "/dashboard/voter/top-rated", label: "Top Rated Offices", icon: Star },
   { href: "/dashboard/voter/complaints", label: "Complaints", icon: MessageSquare },
 ]
@@ -100,11 +101,8 @@ export function Sidebar({ userRole, userName, panchayatName }: SidebarProps) {
 
       {/* Emergency SOS */}
       <div className="p-4 border-t border-sidebar-border">
-        <Button variant="destructive" className="w-full mb-4">
-          <Phone className="h-4 w-4 mr-2" />
-          Emergency SOS
-        </Button>
-        <LogoutButton variant="outline" className="w-full" />
+        <SOSModal />
+        <LogoutButton variant="outline" className="w-full mt-4" />
       </div>
     </div>
   )

@@ -171,7 +171,6 @@ export default function LocationTrackerPage() {
           <h2 className="text-3xl font-bold tracking-tight">Location Tracker</h2>
           <p className="text-muted-foreground">Find nearby government offices and emergency services</p>
         </div>
-        <SOSModal />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -23,8 +23,8 @@ export function LogoutButton({ variant = "ghost", size = "default", className }:
         method: "POST",
       })
 
-      router.push("/auth/login")
-      router.refresh()
+      // Redirect to landing page after logout
+      window.location.href = "/"
     } catch (error) {
       console.error("Logout error:", error)
     } finally {
