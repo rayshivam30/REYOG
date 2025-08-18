@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  name          String
+  phone         String?
+  role          UserRole       @default(VOTER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  panchayatId   String?
+  auditLogs     AuditLog[]
+  complaints    Complaint[]
+  notifications Notification[]
+  queries       Query[]
+  queryUpdates  QueryUpdate[]
+  ratings       Rating[]
+  panchayat     Panchayat?     @relation(fields: [panchayatId], references: [id])
+
+  @@map("users")
+}
+
+model Panchayat {
+  id           String        @id @default(cuid())
+  name         String
+  district     String
+  state        String
+  pincode      String
+  latitude     Float?
+  longitude    Float?
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  offices      Office[]
+  queries      Query[]
+  serviceStats ServiceStat[]
+  users        User[]
+
+  @@map("panchayats")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  offices     Office[]
+  queries     Query[]
+
+  @@map("departments")
+}
+
+model Office {
+  id           String     @id @default(cuid())
+  name         String
+  address      String
+  latitude     Float
+  longitude    Float
+  contactPhone String?
+  contactEmail String?
+  workingHours String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  departmentId String
+  panchayatId  String
+  department   Department @relation(fields: [departmentId], references: [id])
+  panchayat    Panchayat  @relation(fields: [panchayatId], references: [id])
+  queries      Query[]
+  ratings      Rating[]
+
+  @@map("offices")
+}
+
+model Query {
+  id               String         @id @default(cuid())
+  title            String
+  description      String
+  status           QueryStatus    @default(PENDING_REVIEW)
+  latitude         Float?
+  longitude        Float?
+  budgetIssued     Float?
+  budgetSpent      Float          @default(0)
+  officialIncharge String?
+  teamAssigned     String?
+  estimatedStart   DateTime?
+  estimatedEnd     DateTime?
+  acceptedAt       DateTime?
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+  attachments      String[]       @default([])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  userId           String
+  departmentId     String?
+  officeId         String?
+  panchayatId      String?
+  notifications    Notification[]
+  department       Department?    @relation(fields: [departmentId], references: [id])
+  office           Office?        @relation(fields: [officeId], references: [id])
+  panchayat        Panchayat?     @relation(fields: [panchayatId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
+  updates          QueryUpdate[]
+
+  @@map("queries")
+}
+
+model QueryUpdate {
+  id               String       @id @default(cuid())
+  status           QueryStatus?
+  note             String?
+  budgetSpentDelta Float?
+  attachments      String[]     @default([])
+  createdAt        DateTime     @default(now())
+  queryId          String
+  userId           String
+  query            Query        @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  user             User         @relation(fields: [userId], references: [id])
+
+  @@map("query_updates")
+}
+
+model Complaint {
+  id          String          @id @default(cuid())
+  subject     String
+  description String
+  status      ComplaintStatus @default(OPEN)
+  attachments String[]        @default([])
+  resolution  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+
+  @@map("complaints")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  officeId  String
+  office    Office   @relation(fields: [officeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, officeId])
+  @@map("ratings")
+}
+
+model NGO {
+  id           String   @id @default(cuid())
+  name         String
+  focusArea    String
+  coverage     String
+  contactName  String
+  contactEmail String
+  contactPhone String
+  address      String?
+  website      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("ngos")
+}
+
+model ServiceStat {
+  id          String    @id @default(cuid())
+  category    String
+  metric      String
+  value       Int
+  unit        String?
+  lastUpdated DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  panchayatId String
+  panchayat   Panchayat @relation(fields: [panchayatId], references: [id])
+
+  @@unique([panchayatId, category, metric])
+  @@map("service_stats")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  userId    String
+  queryId   String?
+  query     Query?   @relation(fields: [queryId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  VOTER
+  PANCHAYAT
+  ADMIN
+}
+
+enum QueryStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  DECLINED
+  WAITLISTED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ComplaintStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
