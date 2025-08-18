@@ -3,7 +3,6 @@ import { QueryForm } from "@/components/voter/query-form"
 
 export default function NewQueryPage() {
   return (
-    <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Raise a New Query</h1>
@@ -13,6 +12,5 @@ export default function NewQueryPage() {
         </div>
         <QueryForm />
       </div>
-    </DashboardLayout>
   )
 }
