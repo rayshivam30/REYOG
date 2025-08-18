@@ -16,7 +16,7 @@ interface SidebarProps {
 
 const voterNavItems = [
   { href: "/dashboard/voter", label: "Dashboard", icon: Home },
-  { href: "/dashboard/voter/queries", label: "My Queries", icon: FileText },
+  { href: "/dashboard/voter/queries", label: "All Queries", icon: FileText },
   { href: "/dashboard/voter/queries/new", label: "Raise Query", icon: FileText },
   { href: "/dashboard/voter/map", label: "Location Tracker", icon: MapPin },
   { href: "/dashboard/voter/top-rated", label: "Top Rated Offices", icon: Star },
