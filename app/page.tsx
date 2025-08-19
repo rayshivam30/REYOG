@@ -151,31 +151,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Stats Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-accent mb-2">1000+</div>
-              <div className="text-muted-foreground">Government Offices</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-accent mb-2">50,000+</div>
-              <div className="text-muted-foreground">Queries Resolved</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-accent mb-2">25+</div>
-              <div className="text-muted-foreground">Districts Covered</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold text-accent mb-2">4.8★</div>
-              <div className="text-muted-foreground">Average Rating</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      
       {/* CTA Section */}
       <section className="py-20 bg-accent">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -185,7 +161,11 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+              <Button
+                size="lg" 
+                variant="secondary" 
+                className="w-full sm:w-auto bg-transparent border-accent-foreground text-accent-foreground hover:bg-accent-foreground hover:text-accent "
+              >
                 Create Account
                 <Users className="ml-2 h-5 w-5" />
               </Button>

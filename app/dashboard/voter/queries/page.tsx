@@ -85,7 +85,7 @@ export default async function VoterQueriesPage() {
                       {query.status.replace('_', ' ').toLowerCase()}
                     </span>
                   </div>
-                  <Link href={`/dashboard/voter/queries/${query.id}`}>
+                  <Link href={`/dashboard/voter/queries/details/${query.id}`}>
                     <Button variant="outline" size="sm">
                       View Details
                     </Button>
