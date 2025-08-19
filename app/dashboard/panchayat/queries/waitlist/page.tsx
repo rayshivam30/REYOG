@@ -258,9 +258,13 @@ export default function WaitlistPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{query.submittedBy}</div>
+                          <div className="font-medium">
+                            {/* {query.submittedBy} */}
+                            "Ananomous"
+                            </div>
                           <div className="text-sm text-muted-foreground">
-                            {query.contactNumber}
+                            {/* {query.contactNumber} */}
+                            "+91**********"
                           </div>
                         </TableCell>
                         <TableCell className="text-sm">

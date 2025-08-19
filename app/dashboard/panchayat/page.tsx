@@ -25,6 +25,9 @@ interface RecentQuery {
   department?: {
     name: string
   }
+   panchayat?: {
+    name: string
+  }
 }
 
 export default function PanchayatDashboard() {
@@ -211,7 +214,7 @@ export default function PanchayatDashboard() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {query.user.name}
+                          {query.panchayat?.name}
                         </div>
                         <span>{new Date(query.createdAt).toLocaleDateString()}</span>
                       </div>

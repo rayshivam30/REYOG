@@ -1,8 +1,11 @@
+// // app/api/queries/route.ts (Updated)
+
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/prisma" // Adjust this import if needed
 import { createQuerySchema } from "@/lib/validations"
 import { UserRole } from "@prisma/client"
 
+// This GET function is already correct and needs no changes.
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get("x-user-id")
@@ -20,13 +23,11 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = {}
 
-    // Role-based filtering
     if (userRole === UserRole.VOTER) {
       whereClause.userId = userId
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
       whereClause.panchayatId = panchayatId
     }
-    // ADMIN can see all queries (no additional filter)
 
     if (status) {
       whereClause.status = status
@@ -78,11 +79,12 @@ export async function GET(request: NextRequest) {
     console.error("Queries fetch error:", error)
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "An error occurred while fetching queries" } },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }
 
+// --- THIS POST FUNCTION IS UPDATED ---
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get("x-user-id")
@@ -91,23 +93,42 @@ export async function POST(request: NextRequest) {
     if (!userId || userRole !== UserRole.VOTER) {
       return NextResponse.json(
         { error: { code: "FORBIDDEN", message: "Only voters can create queries" } },
-        { status: 403 },
+        { status: 403 }
       )
     }
 
     const body = await request.json()
-    const { title, description, departmentId, officeId, latitude, longitude, attachments } =
+    // --- UPDATE: Destructure panchayatName from the validated body ---
+    const { title, description, panchayatName, departmentId, officeId, latitude, longitude, attachments } =
       createQuerySchema.parse(body)
 
-    // If office is selected, get its panchayat
-    let panchayatId = null
-    if (officeId) {
-      const office = await prisma.office.findUnique({
-        where: { id: officeId },
-        select: { panchayatId: true },
+    // --- ADD: "Find or Create" logic for Panchayat ---
+    let panchayatId: string
+
+    const existingPanchayat = await prisma.panchayat.findFirst({
+      where: {
+        name: {
+          equals: panchayatName,
+          mode: "insensitive", // Case-insensitive search
+        },
+      },
+    })
+
+    if (existingPanchayat) {
+      panchayatId = existingPanchayat.id
+    } else {
+      // Create a new panchayat with placeholder values
+      const newPanchayat = await prisma.panchayat.create({
+        data: {
+          name: panchayatName,
+          district: "Not Specified",
+          state: "Not Specified",
+          pincode: "000000",
+        },
       })
-      panchayatId = office?.panchayatId || null
+      panchayatId = newPanchayat.id
     }
+    // --- END of new logic ---
 
     const query = await prisma.query.create({
       data: {
@@ -116,7 +137,7 @@ export async function POST(request: NextRequest) {
         userId,
         departmentId,
         officeId,
-        panchayatId,
+        panchayatId, // Use the ID from the logic above
         latitude,
         longitude,
         attachments,
@@ -135,7 +156,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create notification for panchayat users if panchayat is assigned
+    // The notification and audit log logic below remains the same and will work correctly.
     if (panchayatId) {
       const panchayatUsers = await prisma.user.findMany({
         where: {
@@ -156,14 +177,13 @@ export async function POST(request: NextRequest) {
               metadata: {
                 queryId: query.id,
                 submittedBy: query.user.name,
-              },
+              } as any, // Cast to 'any' to avoid metadata type issues
             },
-          }),
-        ),
+          })
+        )
       )
     }
 
-    // Create audit log
     await prisma.auditLog.create({
       data: {
         action: "query_created",
@@ -173,16 +193,20 @@ export async function POST(request: NextRequest) {
           queryId: query.id,
           title,
           department: query.department?.name,
-        },
+        } as any, // Cast to 'any' to avoid metadata type issues
       },
     })
 
     return NextResponse.json({ query })
   } catch (error) {
     console.error("Query creation error:", error)
+    // Handle Zod validation errors specifically
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: { code: "VALIDATION_ERROR", issues: error.issues } }, { status: 400 })
+    }
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "An error occurred while creating query" } },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

@@ -63,7 +63,7 @@ export default async function VoterQueriesPage() {
                   <div>
                     <CardTitle className="text-lg">{query.title}</CardTitle>
                     <CardDescription className="mt-1">
-                      Raised by: {query.user.name} • {query.panchayat?.name || 'No Panchayat'}
+                      Raised by: 'AnonySmous' • {query.panchayat?.name || 'No Panchayat'}
                     </CardDescription>
                   </div>
                   <span className="text-sm text-muted-foreground">

@@ -100,7 +100,7 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                   Raised By
                 </h3>
                 <div className="pl-6">
-                  <p className="font-medium">{query.user.name}</p>
+                  {/* <p className="font-medium">{query.user.name}</p> */}
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Mail className="mr-1 h-4 w-4" />
                     {query.user.email}

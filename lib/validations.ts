@@ -15,15 +15,42 @@ export const registerSchema = z.object({
 })
 
 // Query schemas
+// export const createQuerySchema = z.object({
+//   title: z.string().min(5, "Title must be at least 5 characters"),
+//   description: z.string().min(10, "Description must be at least 10 characters"),
+//   departmentId: z.string().optional(),
+//   officeId: z.string().optional(),
+//   latitude: z.number().optional(),
+//   longitude: z.number().optional(),
+//   attachments: z.array(z.string()).default([]),
+// })
+
+// lib/validations.ts
+
+
 export const createQuerySchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
+  title: z.string().min(5, "Title must be at least 5 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  
+  // This is the new field for the typed Panchayat name
+  panchayatName: z.string().min(3, "Panchayat name must be at least 3 characters.").max(100),
+  
   departmentId: z.string().optional(),
   officeId: z.string().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  attachments: z.array(z.string()).default([]),
-})
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string(),
+        url: z.string().url(),
+        size: z.number(),
+        type: z.string(),
+      })
+    )
+    .optional(),
+});
+
 
 export const updateQuerySchema = z.object({
   status: z.nativeEnum(QueryStatus).optional(),
@@ -110,3 +137,4 @@ export const serviceStatSchema = z.object({
   value: z.number().min(0, "Value must be non-negative"),
   unit: z.string().optional(),
 })
+

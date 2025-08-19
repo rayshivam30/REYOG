@@ -290,7 +290,8 @@ export default function ActiveQueriesPage() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {query.user.name}
+                        {/* {query.user.name} */}
+                        "Ananomous"
                       </div>
                       <span>{new Date(query.createdAt).toLocaleDateString()}</span>
                       {query.budgetIssued && <span>Budget: ₹{query.budgetIssued.toLocaleString()}</span>}

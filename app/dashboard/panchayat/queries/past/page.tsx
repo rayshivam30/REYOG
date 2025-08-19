@@ -189,7 +189,10 @@ export default function PastQueriesPage() {
                           {query.description}
                         </div>
                       </TableCell>
-                      <TableCell>{query.submittedBy}</TableCell>
+                      <TableCell>
+                        {/* {query.submittedBy} */}
+                        "Ananomous"
+                        </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{query.category}</Badge>
                       </TableCell>
