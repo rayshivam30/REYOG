@@ -1,42 +1,36 @@
 // import { Suspense } from "react"
+// import { headers } from "next/headers" // Import headers
 // import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 // import { Badge } from "@/components/ui/badge"
 // import { Button } from "@/components/ui/button"
 // import Link from "next/link"
 // import { Bell, Users, FileText, Building2, AlertTriangle } from "lucide-react"
 
+// // This function now fetches real data
 // async function getAdminStats() {
-//   // In a real app, this would fetch from API
-//   return {
-//     totalQueries: 156,
-//     pendingQueries: 23,
-//     totalComplaints: 12,
-//     activeUsers: 89,
-//     totalPanchayats: 15,
-//     recentNotifications: [
-//       {
-//         id: "1",
-//         title: "New Query Accepted",
-//         message: "Water supply query accepted by Bhopal Rural Panchayat",
-//         time: "2 hours ago",
-//         type: "INFO",
-//       },
-//       {
-//         id: "2",
-//         title: "Complaint Filed",
-//         message: "Direct complaint filed against road maintenance",
-//         time: "4 hours ago",
-//         type: "WARNING",
-//       },
-//       {
-//         id: "3",
-//         title: "Query Resolved",
-//         message: "Electricity issue resolved in Sehore",
-//         time: "6 hours ago",
-//         type: "SUCCESS",
-//       },
-//     ],
+//   // We get the URL from the headers to make a server-side API call
+//   const host = headers().get("host")
+//   const protocol = process.env.NODE_ENV === "development" ? "http" : "https"
+
+//   // Forward the request headers to the API route for authentication
+//   const response = await fetch(`${protocol}://${host}/api/admin/stats`, {
+//     headers: new Headers(headers()),
+//   })
+
+//   if (!response.ok) {
+//     // Return a default error state or throw an error
+//     console.error("Failed to fetch admin stats")
+//     return {
+//       totalQueries: 0,
+//       pendingQueries: 0,
+//       totalComplaints: 0,
+//       activeUsers: 0,
+//       totalPanchayats: 0,
+//       recentNotifications: [],
+//     }
 //   }
+
+//   return response.json()
 // }
 
 // function AdminStatsCards({ stats }: { stats: any }) {
@@ -93,6 +87,7 @@
 //   const getTypeColor = (type: string) => {
 //     switch (type) {
 //       case "SUCCESS":
+//       case "query_resolved":
 //         return "bg-green-100 text-green-800"
 //       case "WARNING":
 //         return "bg-yellow-100 text-yellow-800"
@@ -121,7 +116,7 @@
 //                 <p className="text-sm text-muted-foreground">{notification.message}</p>
 //                 <p className="text-xs text-muted-foreground">{notification.time}</p>
 //               </div>
-//               <Badge className={getTypeColor(notification.type)}>{notification.type}</Badge>
+//               <Badge className={getTypeColor(notification.type)}>{notification.type.split("_")[0]}</Badge>
 //             </div>
 //           ))}
 //         </div>
@@ -161,21 +156,29 @@
 //             <CardDescription>Common administrative tasks</CardDescription>
 //           </CardHeader>
 //           <CardContent className="space-y-2">
-//             <Button className="w-full justify-start bg-transparent" variant="outline">
-//               <Users className="mr-2 h-4 w-4" />
-//               Manage Users
+//             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+//               <Link href="/dashboard/admin/users">
+//                 <Users className="mr-2 h-4 w-4" />
+//                 Manage Users
+//               </Link>
 //             </Button>
-//             <Button className="w-full justify-start bg-transparent" variant="outline">
-//               <FileText className="mr-2 h-4 w-4" />
-//               View All Queries
+//             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+//               <Link href="/dashboard/admin/queries">
+//                 <FileText className="mr-2 h-4 w-4" />
+//                 View All Queries
+//               </Link>
 //             </Button>
-//             <Button className="w-full justify-start bg-transparent" variant="outline">
-//               <AlertTriangle className="mr-2 h-4 w-4" />
-//               Handle Complaints
+//             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+//               <Link href="/dashboard/admin/complaints">
+//                 <AlertTriangle className="mr-2 h-4 w-4" />
+//                 Handle Complaints
+//               </Link>
 //             </Button>
-//             <Button className="w-full justify-start bg-transparent" variant="outline">
-//               <Building2 className="mr-2 h-4 w-4" />
-//               Manage NGOs
+//             <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+//               <Link href="/dashboard/admin/ngos">
+//                 <Building2 className="mr-2 h-4 w-4" />
+//                 Manage NGOs
+//               </Link>
 //             </Button>
 //           </CardContent>
 //         </Card>
@@ -184,10 +187,8 @@
 //   )
 // }
 
-// app/dashboard/admin/page.tsx (your file path)
-
 import { Suspense } from "react"
-import { headers } from "next/headers" // Import headers
+import { headers } from "next/headers" 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -196,17 +197,14 @@ import { Bell, Users, FileText, Building2, AlertTriangle } from "lucide-react"
 
 // This function now fetches real data
 async function getAdminStats() {
-  // We get the URL from the headers to make a server-side API call
   const host = headers().get("host")
   const protocol = process.env.NODE_ENV === "development" ? "http" : "https"
 
-  // Forward the request headers to the API route for authentication
   const response = await fetch(`${protocol}://${host}/api/admin/stats`, {
     headers: new Headers(headers()),
   })
 
   if (!response.ok) {
-    // Return a default error state or throw an error
     console.error("Failed to fetch admin stats")
     return {
       totalQueries: 0,
@@ -296,21 +294,33 @@ function RecentNotifications({ notifications }: { notifications: any[] }) {
         <CardDescription>Latest system activities and alerts</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {notifications.map((notification) => (
-            <div key={notification.id} className="flex items-start justify-between space-x-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">{notification.title}</p>
-                <p className="text-sm text-muted-foreground">{notification.message}</p>
-                <p className="text-xs text-muted-foreground">{notification.time}</p>
+        {notifications && notifications.length > 0 ? (
+          <div className="space-y-4">
+            {notifications.map((notification) => (
+              <div key={notification.id} className="flex items-start justify-between space-x-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">{notification.title}</p>
+                  <p className="text-sm text-muted-foreground">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground">{notification.time}</p>
+                </div>
+                <Badge className={getTypeColor(notification.type)}>{notification.type.split("_")[0]}</Badge>
               </div>
-              <Badge className={getTypeColor(notification.type)}>{notification.type.split("_")[0]}</Badge>
-            </div>
-          ))}
-        </div>
-        <Button variant="outline" className="w-full mt-4 bg-transparent">
-          View All Notifications
-        </Button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No new notifications.</p>
+          </div>
+        )}
+
+        {/* --- THIS BUTTON IS NOW CONDITIONALLY RENDERED --- */}
+        {notifications && notifications.length > 0 && (
+          <Button variant="outline" className="w-full mt-4 bg-transparent" asChild>
+            <Link href="/dashboard/admin/notifications">
+              View All Notifications
+            </Link>
+          </Button>
+        )}
       </CardContent>
     </Card>
   )
