@@ -1,51 +1,77 @@
-import { type NextRequest, NextResponse } from "next/server"
+// import { NextResponse } from "next/server"
+// import { prisma } from "@/lib/prisma"
+
+// // GET NGOs
+// export async function GET() {
+//   try {
+//     const ngos = await prisma.nGO.findMany({
+//       orderBy: { createdAt: "desc" }
+//     })
+//     return NextResponse.json(ngos)
+//   } catch (error) {
+//     console.error(error)
+//     return NextResponse.json({ error: "Failed to fetch NGOs" }, { status: 500 })
+//   }
+// }
+
+// // POST NGO
+// export async function POST(req: Request) {
+//   try {
+//     const data = await req.json()
+
+//     const newNGO = await prisma.nGO.create({
+//       data: {
+//         name: data.name,
+//         focusArea: data.focusArea,
+//         coverage: data.coverage,
+//         contactName: data.contactName,
+//         contactEmail: data.contactEmail,
+//         contactPhone: data.contactPhone,
+//         address: data.address,
+//         website: data.website || null
+//       }
+//     })
+
+//     return NextResponse.json(newNGO, { status: 201 })
+//   } catch (error) {
+//     console.error(error)
+//     return NextResponse.json({ error: "Failed to add NGO" }, { status: 500 })
+//   }
+// }
+
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { verifyToken } from "@/lib/auth"
-import { ngoSchema } from "@/lib/validations"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const user = await verifyToken(request)
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Admin access required" } }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const focusArea = searchParams.get("focusArea")
-    const coverage = searchParams.get("coverage")
-
     const ngos = await prisma.nGO.findMany({
-      where: {
-        ...(focusArea && { focusArea: { contains: focusArea, mode: "insensitive" } }),
-        ...(coverage && { coverage: { contains: coverage, mode: "insensitive" } }),
-      },
-      orderBy: { name: "asc" },
+      orderBy: { createdAt: "desc" },
     })
-
     return NextResponse.json(ngos)
   } catch (error) {
-    console.error("Error fetching NGOs:", error)
-    return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Failed to fetch NGOs" } }, { status: 500 })
+    console.error(error)
+    return NextResponse.json({ error: "Failed to fetch NGOs" }, { status: 500 })
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const user = await verifyToken(request)
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Admin access required" } }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const validatedData = ngoSchema.parse(body)
-
-    const ngo = await prisma.nGO.create({
-      data: validatedData,
+    const data = await req.json()
+    const newNGO = await prisma.nGO.create({
+      data: {
+        name: data.name,
+        focusArea: data.focusArea,
+        coverage: data.coverage,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
+        address: data.address,
+        website: data.website || null,
+      },
     })
-
-    return NextResponse.json(ngo, { status: 201 })
+    return NextResponse.json(newNGO, { status: 201 })
   } catch (error) {
-    console.error("Error creating NGO:", error)
-    return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Failed to create NGO" } }, { status: 500 })
+    console.error(error)
+    return NextResponse.json({ error: "Failed to add NGO" }, { status: 500 })
   }
 }
