@@ -1,3 +1,4 @@
+
 // "use client"
 
 // import { useState, useEffect } from "react"
@@ -25,15 +26,117 @@
 // import { Label } from "@/components/ui/label"
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+// const [userToEdit, setUserToEdit] = useState<User | null>(null)
+// // Updated User type to match our data (real + mock)
 // type User = {
 //   id: string
 //   name: string
 //   email: string
 //   role: "ADMIN" | "PANCHAYAT" | "VOTER"
 //   status: "ACTIVE" | "INACTIVE"
-//   lastLogin: string
+//   updatedAt: string // Using 'updatedAt' from schema instead of 'lastLogin'
 // }
 
+// // Hardcoded mock data for non-voter roles
+// const mockUsers: User[] = [
+//   {
+//     id: "mock_admin_1",
+//     name: "Admin User",
+//     email: "admin@example.com",
+//     role: "ADMIN",
+//     status: "ACTIVE",
+//     updatedAt: new Date().toISOString(),
+//   },
+//   {
+//     id: "mock_panchayat_1",
+//     name: "Panchayat User",
+//     email: "panchayat@example.com",
+//     role: "PANCHAYAT",
+//     status: "ACTIVE",
+//     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+//   },
+// ]
+//   // Add this component before the default export of UsersPage()
+// // File: dashboard/admin/users/page.tsx
+
+// function EditUserDialog({
+//   user,
+//   onUpdate,
+//   onClose,
+// }: {
+//   user: User
+//   onUpdate: (updatedUser: User) => void
+//   onClose: () => void
+// }) {
+//   const [formData, setFormData] = useState({
+//     name: user.name,
+//     email: user.email,
+//     role: user.role,
+//   })
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault()
+//     try {
+//       const response = await fetch(`/api/admin/users/${user.id}`, {
+//         method: "PATCH",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(formData),
+//       })
+
+//       if (!response.ok) {
+//         throw new Error("Failed to update user")
+//       }
+
+//       const updatedUser = await response.json()
+//       onUpdate(updatedUser.user)
+//       onClose()
+//     } catch (error) {
+//       console.error("Error updating user:", error)
+//       alert("Failed to update user.")
+//     }
+//   }
+
+//   return (
+//     <Dialog open={true} onOpenChange={onClose}>
+//       <DialogContent>
+//         <form onSubmit={handleSubmit}>
+//           <DialogHeader>
+//             <DialogTitle>Edit User</DialogTitle>
+//             <DialogDescription>
+//               Update the details for {user.name}.
+//             </DialogDescription>
+//           </DialogHeader>
+//           <div className="grid gap-4 py-4">
+//             <div className="grid grid-cols-4 items-center gap-4">
+//               <Label htmlFor="edit-name" className="text-right">Name</Label>
+//               <Input id="edit-name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="col-span-3" required />
+//             </div>
+//             <div className="grid grid-cols-4 items-center gap-4">
+//               <Label htmlFor="edit-email" className="text-right">Email</Label>
+//               <Input id="edit-email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="col-span-3" required />
+//             </div>
+//             <div className="grid grid-cols-4 items-center gap-4">
+//               <Label htmlFor="edit-role" className="text-right">Role</Label>
+//               <Select value={formData.role} onValueChange={(value: "ADMIN" | "PANCHAYAT" | "VOTER") => setFormData({ ...formData, role: value })}>
+//                 <SelectTrigger className="col-span-3">
+//                   <SelectValue placeholder="Select role" />
+//                 </SelectTrigger>
+//                 <SelectContent>
+//                   <SelectItem value="ADMIN">Admin</SelectItem>
+//                   <SelectItem value="PANCHAYAT">Panchayat</SelectItem>
+//                   <SelectItem value="VOTER">Voter</SelectItem>
+//                 </SelectContent>
+//               </Select>
+//             </div>
+//           </div>
+//           <DialogFooter>
+//             <Button type="submit">Save changes</Button>
+//           </DialogFooter>
+//         </form>
+//       </DialogContent>
+//     </Dialog>
+//   )
+// }
 // export default function UsersPage() {
 //   const [users, setUsers] = useState<User[]>([])
 //   const [searchTerm, setSearchTerm] = useState("")
@@ -49,41 +152,24 @@
 //   // Fetch users from API
 //   useEffect(() => {
 //     const fetchUsers = async () => {
+//       setIsLoading(true)
 //       try {
-//         // Replace with actual API call
-//         // const response = await fetch("/api/admin/users")
-//         // const data = await response.json()
-//         // setUsers(data.users)
+//         const response = await fetch("/api/admin/users")
+//         if (!response.ok) {
+//           throw new Error("Failed to fetch users")
+//         }
+//         const data = await response.json()
         
-//         // Mock data for now
-//         setUsers([
-//           {
-//             id: "1",
-//             name: "Admin User",
-//             email: "admin@example.com",
-//             role: "ADMIN",
-//             status: "ACTIVE",
-//             lastLogin: new Date().toISOString(),
-//           },
-//           {
-//             id: "2",
-//             name: "Panchayat User",
-//             email: "panchayat@example.com",
-//             role: "PANCHAYAT",
-//             status: "ACTIVE",
-//             lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-//           },
-//           {
-//             id: "3",
-//             name: "Voter User",
-//             email: "voter@example.com",
-//             role: "VOTER",
-//             status: "INACTIVE",
-//             lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-//           },
-//         ])
+//         const realVoters = data.users.map((user: any) => ({
+//           ...user,
+//           status: "ACTIVE",
+//         }))
+
+//         setUsers([...mockUsers, ...realVoters])
+
 //       } catch (error) {
 //         console.error("Error fetching users:", error)
+//         setUsers(mockUsers)
 //       } finally {
 //         setIsLoading(false)
 //       }
@@ -101,50 +187,46 @@
 //   const handleCreateUser = async (e: React.FormEvent) => {
 //     e.preventDefault()
 //     try {
-//       // Replace with actual API call
-//       // const response = await fetch("/api/admin/users", {
-//       //   method: "POST",
-//       //   headers: { "Content-Type": "application/json" },
-//       //   body: JSON.stringify(newUser),
-//       // })
-//       // const data = await response.json()
-      
-//       // Add new user to the list (temporary until API is implemented)
-//       const newUserData: User = {
-//         id: Math.random().toString(36).substr(2, 9),
-//         name: newUser.name,
-//         email: newUser.email,
-//         role: newUser.role,
-//         status: "ACTIVE",
-//         lastLogin: new Date().toISOString(),
-//       }
-      
-//       setUsers([...users, newUserData])
-      
-//       // Reset form
-//       setNewUser({
-//         name: "",
-//         email: "",
-//         role: "VOTER",
-//         password: "",
+//       const response = await fetch("/api/admin/users", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(newUser),
 //       })
       
+//       if (!response.ok) {
+//         const errorData = await response.json()
+//         throw new Error(errorData.error || "Failed to create user")
+//       }
+
+//       const { user: createdUser } = await response.json()
+
+//       setUsers([...users, { ...createdUser, status: "ACTIVE" }])
+      
+//       setNewUser({ name: "", email: "", role: "VOTER", password: "" })
 //       setIsCreateDialogOpen(false)
+
 //     } catch (error) {
 //       console.error("Error creating user:", error)
+//       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
 //     }
 //   }
 
 //   const handleDeleteUser = async (userId: string) => {
+//     if (userId.startsWith("mock_")) {
+//         alert("This is a mock user and cannot be deleted.");
+//         return;
+//     }
+
 //     if (window.confirm("Are you sure you want to delete this user?")) {
 //       try {
-//         // Replace with actual API call
-//         // await fetch(`/api/admin/users/${userId}`, { method: "DELETE" })
-        
-//         // Update local state (temporary until API is implemented)
+//         const response = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" })
+//         if (!response.ok) {
+//           throw new Error("Failed to delete user")
+//         }
 //         setUsers(users.filter((user) => user.id !== userId))
 //       } catch (error) {
 //         console.error("Error deleting user:", error)
+//         alert("Failed to delete user.")
 //       }
 //     }
 //   }
@@ -178,44 +260,16 @@
 //               </DialogHeader>
 //               <div className="grid gap-4 py-4">
 //                 <div className="grid grid-cols-4 items-center gap-4">
-//                   <Label htmlFor="name" className="text-right">
-//                     Name
-//                   </Label>
-//                   <Input
-//                     id="name"
-//                     value={newUser.name}
-//                     onChange={(e) =>
-//                       setNewUser({ ...newUser, name: e.target.value })
-//                     }
-//                     className="col-span-3"
-//                     required
-//                   />
+//                   <Label htmlFor="name" className="text-right">Name</Label>
+//                   <Input id="name" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="col-span-3" required/>
 //                 </div>
 //                 <div className="grid grid-cols-4 items-center gap-4">
-//                   <Label htmlFor="email" className="text-right">
-//                     Email
-//                   </Label>
-//                   <Input
-//                     id="email"
-//                     type="email"
-//                     value={newUser.email}
-//                     onChange={(e) =>
-//                       setNewUser({ ...newUser, email: e.target.value })
-//                     }
-//                     className="col-span-3"
-//                     required
-//                   />
+//                   <Label htmlFor="email" className="text-right">Email</Label>
+//                   <Input id="email" type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="col-span-3" required/>
 //                 </div>
 //                 <div className="grid grid-cols-4 items-center gap-4">
-//                   <Label htmlFor="role" className="text-right">
-//                     Role
-//                   </Label>
-//                   <Select
-//                     value={newUser.role}
-//                     onValueChange={(value: "ADMIN" | "PANCHAYAT" | "VOTER") =>
-//                       setNewUser({ ...newUser, role: value })
-//                     }
-//                   >
+//                   <Label htmlFor="role" className="text-right">Role</Label>
+//                   <Select value={newUser.role} onValueChange={(value: "ADMIN" | "PANCHAYAT" | "VOTER") => setNewUser({ ...newUser, role: value })}>
 //                     <SelectTrigger className="col-span-3">
 //                       <SelectValue placeholder="Select role" />
 //                     </SelectTrigger>
@@ -227,19 +281,8 @@
 //                   </Select>
 //                 </div>
 //                 <div className="grid grid-cols-4 items-center gap-4">
-//                   <Label htmlFor="password" className="text-right">
-//                     Password
-//                   </Label>
-//                   <Input
-//                     id="password"
-//                     type="password"
-//                     value={newUser.password}
-//                     onChange={(e) =>
-//                       setNewUser({ ...newUser, password: e.target.value })
-//                     }
-//                     className="col-span-3"
-//                     required
-//                   />
+//                   <Label htmlFor="password" className="text-right">Password</Label>
+//                   <Input id="password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="col-span-3" required/>
 //                 </div>
 //               </div>
 //               <DialogFooter>
@@ -249,20 +292,14 @@
 //           </DialogContent>
 //         </Dialog>
 //       </div>
-
+      
 //       <Card>
 //         <CardHeader>
 //           <div className="flex justify-between items-center">
 //             <CardTitle>Users</CardTitle>
 //             <div className="relative w-64">
 //               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-//               <Input
-//                 type="search"
-//                 placeholder="Search users..."
-//                 className="pl-8"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//               />
+//               <Input type="search" placeholder="Search users..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
 //             </div>
 //           </div>
 //         </CardHeader>
@@ -279,7 +316,7 @@
 //                   <TableHead>Email</TableHead>
 //                   <TableHead>Role</TableHead>
 //                   <TableHead>Status</TableHead>
-//                   <TableHead>Last Login</TableHead>
+//                   <TableHead>Last Activity</TableHead>
 //                   <TableHead className="text-right">Actions</TableHead>
 //                 </TableRow>
 //               </TableHeader>
@@ -306,18 +343,19 @@
 //                         </span>
 //                       </TableCell>
 //                       <TableCell>
-//                         {new Date(user.lastLogin).toLocaleString()}
+//                         {new Date(user.updatedAt).toLocaleString()}
 //                       </TableCell>
 //                       <TableCell className="text-right">
 //                         <div className="flex justify-end gap-2">
-//                           <Button variant="outline" size="sm">
+//                           <Button variant="outline" size="sm" disabled={user.id.startsWith("mock_")}>
 //                             <Pencil className="h-4 w-4" />
 //                           </Button>
 //                           <Button
 //                             variant="outline"
 //                             size="sm"
 //                             onClick={() => handleDeleteUser(user.id)}
-//                             className="text-red-600 hover:bg-red-50 hover:text-red-700"
+//                             disabled={user.id.startsWith("mock_")}
+//                             className="text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
 //                           >
 //                             <Trash2 className="h-4 w-4" />
 //                           </Button>
@@ -340,8 +378,6 @@
 //     </div>
 //   )
 // }
-// File: app/dashboard/admin/users/page.tsx
-
 
 "use client"
 
@@ -400,11 +436,91 @@ const mockUsers: User[] = [
   },
 ]
 
+function EditUserDialog({
+  user,
+  onUpdate,
+  onClose,
+}: {
+  user: User
+  onUpdate: (updatedUser: User) => void
+  onClose: () => void
+}) {
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update user")
+      }
+
+      const updatedUser = await response.json()
+      onUpdate(updatedUser.user)
+      onClose()
+    } catch (error) {
+      console.error("Error updating user:", error)
+      alert("Failed to update user.")
+    }
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update the details for {user.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">Name</Label>
+              <Input id="edit-name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-email" className="text-right">Email</Label>
+              <Input id="edit-email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-role" className="text-right">Role</Label>
+              <Select value={formData.role} onValueChange={(value: "ADMIN" | "PANCHAYAT" | "VOTER") => setFormData({ ...formData, role: value })}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="PANCHAYAT">Panchayat</SelectItem>
+                  <SelectItem value="VOTER">Voter</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit">Save changes</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -412,7 +528,6 @@ export default function UsersPage() {
     password: "",
   })
 
-  // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoading(true)
@@ -610,7 +725,12 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" disabled={user.id.startsWith("mock_")}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={user.id.startsWith("mock_")}
+                            onClick={() => setUserToEdit(user)}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
@@ -638,6 +758,16 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {userToEdit && (
+        <EditUserDialog
+          user={userToEdit}
+          onUpdate={(updatedUser) => {
+            setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+          }}
+          onClose={() => setUserToEdit(null)}
+        />
+      )}
     </div>
   )
 }
