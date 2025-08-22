@@ -98,6 +98,7 @@ model Query {
   acceptedAt       DateTime?
   resolvedAt       DateTime?
   closedAt         DateTime?
+    wardNumber      Int? 
   attachments      String[]       @default([])
   upvoteCount      Int            @default(0)
   createdAt        DateTime       @default(now())
