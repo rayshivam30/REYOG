@@ -23,6 +23,7 @@ model User {
   queries       Query[]
   queryUpdates  QueryUpdate[]
   ratings       Rating[]
+  upvotes       QueryUpvote[]  // ADD THIS LINE
   panchayat     Panchayat?     @relation(fields: [panchayatId], references: [id])
 
   @@map("users")
@@ -98,6 +99,7 @@ model Query {
   resolvedAt       DateTime?
   closedAt         DateTime?
   attachments      String[]       @default([])
+  upvoteCount      Int            @default(0)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   userId           String
@@ -110,8 +112,21 @@ model Query {
   panchayat        Panchayat?     @relation(fields: [panchayatId], references: [id])
   user             User           @relation(fields: [userId], references: [id])
   updates          QueryUpdate[]
+  upvotes          QueryUpvote[]  // ADD THIS LINE
 
   @@map("queries")
+}
+
+model QueryUpvote {
+  id        String   @id @default(cuid())
+  queryId   String
+  userId    String
+  createdAt DateTime @default(now())
+  query     Query    @relation(fields: [queryId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([queryId, userId])
+  @@map("query_upvotes")
 }
 
 model QueryUpdate {

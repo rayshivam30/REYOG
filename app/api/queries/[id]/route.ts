@@ -28,6 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         department: true,
         office: true,
         panchayat: true,
+        upvoteCount: true,
         updates: {
           include: {
             user: {
