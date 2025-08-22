@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, MapPin, Star, MessageSquare, Plus, Clock, CheckCircle, AlertCircle } from "lucide-react"
+import { FileText, MapPin, Star, MessageSquare, Plus, Clock, CheckCircle, AlertCircle, ThumbsUp } from "lucide-react"
 import Link from "next/link"
 
 interface Query {
@@ -13,6 +13,7 @@ interface Query {
   title: string
   status: string
   createdAt: string
+  upvoteCount: number // ADDED THIS
   department?: {
     name: string
   }
@@ -254,6 +255,11 @@ export default function VoterDashboard() {
                         <p className="text-xs text-muted-foreground mt-1">
                           {new Date(query.createdAt).toLocaleDateString()}
                         </p>
+                      </div>
+                      {/* ADDED UPVOTE COUNT DISPLAY */}
+                      <div className="flex items-center space-x-1 text-sm text-gray-600">
+                        <ThumbsUp className="h-4 w-4" />
+                        <span>{query.upvoteCount}</span>
                       </div>
                     </div>
                   ))}
