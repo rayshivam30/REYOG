@@ -213,10 +213,11 @@
 
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { createQuerySchema } from "@/lib/validations"
 import { UserRole } from "@prisma/client"
-import { createQuerySchema } from "@/lib/validations" // Import the validation schema
+import { z } from "zod"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get("x-user-id")
     const userRole = request.headers.get("x-user-role") as UserRole
@@ -226,10 +227,25 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "User not authenticated" } }, { status: 401 })
     }
 
-    const queryId = params.id
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get("status")
+    const limit = Number.parseInt(searchParams.get("limit") || "50")
+    const offset = Number.parseInt(searchParams.get("offset") || "0")
 
-    const query = await prisma.query.findUnique({
-      where: { id: queryId },
+    const whereClause: any = {}
+
+    if (userRole === UserRole.VOTER) {
+      whereClause.userId = userId
+    } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
+      whereClause.panchayatId = panchayatId
+    }
+
+    if (status) {
+      whereClause.status = status
+    }
+
+    const queries = await prisma.query.findMany({
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -241,11 +257,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         },
         department: true,
         office: true,
-        panchayat: {
-          select: {
-            name: true,
-          },
-        },
+        panchayat: true,
         updates: {
           include: {
             user: {
@@ -257,36 +269,31 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
             },
           },
           orderBy: {
-            createdAt: "asc",
+            createdAt: "desc",
+          },
+        },
+        _count: {
+          select: {
+            updates: true,
           },
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
+      skip: offset,
     })
 
-    if (!query) {
-      return NextResponse.json({ error: { code: "NOT_FOUND", message: "Query not found" } }, { status: 404 })
-    }
-
-    // Check access permissions
-    const hasAccess =
-      userRole === UserRole.ADMIN ||
-      (userRole === UserRole.VOTER && query.userId === userId) ||
-      (userRole === UserRole.PANCHAYAT && query.panchayatId === panchayatId)
-
-    if (!hasAccess) {
-      return NextResponse.json({ error: { code: "FORBIDDEN", message: "Access denied" } }, { status: 403 })
-    }
-
-    return NextResponse.json({ query })
+    return NextResponse.json({ queries })
   } catch (error) {
-    console.error("Query fetch error:", error)
+    console.error("Queries fetch error:", error)
     return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "An error occurred while fetching query" } },
-      { status: 500 },
+      { error: { code: "INTERNAL_ERROR", message: "An error occurred while fetching queries" } },
+      { status: 500 }
     )
   }
 }
-
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get("x-user-id")

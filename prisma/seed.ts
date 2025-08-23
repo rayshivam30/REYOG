@@ -10,6 +10,7 @@ async function main() {
   
   // Skip clearing if tables don't exist
   console.log("🔍 Checking database state...")
+  // Using a more robust way to get table names that works across different databases
   const tables = await prisma.$queryRaw`
     SELECT table_name 
     FROM information_schema.tables 
@@ -23,7 +24,10 @@ async function main() {
   // Only try to clear tables that exist
   if (tableNames.length > 0) {
     console.log("🧹 Clearing existing data...");
-    for (const table of ['User', 'Panchayat', 'Department']) {
+    // Explicitly listing tables to truncate in the correct order to avoid foreign key issues
+    const tablesToTruncate = ['Rating', 'Complaint', 'QueryUpdate', 'Query', 'User', 'NGO', 'Office', 'Panchayat', 'Department'];
+    
+    for (const table of tablesToTruncate) {
       if (tableNames.includes(table.toLowerCase())) {
         console.log(`- Clearing ${table}...`);
         await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`);
@@ -56,7 +60,7 @@ async function main() {
     }),
   ])
 
-  // Create Panchayats (around Bhopal area)
+  // Create Panchayats (now 6 of them, as requested)
   const panchayats = await Promise.all([
     prisma.panchayat.create({
       data: {
@@ -80,6 +84,55 @@ async function main() {
         longitude: 77.0873,
         contactEmail: "sehore@mp.gov.in",
         contactPhone: "+91-7562-232123",
+      },
+    }),
+    // New Panchayats
+    prisma.panchayat.create({
+      data: {
+        name: "Indore Rural Panchayat",
+        district: "Indore",
+        state: "Madhya Pradesh",
+        pincode: "452001",
+        latitude: 22.7196,
+        longitude: 75.8577,
+        contactEmail: "indore.rural@mp.gov.in",
+        contactPhone: "+91-731-2521111",
+      },
+    }),
+    prisma.panchayat.create({
+      data: {
+        name: "Jabalpur Rural Panchayat",
+        district: "Jabalpur",
+        state: "Madhya Pradesh",
+        pincode: "482001",
+        latitude: 23.1815,
+        longitude: 79.9168,
+        contactEmail: "jabalpur.rural@mp.gov.in",
+        contactPhone: "+91-761-2678901",
+      },
+    }),
+    prisma.panchayat.create({
+      data: {
+        name: "Gwalior Rural Panchayat",
+        district: "Gwalior",
+        state: "Madhya Pradesh",
+        pincode: "474001",
+        latitude: 26.2183,
+        longitude: 78.1828,
+        contactEmail: "gwalior.rural@mp.gov.in",
+        contactPhone: "+91-751-2456789",
+      },
+    }),
+    prisma.panchayat.create({
+      data: {
+        name: "Ujjain Panchayat",
+        district: "Ujjain",
+        state: "Madhya Pradesh",
+        pincode: "456001",
+        latitude: 23.1793,
+        longitude: 75.7831,
+        contactEmail: "ujjain@mp.gov.in",
+        contactPhone: "+91-734-2567890",
       },
     }),
   ])
@@ -178,6 +231,7 @@ async function main() {
 
   // Panchayat users
   const panchayatUsers = await Promise.all([
+    // Assigning users to the newly created panchayats
     prisma.user.create({
       data: {
         email: "bhopal.staff@reyog.gov.in",
@@ -196,6 +250,50 @@ async function main() {
         phone: "+91-9876543212",
         role: UserRole.PANCHAYAT,
         panchayatId: panchayats[1].id,
+      },
+    }),
+    // User 3: Assigned to the third panchayat
+    prisma.user.create({
+      data: {
+        email: "indore.staff@reyog.gov.in",
+        password: hashedPassword,
+        name: "Amit Patel",
+        phone: "+91-7654321333",
+        role: UserRole.PANCHAYAT,
+        panchayatId: panchayats[2].id,
+      },
+    }),
+    // User 4: Assigned to the fourth panchayat
+    prisma.user.create({
+      data: {
+        email: "jabalpur.staff@reyog.gov.in",
+        password: hashedPassword,
+        name: "Sunita Singh",
+        phone: "+91-6543214444",
+        role: UserRole.PANCHAYAT,
+        panchayatId: panchayats[3].id,
+      },
+    }),
+    // User 5: Assigned to the fifth panchayat
+    prisma.user.create({
+      data: {
+        email: "gwalior.staff@reyog.gov.in",
+        password: hashedPassword,
+        name: "Vikram Reddy",
+        phone: "+91-5432155555",
+        role: UserRole.PANCHAYAT,
+        panchayatId: panchayats[4].id,
+      },
+    }),
+    // User 6: Assigned to the sixth panchayat
+    prisma.user.create({
+      data: {
+        email: "ujjain.staff@reyog.gov.in",
+        password: hashedPassword,
+        name: "Anjali Gupta",
+        phone: "+91-4321666666",
+        role: UserRole.PANCHAYAT,
+        panchayatId: panchayats[5].id,
       },
     }),
   ])

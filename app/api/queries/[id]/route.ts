@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "User not authenticated" } }, { status: 401 })
     }
 
-    const queryId = params.id
+    const queryId = params.id // This is now safe, as the route guarantees an ID
 
     const query = await prisma.query.findUnique({
       where: { id: queryId },
@@ -28,7 +28,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         department: true,
         office: true,
         panchayat: true,
-        upvoteCount: true,
         updates: {
           include: {
             user: {
@@ -50,7 +49,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: { code: "NOT_FOUND", message: "Query not found" } }, { status: 404 })
     }
 
-    // Check access permissions
     const hasAccess =
       userRole === UserRole.ADMIN ||
       (userRole === UserRole.VOTER && query.userId === userId) ||
@@ -69,7 +67,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     )
   }
 }
-
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const userId = request.headers.get("x-user-id")
