@@ -35,6 +35,12 @@ interface Office {
   }
 }
 
+// NEW INTERFACE FOR PANCHAYAT
+interface Panchayat {
+  id: string
+  name: string
+}
+
 interface UploadedFile {
   id: string
   name: string
@@ -48,6 +54,7 @@ export function QueryForm() {
   const [error, setError] = useState("")
   const [departments, setDepartments] = useState<Department[]>([])
   const [offices, setOffices] = useState<Office[]>([])
+  const [panchayats, setPanchayats] = useState<Panchayat[]>([]) // NEW STATE
   const [selectedDepartment, setSelectedDepartment] = useState("default")
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
@@ -72,6 +79,12 @@ export function QueryForm() {
       .then((res) => res.json())
       .then((data) => setDepartments(data.departments || []))
       .catch((err) => console.error("Failed to fetch departments:", err))
+
+    // NEW: Fetch panchayats
+    fetch("/api/panchayats")
+      .then((res) => res.json())
+      .then((data) => setPanchayats(data.panchayats || []))
+      .catch((err) => console.error("Failed to fetch panchayats:", err))
   }, [])
 
   useEffect(() => {
@@ -189,12 +202,26 @@ export function QueryForm() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* NEW DROPDOWN FOR PANCHAYAT */}
             <div className="space-y-2">
-              <Label htmlFor="panchayatName">Panchayat Name *</Label>
-              <Input id="panchayatName" placeholder="Enter your Panchayat name" {...register("panchayatName")} />
-              {errors.panchayatName && <p className="text-sm text-destructive">{errors.panchayatName.message}</p>}
+              <Label>Panchayat *</Label>
+              <Select
+                onValueChange={(value) => setValue("panchayatId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your Panchayat" />
+                </SelectTrigger>
+                <SelectContent>
+                  {panchayats.map((panchayat) => (
+                    <SelectItem key={panchayat.id} value={panchayat.id}>
+                      {panchayat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.panchayatId && <p className="text-sm text-destructive">{errors.panchayatId.message}</p>}
             </div>
-            {/* ADD THIS NEW INPUT FIELD */}
+            
             <div className="space-y-2">
               <Label htmlFor="wardNumber">Ward Number *</Label>
               <Input 
