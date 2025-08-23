@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -26,6 +24,11 @@ interface Department {
   name: string
 }
 
+interface Panchayat {
+  id: string
+  name: string
+}
+
 interface Office {
   id: string
   name: string
@@ -47,6 +50,7 @@ export function QueryForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [departments, setDepartments] = useState<Department[]>([])
+  const [panchayats, setPanchayats] = useState<Panchayat[]>([])
   const [offices, setOffices] = useState<Office[]>([])
   const [selectedDepartment, setSelectedDepartment] = useState("default")
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -72,6 +76,12 @@ export function QueryForm() {
       .then((res) => res.json())
       .then((data) => setDepartments(data.departments || []))
       .catch((err) => console.error("Failed to fetch departments:", err))
+
+    // Fetch panchayats
+    fetch("/api/panchayats")
+      .then((res) => res.json())
+      .then((data) => setPanchayats(data.panchayats || []))
+      .catch((err) => console.error("Failed to fetch panchayats:", err))
   }, [])
 
   useEffect(() => {
@@ -190,17 +200,28 @@ export function QueryForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="panchayatName">Panchayat Name *</Label>
-              <Input id="panchayatName" placeholder="Enter your Panchayat name" {...register("panchayatName")} />
-              {errors.panchayatName && <p className="text-sm text-destructive">{errors.panchayatName.message}</p>}
+              <Label htmlFor="panchayatId">Panchayat *</Label>
+              <Select onValueChange={(value) => setValue("panchayatId", value)} value={watch("panchayatId")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your Panchayat" />
+                </SelectTrigger>
+                <SelectContent>
+                  {panchayats.map((panchayat) => (
+                    <SelectItem key={panchayat.id} value={panchayat.id}>
+                      {panchayat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.panchayatId && <p className="text-sm text-destructive">{errors.panchayatId.message}</p>}
             </div>
-            {/* ADD THIS NEW INPUT FIELD */}
+            
             <div className="space-y-2">
               <Label htmlFor="wardNumber">Ward Number *</Label>
-              <Input 
-                id="wardNumber" 
-                type="number" 
-                placeholder="Enter your ward number" 
+              <Input
+                id="wardNumber"
+                type="number"
+                placeholder="Enter your ward number"
                 {...register("wardNumber", { valueAsNumber: true })}
               />
               {errors.wardNumber && <p className="text-sm text-destructive">{errors.wardNumber.message}</p>}

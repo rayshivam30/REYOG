@@ -1,5 +1,3 @@
-
-
 import { z } from "zod"
 import { UserRole, QueryStatus, ComplaintStatus } from "@prisma/client"
 
@@ -21,10 +19,13 @@ export const createQuerySchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
   description: z.string().min(10, "Description must be at least 10 characters"),
 
-  // This is the new field for the typed Panchayat name
-  panchayatName: z.string().min(3, "Panchayat name must be at least 3 characters.").max(100),
+  // --- CHANGE IS HERE ---
+  // REMOVED: The old 'panchayatName' input field validation.
+  // panchayatName: z.string().min(3, "Panchayat name must be at least 3 characters.").max(100),
   
-  // ADDED THIS: A new field for the ward number
+  // ADDED: The new 'panchayatId' validation for the dropdown selector.
+  panchayatId: z.string().min(1, "Please select a Panchayat from the list."),
+  
   wardNumber: z.number().int().min(1, "Ward number must be a positive integer"),
   
   departmentId: z.string().optional(),
@@ -42,7 +43,6 @@ export const createQuerySchema = z.object({
     )
     .optional(),
 });
-
 
 export const updateQuerySchema = z.object({
   status: z.nativeEnum(QueryStatus).optional(),

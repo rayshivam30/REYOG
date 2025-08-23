@@ -210,7 +210,6 @@
 //     )
 //   }
 // }
-
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createQuerySchema } from "@/lib/validations"
@@ -294,51 +293,40 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get("x-user-id")
     const userRole = request.headers.get("x-user-role") as UserRole
-    const panchayatId = request.headers.get("x-user-panchayat-id")
 
     if (!userId || userRole !== UserRole.VOTER) {
       return NextResponse.json({ error: { code: "FORBIDDEN", message: "Only voters can create queries" } }, { status: 403 })
     }
 
     const body = await request.json()
-    const { title, description, panchayatName, wardNumber, departmentId, officeId, latitude, longitude, attachments } = createQuerySchema.parse(body)
-
-    // Find the panchayat
-    const panchayat = await prisma.panchayat.findFirst({
-      where: {
-        name: {
-          equals: panchayatName,
-          mode: 'insensitive',
-        },
-      },
-    })
-
-    if (!panchayat) {
-      return NextResponse.json({ error: { code: "NOT_FOUND", message: "Panchayat not found" } }, { status: 404 })
-    }
+    const { title, description, panchayatId, wardNumber, departmentId, officeId, latitude, longitude, attachments } = createQuerySchema.parse(body)
 
     const createdQuery = await prisma.query.create({
       data: {
         title,
         description,
-        wardNumber, // ADDED THIS LINE
+        wardNumber,
         latitude,
         longitude,
-        attachments: attachments ? attachments.map(a => JSON.stringify(a)) : [], // Ensure attachments are saved as strings
+        attachments: attachments ? attachments.map(a => JSON.stringify(a)) : [],
         userId,
         departmentId,
         officeId,
-        panchayatId: panchayat.id,
+        panchayatId: panchayatId,
       },
     })
 
     return NextResponse.json({ query: createdQuery }, { status: 201 })
   } catch (error) {
     console.error("Query creation error:", error)
+     if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: { code: "BAD_REQUEST", issues: error.issues } }, { status: 400 })
+    }
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "An error occurred while creating the query" } },
       { status: 500 },
