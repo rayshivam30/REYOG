@@ -22,8 +22,8 @@ model User {
   notifications Notification[]
   queries       Query[]
   queryUpdates  QueryUpdate[]
+  upvotes       QueryUpvote[]
   ratings       Rating[]
-  upvotes       QueryUpvote[]  // ADD THIS LINE
   panchayat     Panchayat?     @relation(fields: [panchayatId], references: [id])
 
   @@map("users")
@@ -98,22 +98,22 @@ model Query {
   acceptedAt       DateTime?
   resolvedAt       DateTime?
   closedAt         DateTime?
-    wardNumber      Int? 
   attachments      String[]       @default([])
-  upvoteCount      Int            @default(0)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   userId           String
   departmentId     String?
   officeId         String?
   panchayatId      String?
+  upvoteCount      Int            @default(0)
+  wardNumber       Int?
   notifications    Notification[]
   department       Department?    @relation(fields: [departmentId], references: [id])
   office           Office?        @relation(fields: [officeId], references: [id])
   panchayat        Panchayat?     @relation(fields: [panchayatId], references: [id])
   user             User           @relation(fields: [userId], references: [id])
   updates          QueryUpdate[]
-  upvotes          QueryUpvote[]  // ADD THIS LINE
+  upvotes          QueryUpvote[]
 
   @@map("queries")
 }

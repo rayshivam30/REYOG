@@ -174,22 +174,29 @@ export default async function VoterQueriesPage() {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="flex justify-between items-end">
-                  <div className="flex-1 pr-4">
-                    <p className="text-muted-foreground line-clamp-2">{query.description}</p>
-                    <div className="mt-2 text-sm text-gray-500">
-                      <span className="font-medium">{query.department?.name || 'Unassigned'}</span>
-                      <span className="ml-2">|</span>
-                      {/* ADDED THESE LINES TO DISPLAY PANCHAYAT AND WARD NUMBER */}
-                      <span className="ml-2">{query.panchayat?.name || 'N/A'}</span>
-                      <span className="ml-2">|</span>
-                      <span className="ml-2">Ward No: {query.wardNumber}</span>
-                      <span className="ml-2">|</span>
-                      <span className="ml-2">{format(new Date(query.createdAt), 'MMM d, yyyy')}</span>
+                <CardContent>
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <p className="text-muted-foreground line-clamp-2 mb-3">{query.description}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                        <span className="font-medium bg-gray-100 px-2 py-1 rounded">{query.department?.name || 'Unassigned'}</span>
+                        <span className="text-gray-300">•</span>
+                        <span>{query.panchayat?.name || 'N/A'}</span>
+                        <span className="text-gray-300">•</span>
+                        <span>Ward {query.wardNumber}</span>
+                        <span className="text-gray-300">•</span>
+                        <span>{format(new Date(query.createdAt), 'MMM d, yyyy')}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <UpvoteButton queryId={query.id} initialUpvoteCount={query.upvoteCount} />
+                      <Link href={`/dashboard/voter/queries/details/${query.id}`} className="w-full">
+                        <Button variant="outline" size="sm" className="w-full whitespace-nowrap">
+                          View Details
+                        </Button>
+                      </Link>
                     </div>
                   </div>
-                  {/* Upvote button and count */}
-                  <UpvoteButton queryId={query.id} initialUpvoteCount={query.upvoteCount} />
                 </CardContent>
               </Card>
             ))
