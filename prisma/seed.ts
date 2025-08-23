@@ -1,6 +1,3 @@
-
-
-
 import { PrismaClient, UserRole, QueryStatus, ComplaintStatus } from "@prisma/client"
 import { hashPassword } from "../lib/auth"
 
@@ -11,22 +8,31 @@ const prisma = new PrismaClient({
 async function main() {
   console.log("🌱 Starting seed...")
   
-  // Clear existing data safely
-  console.log("🧹 Clearing existing data...");
-  await prisma.auditLog.deleteMany({});
-  await prisma.complaint.deleteMany({});
-  await prisma.nGO.deleteMany({});
-  await prisma.notification.deleteMany({});
-  await prisma.queryUpvote.deleteMany({});
-  await prisma.queryUpdate.deleteMany({});
-  await prisma.query.deleteMany({});
-  await prisma.rating.deleteMany({});
-  await prisma.serviceStat.deleteMany({});
-  await prisma.office.deleteMany({});
-  await prisma.user.deleteMany({});
-  await prisma.panchayat.deleteMany({});
-  await prisma.department.deleteMany({});
-  console.log("✅ Database cleared");
+  // Skip clearing if tables don't exist
+  console.log("🔍 Checking database state...")
+  const tables = await prisma.$queryRaw`
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_type = 'BASE TABLE';
+  `
+  
+  const tableNames = (tables as any[]).map(t => t.table_name);
+  console.log("Found tables:", tableNames);
+  
+  // Only try to clear tables that exist
+  if (tableNames.length > 0) {
+    console.log("🧹 Clearing existing data...");
+    for (const table of ['User', 'Panchayat', 'Department']) {
+      if (tableNames.includes(table.toLowerCase())) {
+        console.log(`- Clearing ${table}...`);
+        await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`);
+      }
+    }
+    console.log("✅ Database cleared");
+  } else {
+    console.log("ℹ️ No existing tables found, proceeding with seed...");
+  }
 
   // Create Departments
   const departments = await Promise.all([
@@ -74,55 +80,6 @@ async function main() {
         longitude: 77.0873,
         contactEmail: "sehore@mp.gov.in",
         contactPhone: "+91-7562-232123",
-      },
-    }),
-    // New Panchayats
-    prisma.panchayat.create({
-      data: {
-        name: "Raisen Panchayat",
-        district: "Raisen",
-        state: "Madhya Pradesh",
-        pincode: "464551",
-        latitude: 23.3323,
-        longitude: 77.795,
-        contactEmail: "raisen@mp.gov.in",
-        contactPhone: "+91-7482-222123",
-      },
-    }),
-    prisma.panchayat.create({
-      data: {
-        name: "Vidisha Panchayat",
-        district: "Vidisha",
-        state: "Madhya Pradesh",
-        pincode: "464001",
-        latitude: 23.5298,
-        longitude: 77.8105,
-        contactEmail: "vidisha@mp.gov.in",
-        contactPhone: "+91-7592-234567",
-      },
-    }),
-    prisma.panchayat.create({
-      data: {
-        name: "Dewas Panchayat",
-        district: "Dewas",
-        state: "Madhya Pradesh",
-        pincode: "455001",
-        latitude: 22.966,
-        longitude: 76.052,
-        contactEmail: "dewas@mp.gov.in",
-        contactPhone: "+91-7272-234568",
-      },
-    }),
-    prisma.panchayat.create({
-      data: {
-        name: "Rajgarh Panchayat",
-        district: "Rajgarh",
-        state: "Madhya Pradesh",
-        pincode: "465661",
-        latitude: 24.015,
-        longitude: 76.816,
-        contactEmail: "rajgarh@mp.gov.in",
-        contactPhone: "+91-7372-234569",
       },
     }),
   ])
@@ -203,103 +160,6 @@ async function main() {
         panchayatId: panchayats[1].id,
       },
     }),
-    // New Offices for new Panchayats
-    prisma.office.create({
-      data: {
-        name: "Primary Health Center - Raisen",
-        address: "Hospital Road, Raisen, MP 464551",
-        latitude: 23.332,
-        longitude: 77.795,
-        contactPhone: "+91-7482-222124",
-        workingHours: "9:00 AM - 5:00 PM",
-        departmentId: departments[0].id, // Health
-        panchayatId: panchayats[2].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Roads Office - Raisen",
-        address: "Main Bypass, Raisen, MP 464551",
-        latitude: 23.333,
-        longitude: 77.796,
-        contactPhone: "+91-7482-222125",
-        workingHours: "9:00 AM - 5:00 PM",
-        departmentId: departments[3].id, // Roads
-        panchayatId: panchayats[2].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Water Supply Office - Vidisha",
-        address: "Station Road, Vidisha, MP 464001",
-        latitude: 23.53,
-        longitude: 77.811,
-        contactPhone: "+91-7592-234568",
-        workingHours: "10:00 AM - 6:00 PM",
-        departmentId: departments[2].id, // Water
-        panchayatId: panchayats[3].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Education Office - Vidisha",
-        address: "Collectorate, Vidisha, MP 464001",
-        latitude: 23.531,
-        longitude: 77.812,
-        contactPhone: "+91-7592-234569",
-        workingHours: "8:00 AM - 4:00 PM",
-        departmentId: departments[1].id, // Education
-        panchayatId: panchayats[3].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Sanitation Office - Dewas",
-        address: "Urban Civic Center, Dewas, MP 455001",
-        latitude: 22.966,
-        longitude: 76.052,
-        contactPhone: "+91-7272-234569",
-        workingHours: "8:00 AM - 4:00 PM",
-        departmentId: departments[4].id, // Sanitation
-        panchayatId: panchayats[4].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Health Center - Dewas",
-        address: "Main Road, Dewas, MP 455001",
-        latitude: 22.967,
-        longitude: 76.053,
-        contactPhone: "+91-7272-234570",
-        workingHours: "9:00 AM - 5:00 PM",
-        departmentId: departments[0].id, // Health
-        panchayatId: panchayats[4].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Electricity Board - Rajgarh",
-        address: "Power House, Rajgarh, MP 465661",
-        latitude: 24.015,
-        longitude: 76.816,
-        contactPhone: "+91-7372-234570",
-        workingHours: "9:00 AM - 6:00 PM",
-        departmentId: departments[5].id, // Electricity
-        panchayatId: panchayats[5].id,
-      },
-    }),
-    prisma.office.create({
-      data: {
-        name: "Water Office - Rajgarh",
-        address: "Main Street, Rajgarh, MP 465661",
-        latitude: 24.016,
-        longitude: 76.817,
-        contactPhone: "+91-7372-234571",
-        workingHours: "10:00 AM - 6:00 PM",
-        departmentId: departments[2].id, // Water
-        panchayatId: panchayats[5].id,
-      },
-    }),
   ])
 
   // Create Users
@@ -336,47 +196,6 @@ async function main() {
         phone: "+91-9876543212",
         role: UserRole.PANCHAYAT,
         panchayatId: panchayats[1].id,
-      },
-    }),
-    // New Panchayat users
-    prisma.user.create({
-      data: {
-        email: "raisen.staff@reyog.gov.in",
-        password: hashedPassword,
-        name: "Suresh Sinha",
-        phone: "+91-9876543218",
-        role: UserRole.PANCHAYAT,
-        panchayatId: panchayats[2].id,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: "vidisha.staff@reyog.gov.in",
-        password: hashedPassword,
-        name: "Deepa Verma",
-        phone: "+91-9876543219",
-        role: UserRole.PANCHAYAT,
-        panchayatId: panchayats[3].id,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: "dewas.staff@reyog.gov.in",
-        password: hashedPassword,
-        name: "Alok Gupta",
-        phone: "+91-9876543220",
-        role: UserRole.PANCHAYAT,
-        panchayatId: panchayats[4].id,
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: "rajgarh.staff@reyog.gov.in",
-        password: hashedPassword,
-        name: "Smita Singh",
-        phone: "+91-9876543221",
-        role: UserRole.PANCHAYAT,
-        panchayatId: panchayats[5].id,
       },
     }),
   ])
@@ -846,19 +665,6 @@ async function main() {
         panchayatId: panchayats[1].id,
       },
     }),
-    // New Panchayat stats
-    prisma.serviceStat.create({
-      data: { category: "Hospitals", metric: "doctors", value: 4, unit: "count", panchayatId: panchayats[2].id, },
-    }),
-    prisma.serviceStat.create({
-      data: { category: "Schools", metric: "teachers", value: 15, unit: "count", panchayatId: panchayats[3].id, },
-    }),
-    prisma.serviceStat.create({
-      data: { category: "Roads", metric: "length_km", value: 120, unit: "km", panchayatId: panchayats[4].id, },
-    }),
-    prisma.serviceStat.create({
-      data: { category: "Electricity", metric: "households_with_power", value: 5000, unit: "count", panchayatId: panchayats[5].id, },
-    }),
   ])
 
   console.log("✅ Seed completed successfully!")
@@ -871,16 +677,12 @@ async function main() {
   console.log(`- 4 Complaints`)
   console.log(`- 3 NGOs`)
   console.log(`- 10 Ratings`)
-  console.log(`- 14 Service Stats`)
+  console.log(`- 10 Service Stats`)
 
   console.log("\n🔐 Login Credentials:")
   console.log("Admin: admin@reyog.gov.in / password123")
   console.log("Panchayat (Bhopal): bhopal.staff@reyog.gov.in / password123")
   console.log("Panchayat (Sehore): sehore.staff@reyog.gov.in / password123")
-  console.log("Panchayat (Raisen): raisen.staff@reyog.gov.in / password123")
-  console.log("Panchayat (Vidisha): vidisha.staff@reyog.gov.in / password123")
-  console.log("Panchayat (Dewas): dewas.staff@reyog.gov.in / password123")
-  console.log("Panchayat (Rajgarh): rajgarh.staff@reyog.gov.in / password123")
   console.log("Voter: ramesh.voter@gmail.com / password123")
   console.log("(+ 4 more voter accounts)")
 }
