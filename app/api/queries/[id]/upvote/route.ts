@@ -1,68 +1,123 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
+import { getAuthUser } from '@/lib/auth';
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const userId = request.headers.get("x-user-id");
-    const userRole = request.headers.get("x-user-role") as UserRole;
-    
-    // Check for user authentication and role
-    if (!userId || userRole !== UserRole.VOTER) {
-      return NextResponse.json(
-        { error: { code: "FORBIDDEN", message: "Only voters can upvote queries" } },
-        { status: 403 }
-      );
+    const user = await getAuthUser();
+    if (!user) {
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
-    
-    // Use the id from params
+
     const queryId = params.id;
+    const userId = (user as any).id;
 
-    // Check if the query exists
-    const existingQuery = await prisma.query.findUnique({
-      where: { id: queryId },
-    });
-    
-    if (!existingQuery) {
-      return NextResponse.json({ error: { code: "NOT_FOUND", message: "Query not found" } }, { status: 404 });
+    // Check if table exists, if not create it
+    try {
+      await prisma.$queryRaw`SELECT 1 FROM "query_upvotes" LIMIT 1`;
+    } catch (error) {
+      console.log('Creating query_upvotes table...');
+      try {
+        await prisma.$executeRaw`
+          CREATE TABLE "query_upvotes" (
+            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+            "queryId" TEXT NOT NULL,
+            "userId" TEXT NOT NULL,
+            "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            FOREIGN KEY ("queryId") REFERENCES "queries"(id) ON DELETE CASCADE,
+            FOREIGN KEY ("userId") REFERENCES "users"(id) ON DELETE CASCADE,
+            CONSTRAINT "query_upvotes_queryId_userId_key" UNIQUE ("queryId", "userId")
+          )
+        `;
+        console.log('Successfully created query_upvotes table');
+      } catch (createError) {
+        console.error('Error creating query_upvotes table:', createError);
+        throw createError;
+      }
     }
 
-    try {
-      // Create a new upvote record in the database
-      await prisma.queryUpvote.create({
-        data: {
-          queryId,
-          userId,
-        },
-      });
+    // Check if already upvoted
+    const existingUpvote = await prisma.$queryRaw`
+      SELECT id FROM "query_upvotes" 
+      WHERE "userId" = ${userId} AND "queryId" = ${queryId} 
+      LIMIT 1
+    `;
+    
+    let upvoteCount = 0;
+    
+    if (!(existingUpvote as any[]).length) {
+      // Add upvote
+      await prisma.$transaction([
+        prisma.$executeRaw`
+          INSERT INTO "QueryUpvote" ("id", "userId", "queryId", "createdAt")
+          VALUES (gen_random_uuid(), ${userId}, ${queryId}, NOW())
+        `,
+        prisma.$executeRaw`
+          UPDATE "Query" 
+          SET "upvoteCount" = "upvoteCount" + 1 
+          WHERE "id" = ${queryId}
+        `
+      ]);
       
-      // If the creation is successful, increment the upvote count on the query
-      await prisma.query.update({
-        where: { id: queryId },
-        data: {
-          upvoteCount: {
-            increment: 1,
-          },
-        },
-      });
+      // Get updated count
+      const result = await prisma.$queryRaw`
+        SELECT "upvoteCount" FROM "Query" WHERE "id" = ${queryId}
+      `;
+      upvoteCount = Number((result as any)[0]?.upvoteCount || 0);
+    } else {
+      // Remove upvote
+      await prisma.$transaction([
+        prisma.$executeRaw`
+          DELETE FROM "QueryUpvote" 
+          WHERE "userId" = ${userId} AND "queryId" = ${queryId}
+        `,
+        prisma.$executeRaw`
+          UPDATE "Query" 
+          SET "upvoteCount" = GREATEST(0, "upvoteCount" - 1)
+          WHERE "id" = ${queryId}
+        `
+      ]);
+      
+      // Get updated count
+      const result = await prisma.$queryRaw`
+        SELECT "upvoteCount" FROM "Query" WHERE "id" = ${queryId}
+      `;
+      upvoteCount = Number((result as any)[0]?.upvoteCount || 0);
+    }
 
-      return NextResponse.json({ message: "Upvote successful" });
-
-    } catch (e: any) {
-      // Handle the unique constraint error if the user has already upvoted
-      if (e.code === 'P2002') { // Prisma's unique constraint violation error code
+    return NextResponse.json({ success: true, upvoteCount });
+  } catch (error) {
+    console.error("Upvote error:", error);
+    
+    // Handle specific error cases
+    if (error instanceof Error) {
+      // Prisma's unique constraint violation error code
+      if ('code' in error && error.code === 'P2002') {
         return NextResponse.json(
           { error: { code: "CONFLICT", message: "You have already upvoted this query" } },
           { status: 409 }
         );
       }
-      // Re-throw other errors for the outer catch block to handle
-      throw e;
     }
-  } catch (error) {
-    console.error("Upvote error:", error);
+    
+    // Generic error response
     return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "An error occurred while processing your request" } },
+      { 
+        error: { 
+          code: "INTERNAL_ERROR", 
+          message: "An error occurred while processing your request" 
+        } 
+      },
       { status: 500 }
     );
   }

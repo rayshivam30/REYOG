@@ -112,8 +112,8 @@ import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ThumbsUp } from "lucide-react"
-import { UpvoteButton } from "@/components/voter/upvote-button" // Import the client component
+import { SocialActions } from "@/components/voter/social-actions"
+import { MapPin, Calendar } from "lucide-react"
 
 const statusVariant = {
   PENDING_REVIEW: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
@@ -161,37 +161,63 @@ export default async function VoterQueriesPage() {
             <div className="text-center text-muted-foreground p-8">No queries found for your panchayat.</div>
           ) : (
             queries.map((query) => (
-              <Card key={query.id} className="relative transition-shadow hover:shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Link href={`/dashboard/voter/queries/details/${query.id}`} className="flex-1">
-                      <CardTitle className="text-xl font-semibold hover:underline">
+              <Card key={query.id} className="relative overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/20">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary/10" />
+                <CardHeader className="pb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <Link href={`/dashboard/voter/queries/details/${query.id}`} className="group flex-1">
+                      <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-2">
                         {query.title}
                       </CardTitle>
                     </Link>
-                    <Badge className={`${statusVariant[query.status as keyof typeof statusVariant]}`}>
+                    <Badge 
+                      className={`${statusVariant[query.status as keyof typeof statusVariant]} text-xs font-medium py-1 px-2.5 rounded-full border-0`}
+                    >
                       {query.status.replace('_', ' ')}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <p className="text-muted-foreground line-clamp-2 mb-3">{query.description}</p>
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                        <span className="font-medium bg-gray-100 px-2 py-1 rounded">{query.department?.name || 'Unassigned'}</span>
+                <CardContent className="pt-0">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    <div className="flex-1 space-y-3">
+                      <p className="text-gray-600 line-clamp-3 text-sm leading-relaxed">
+                        {query.description}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-500">
+                        <span className="inline-flex items-center bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                          {query.department?.name || 'Unassigned'}
+                        </span>
                         <span className="text-gray-300">•</span>
-                        <span>{query.panchayat?.name || 'N/A'}</span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                          {query.panchayat?.name || 'N/A'}
+                        </span>
                         <span className="text-gray-300">•</span>
                         <span>Ward {query.wardNumber}</span>
                         <span className="text-gray-300">•</span>
-                        <span>{format(new Date(query.createdAt), 'MMM d, yyyy')}</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                          {format(new Date(query.createdAt), 'MMM d, yyyy')}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <UpvoteButton queryId={query.id} initialUpvoteCount={query.upvoteCount} />
-                      <Link href={`/dashboard/voter/queries/details/${query.id}`} className="w-full">
-                        <Button variant="outline" size="sm" className="w-full whitespace-nowrap">
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <SocialActions 
+                        queryId={query.id}
+                        initialLikes={0}
+                        initialComments={0}
+                        initialShares={0}
+                        initialUpvotes={query.upvoteCount || 0}
+                        className="flex-1"
+                      />
+                      <Link href={`/dashboard/voter/queries/details/${query.id}`} className="ml-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="whitespace-nowrap bg-white hover:bg-gray-50 border-gray-200 hover:border-primary/30 transition-colors"
+                        >
                           View Details
                         </Button>
                       </Link>

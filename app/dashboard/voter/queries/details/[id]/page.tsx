@@ -7,7 +7,7 @@ import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar, MapPin } from "lucide-react"
 import Link from "next/link"
-import { UpvoteButton } from "@/components/voter/upvote-button"
+import { SocialActions } from "@/components/voter/social-actions"
 
 interface QueryWithRelations {
   id: string
@@ -120,9 +120,12 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                 </div>
               </div>
               <div className="flex justify-end">
-                <UpvoteButton
+                <SocialActions 
                   queryId={query.id}
-                  initialUpvoteCount={query.upvoteCount}
+                  initialUpvotes={query.upvoteCount}
+                  initialLikes={0}
+                  initialComments={0}
+                  initialShares={0}
                 />
               </div>
             </div>
