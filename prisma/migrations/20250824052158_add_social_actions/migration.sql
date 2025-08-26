@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "public"."queries" ADD COLUMN     "commentCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "likeCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "retweetCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "shareCount" INTEGER NOT NULL DEFAULT 0;

@@ -24,6 +24,8 @@ model User {
   queryUpdates  QueryUpdate[]
   upvotes       QueryUpvote[]
   ratings       Rating[]
+  comments      Comment[]
+  likes         QueryLike[]
   panchayat     Panchayat?     @relation(fields: [panchayatId], references: [id])
 
   @@map("users")
@@ -106,6 +108,12 @@ model Query {
   officeId         String?
   panchayatId      String?
   upvoteCount      Int            @default(0)
+  likeCount        Int            @default(0)
+  commentCount     Int            @default(0)
+  shareCount       Int            @default(0)
+  retweetCount     Int            @default(0)
+  isRetweet        Boolean        @default(false)
+  originalQueryId  String?
   wardNumber       Int?
   notifications    Notification[]
   department       Department?    @relation(fields: [departmentId], references: [id])
@@ -114,6 +122,8 @@ model Query {
   user             User           @relation(fields: [userId], references: [id])
   updates          QueryUpdate[]
   upvotes          QueryUpvote[]
+  likes            QueryLike[]
+  comments         Comment[]
 
   @@map("queries")
 }
@@ -128,6 +138,31 @@ model QueryUpvote {
 
   @@unique([queryId, userId])
   @@map("query_upvotes")
+}
+
+model QueryLike {
+  id        String   @id @default(cuid())
+  queryId   String
+  userId    String
+  createdAt DateTime @default(now())
+  query     Query    @relation(fields: [queryId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([queryId, userId])
+  @@map("query_likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  queryId   String
+  userId    String
+  query     Query    @relation(fields: [queryId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("comments")
 }
 
 model QueryUpdate {

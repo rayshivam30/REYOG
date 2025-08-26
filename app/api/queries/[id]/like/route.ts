@@ -1,14 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
+import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
-import type { NextRequest as NextReq } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
 
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
+interface LikeRequest {
+  like: boolean;
+}
 
 export async function GET(
   request: NextRequest,
@@ -24,29 +21,29 @@ export async function GET(
     const { id: queryId } = await params;
     const userId = user.userId;
 
-    // Check if already upvoted
-    const existingUpvote = await prisma.queryUpvote.findFirst({
+    // Check if already liked
+    const existingLike = await prisma.queryLike.findFirst({
       where: {
         userId: userId,
         queryId: queryId
       }
     });
 
-    // Get current upvote count
+    // Get current like count
     const query = await prisma.query.findUnique({
       where: { id: queryId },
-      select: { upvoteCount: true }
+      select: { likeCount: true }
     });
 
     return NextResponse.json({ 
       success: true, 
-      isUpvoted: !!existingUpvote,
-      upvoteCount: query?.upvoteCount || 0
+      isLiked: !!existingLike,
+      likeCount: query?.likeCount || 0
     });
   } catch (error) {
-    console.error('Error fetching upvote status:', error);
+    console.error('Error fetching like status:', error);
     return new NextResponse(
-      JSON.stringify({ error: 'Failed to fetch upvote status' }), 
+      JSON.stringify({ error: 'Failed to fetch like status' }), 
       { status: 500 }
     );
   }
@@ -59,29 +56,29 @@ export async function POST(
   try {
     // Await the params object
     const { id: queryId } = await params;
-    const { upvote } = await request.json();
+    const { like } = await request.json() as LikeRequest;
     
     const user = await getAuthUser();
     if (!user?.userId) {
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
     const userId = user.userId;
-
-    // Check if already upvoted
-    const existingUpvote = await prisma.queryUpvote.findFirst({
+    
+    // Check if already liked
+    const existingLike = await prisma.queryLike.findFirst({
       where: {
         userId: userId,
         queryId: queryId
       }
     });
     
-    let upvoteCount = 0;
-    let isUpvoted = false;
+    let likeCount = 0;
+    let isLiked = false;
     
-    if (upvote && !existingUpvote) {
-      // Add upvote
+    if (like && !existingLike) {
+      // Add like
       await prisma.$transaction([
-        prisma.queryUpvote.create({
+        prisma.queryLike.create({
           data: {
             userId: userId,
             queryId: queryId
@@ -90,17 +87,17 @@ export async function POST(
         prisma.query.update({
           where: { id: queryId },
           data: {
-            upvoteCount: {
+            likeCount: {
               increment: 1
             }
           }
         })
       ]);
-      isUpvoted = true;
-    } else if (!upvote && existingUpvote) {
-      // Remove upvote
+      isLiked = true;
+    } else if (!like && existingLike) {
+      // Remove like
       await prisma.$transaction([
-        prisma.queryUpvote.deleteMany({
+        prisma.queryLike.deleteMany({
           where: {
             userId: userId,
             queryId: queryId
@@ -109,50 +106,36 @@ export async function POST(
         prisma.query.update({
           where: { id: queryId },
           data: {
-            upvoteCount: {
+            likeCount: {
               decrement: 1
             }
           }
         })
       ]);
-      isUpvoted = false;
+      isLiked = false;
     }
     
     // Get current state
     const query = await prisma.query.findUnique({
       where: { id: queryId },
-      select: { upvoteCount: true }
+      select: { likeCount: true }
     });
     
-    upvoteCount = Math.max(0, query?.upvoteCount || 0);
+    likeCount = Math.max(0, query?.likeCount || 0);
     
     return NextResponse.json({ 
       success: true, 
-      isUpvoted,
-      upvoteCount
+      isLiked,
+      likeCount
     });
   } catch (error) {
-    console.error("Upvote error:", error);
-    
-    // Handle specific error cases
-    if (error instanceof Error) {
-      // Prisma's unique constraint violation error code
-      if ('code' in error && error.code === 'P2002') {
-        return NextResponse.json(
-          { error: { code: "CONFLICT", message: "You have already upvoted this query" } },
-          { status: 409 }
-        );
-      }
-    }
-    
-    // Generic error response
-    return NextResponse.json(
-      { 
-        error: { 
-          code: "INTERNAL_ERROR", 
-          message: "An error occurred while processing your request" 
-        } 
-      },
+    console.error('Error updating like:', error);
+    return new NextResponse(
+      JSON.stringify({ 
+        success: false, 
+        error: 'Failed to update like',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }), 
       { status: 500 }
     );
   }
