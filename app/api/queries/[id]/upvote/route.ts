@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 import { getAuthUser } from '@/lib/auth';
+import type { NextRequest as NextReq } from 'next/server';
 
 type RouteParams = {
   params: {
@@ -9,93 +10,127 @@ type RouteParams = {
   };
 };
 
-export async function POST(
+export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const user = await getAuthUser();
-    if (!user) {
+    if (!user?.userId) {
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    const queryId = params.id;
-    const userId = (user as any).id;
-
-    // Check if table exists, if not create it
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM "query_upvotes" LIMIT 1`;
-    } catch (error) {
-      console.log('Creating query_upvotes table...');
-      try {
-        await prisma.$executeRaw`
-          CREATE TABLE "query_upvotes" (
-            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-            "queryId" TEXT NOT NULL,
-            "userId" TEXT NOT NULL,
-            "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            FOREIGN KEY ("queryId") REFERENCES "queries"(id) ON DELETE CASCADE,
-            FOREIGN KEY ("userId") REFERENCES "users"(id) ON DELETE CASCADE,
-            CONSTRAINT "query_upvotes_queryId_userId_key" UNIQUE ("queryId", "userId")
-          )
-        `;
-        console.log('Successfully created query_upvotes table');
-      } catch (createError) {
-        console.error('Error creating query_upvotes table:', createError);
-        throw createError;
-      }
-    }
+    // Await the params object
+    const { id: queryId } = await params;
+    const userId = user.userId;
 
     // Check if already upvoted
-    const existingUpvote = await prisma.$queryRaw`
-      SELECT id FROM "query_upvotes" 
-      WHERE "userId" = ${userId} AND "queryId" = ${queryId} 
-      LIMIT 1
-    `;
+    const existingUpvote = await prisma.queryUpvote.findFirst({
+      where: {
+        userId: userId,
+        queryId: queryId
+      }
+    });
+
+    // Get current upvote count
+    const query = await prisma.query.findUnique({
+      where: { id: queryId },
+      select: { upvoteCount: true }
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      isUpvoted: !!existingUpvote,
+      upvoteCount: query?.upvoteCount || 0
+    });
+  } catch (error) {
+    console.error('Error fetching upvote status:', error);
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to fetch upvote status' }), 
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Await the params object
+    const { id: queryId } = await params;
+    const { upvote } = await request.json();
+    
+    const user = await getAuthUser();
+    if (!user?.userId) {
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+    const userId = user.userId;
+
+    // Check if already upvoted
+    const existingUpvote = await prisma.queryUpvote.findFirst({
+      where: {
+        userId: userId,
+        queryId: queryId
+      }
+    });
     
     let upvoteCount = 0;
+    let isUpvoted = false;
     
-    if (!(existingUpvote as any[]).length) {
+    if (upvote && !existingUpvote) {
       // Add upvote
       await prisma.$transaction([
-        prisma.$executeRaw`
-          INSERT INTO "QueryUpvote" ("id", "userId", "queryId", "createdAt")
-          VALUES (gen_random_uuid(), ${userId}, ${queryId}, NOW())
-        `,
-        prisma.$executeRaw`
-          UPDATE "Query" 
-          SET "upvoteCount" = "upvoteCount" + 1 
-          WHERE "id" = ${queryId}
-        `
+        prisma.queryUpvote.create({
+          data: {
+            userId: userId,
+            queryId: queryId
+          }
+        }),
+        prisma.query.update({
+          where: { id: queryId },
+          data: {
+            upvoteCount: {
+              increment: 1
+            }
+          }
+        })
       ]);
-      
-      // Get updated count
-      const result = await prisma.$queryRaw`
-        SELECT "upvoteCount" FROM "Query" WHERE "id" = ${queryId}
-      `;
-      upvoteCount = Number((result as any)[0]?.upvoteCount || 0);
-    } else {
+      isUpvoted = true;
+    } else if (!upvote && existingUpvote) {
       // Remove upvote
       await prisma.$transaction([
-        prisma.$executeRaw`
-          DELETE FROM "QueryUpvote" 
-          WHERE "userId" = ${userId} AND "queryId" = ${queryId}
-        `,
-        prisma.$executeRaw`
-          UPDATE "Query" 
-          SET "upvoteCount" = GREATEST(0, "upvoteCount" - 1)
-          WHERE "id" = ${queryId}
-        `
+        prisma.queryUpvote.deleteMany({
+          where: {
+            userId: userId,
+            queryId: queryId
+          }
+        }),
+        prisma.query.update({
+          where: { id: queryId },
+          data: {
+            upvoteCount: {
+              decrement: 1
+            }
+          }
+        })
       ]);
-      
-      // Get updated count
-      const result = await prisma.$queryRaw`
-        SELECT "upvoteCount" FROM "Query" WHERE "id" = ${queryId}
-      `;
-      upvoteCount = Number((result as any)[0]?.upvoteCount || 0);
+      isUpvoted = false;
     }
-
-    return NextResponse.json({ success: true, upvoteCount });
+    
+    // Get current state
+    const query = await prisma.query.findUnique({
+      where: { id: queryId },
+      select: { upvoteCount: true }
+    });
+    
+    upvoteCount = Math.max(0, query?.upvoteCount || 0);
+    
+    return NextResponse.json({ 
+      success: true, 
+      isUpvoted,
+      upvoteCount
+    });
   } catch (error) {
     console.error("Upvote error:", error);
     

@@ -7,27 +7,30 @@ type PrismaClientWithModels = typeof prisma & {
   comment: any; // Temporary any type to bypass type checking
 };
 
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
-
 export async function POST(
   request: Request,
-  context: RouteParams
+  context: { params: { id: string } }
 ) {
   try {
+    const { id: queryId } = await Promise.resolve(context.params);
     const user = await getAuthUser();
-    if (!user) {
+    if (!user || !user.userId) {
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
     const { content } = await request.json();
-    const queryId = context.params.id;
 
     // Type assertion to bypass TypeScript errors
     const prismaClient = prisma as unknown as PrismaClientWithModels;
+    
+    // First, verify the query exists
+    const queryExists = await prisma.query.findUnique({
+      where: { id: queryId }
+    });
+
+    if (!queryExists) {
+      return new NextResponse(JSON.stringify({ error: 'Query not found' }), { status: 404 });
+    }
     
     // Create a new comment
     const comment = await prismaClient.comment.create({
@@ -37,7 +40,7 @@ export async function POST(
           connect: { id: queryId }
         },
         user: {
-          connect: { id: (user as any).id }
+          connect: { id: user.userId }
         }
       },
       include: {
@@ -53,7 +56,7 @@ export async function POST(
 
     // Update the comment count using a raw SQL query to avoid type issues
     await prisma.$executeRaw`
-      UPDATE "Query" 
+      UPDATE queries 
       SET "commentCount" = "commentCount" + 1
       WHERE id = ${queryId}
     `;
@@ -72,10 +75,10 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  context: RouteParams
+  context: { params: { id: string } }
 ) {
   try {
-    const queryId = context.params.id;
+    const { id: queryId } = await Promise.resolve(context.params);
 
     // Type assertion to bypass TypeScript errors
     const prismaClient = prisma as unknown as PrismaClientWithModels;

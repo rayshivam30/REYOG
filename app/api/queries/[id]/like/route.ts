@@ -1,107 +1,132 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
 
 interface LikeRequest {
   like: boolean;
 }
 
-export async function POST(
-  request: Request,
+export async function GET(
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const user = await getAuthUser();
-    if (!user) {
+    if (!user?.userId) {
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    const { like } = await request.json() as LikeRequest;
-    const queryId = params.id;
-    const userId = (user as any).id;
-    
-    // Check if table exists, if not create it
-    try {
-      await prisma.$queryRaw`SELECT 1 FROM "query_likes" LIMIT 1`;
-    } catch (error) {
-      console.log('Creating query_likes table...');
-      try {
-        await prisma.$executeRaw`
-          CREATE TABLE "query_likes" (
-            id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-            "queryId" TEXT NOT NULL,
-            "userId" TEXT NOT NULL,
-            "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            FOREIGN KEY ("queryId") REFERENCES "queries"(id) ON DELETE CASCADE,
-            FOREIGN KEY ("userId") REFERENCES "users"(id) ON DELETE CASCADE,
-            CONSTRAINT "query_likes_queryId_userId_key" UNIQUE ("queryId", "userId")
-          )
-        `;
-        console.log('Successfully created query_likes table');
-      } catch (createError) {
-        console.error('Error creating query_likes table:', createError);
-        throw createError;
-      }
-    }
+    // Await the params object
+    const { id: queryId } = await params;
+    const userId = user.userId;
 
     // Check if already liked
-    const existingLike = await prisma.$queryRaw`
-      SELECT id FROM "query_likes" 
-      WHERE "userId" = ${userId} AND "queryId" = ${queryId} 
-      LIMIT 1
-    `;
-    
-    let likeCount = 0;
-    
-    if (like && !(existingLike as any[]).length) {
-      // Add like
-      await prisma.$transaction([
-        prisma.$executeRaw`
-          INSERT INTO "QueryLike" ("id", "userId", "queryId", "createdAt")
-          VALUES (gen_random_uuid(), ${userId}, ${queryId}, NOW())
-        `,
-        prisma.$executeRaw`
-          UPDATE "Query" 
-          SET "likeCount" = "likeCount" + 1 
-          WHERE "id" = ${queryId}
-        `
-      ]);
-      
-      // Get updated count
-      const result = await prisma.$queryRaw`
-        SELECT "likeCount" FROM "Query" WHERE "id" = ${queryId}
-      `;
-      likeCount = Number((result as any)[0]?.likeCount || 0);
-    } else if (!like && (existingLike as any[]).length) {
-      // Remove like
-      await prisma.$transaction([
-        prisma.$executeRaw`
-          DELETE FROM "QueryLike" 
-          WHERE "userId" = ${userId} AND "queryId" = ${queryId}
-        `,
-        prisma.$executeRaw`
-          UPDATE "Query" 
-          SET "likeCount" = GREATEST(0, "likeCount" - 1)
-          WHERE "id" = ${queryId}
-        `
-      ]);
-      
-      // Get updated count
-      const result = await prisma.$queryRaw`
-        SELECT "likeCount" FROM "Query" WHERE "id" = ${queryId}
-      `;
-      likeCount = Number((result as any)[0]?.likeCount || 0);
-    } else {
-      // Just get current count
-      const result = await prisma.$queryRaw`
-        SELECT "likeCount" FROM "Query" WHERE "id" = ${queryId}
-      `;
-      likeCount = Number((result as any)[0]?.likeCount || 0);
-    }
+    const existingLike = await prisma.queryLike.findFirst({
+      where: {
+        userId: userId,
+        queryId: queryId
+      }
+    });
+
+    // Get current like count
+    const query = await prisma.query.findUnique({
+      where: { id: queryId },
+      select: { likeCount: true }
+    });
+
     return NextResponse.json({ 
       success: true, 
-      likeCount,
-      isLiked: like
+      isLiked: !!existingLike,
+      likeCount: query?.likeCount || 0
+    });
+  } catch (error) {
+    console.error('Error fetching like status:', error);
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to fetch like status' }), 
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Await the params object
+    const { id: queryId } = await params;
+    const { like } = await request.json() as LikeRequest;
+    
+    const user = await getAuthUser();
+    if (!user?.userId) {
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+    const userId = user.userId;
+    
+    // Check if already liked
+    const existingLike = await prisma.queryLike.findFirst({
+      where: {
+        userId: userId,
+        queryId: queryId
+      }
+    });
+    
+    let likeCount = 0;
+    let isLiked = false;
+    
+    if (like && !existingLike) {
+      // Add like
+      await prisma.$transaction([
+        prisma.queryLike.create({
+          data: {
+            userId: userId,
+            queryId: queryId
+          }
+        }),
+        prisma.query.update({
+          where: { id: queryId },
+          data: {
+            likeCount: {
+              increment: 1
+            }
+          }
+        })
+      ]);
+      isLiked = true;
+    } else if (!like && existingLike) {
+      // Remove like
+      await prisma.$transaction([
+        prisma.queryLike.deleteMany({
+          where: {
+            userId: userId,
+            queryId: queryId
+          }
+        }),
+        prisma.query.update({
+          where: { id: queryId },
+          data: {
+            likeCount: {
+              decrement: 1
+            }
+          }
+        })
+      ]);
+      isLiked = false;
+    }
+    
+    // Get current state
+    const query = await prisma.query.findUnique({
+      where: { id: queryId },
+      select: { likeCount: true }
+    });
+    
+    likeCount = Math.max(0, query?.likeCount || 0);
+    
+    return NextResponse.json({ 
+      success: true, 
+      isLiked,
+      likeCount
     });
   } catch (error) {
     console.error('Error updating like:', error);
