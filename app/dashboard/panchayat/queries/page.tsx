@@ -77,8 +77,10 @@ export default function ActiveQueriesPage() {
       if (response.ok) {
         const data = await response.json()
         const allQueries = data.queries || []
-        // Filter for active queries (not closed or declined)
-        const activeQueries = allQueries.filter((q: Query) => !["CLOSED", "DECLINED"].includes(q.status))
+        // Only show ACCEPTED queries in the active queries page
+        const activeQueries = allQueries.filter(
+          (q: Query) => q.status === 'ACCEPTED' && q.status !== 'RESOLVED'
+        )
         setQueries(activeQueries)
         setFilteredQueries(activeQueries)
       }
@@ -94,7 +96,7 @@ export default function ActiveQueriesPage() {
 
     setIsUpdating(true)
     try {
-      const response = await fetch(`/api/queries/${selectedQuery.id}/updates`, {
+      const response = await fetch(`/api/queries/${selectedQuery.id}/status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -106,13 +108,14 @@ export default function ActiveQueriesPage() {
       })
 
       if (response.ok) {
-        await fetchQueries()
+        // Close the dialog and refetch queries
         setSelectedQuery(null)
         setUpdateStatus("")
         setUpdateNote("")
+        await fetchQueries() // Refetch to update the list
       }
     } catch (error) {
-      console.error("Failed to update query:", error)
+      console.error("Failed to update status:", error)
     } finally {
       setIsUpdating(false)
     }

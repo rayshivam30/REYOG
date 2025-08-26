@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -221,26 +222,38 @@ export default function AllQueriesPage() {
                       {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
                     </div>
                   </div>
-                  <div className="bg-muted/30 px-4 py-2 border-t border-border flex items-center justify-start gap-6 text-sm">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <ArrowUp className="h-4 w-4" />
-                      <span>{query.upvoteCount ?? 0}</span>
+                  <div className="bg-muted/30 px-4 py-2 border-t border-border flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <ArrowUp className="h-4 w-4" />
+                        <span>{query.upvoteCount ?? 0}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <ThumbsUp className="h-4 w-4" />
+                        <span>{query.likeCount ?? 0}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1.5 h-auto py-1 px-2 text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setViewingCommentsFor(query)
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <span>{query.commentCount ?? 0}</span>
+                      </Button>
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <ThumbsUp className="h-4 w-4" />
-                      <span>{query.likeCount ?? 0}</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-1.5 h-auto py-1 px-2 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setViewingCommentsFor(query)
-                      }}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      asChild
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <MessageSquare className="h-4 w-4" />
-                      <span>{query.commentCount ?? 0}</span>
+                      <Link href={`/dashboard/panchayat/queries/${query.id}`}>
+                        View Details
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -363,7 +376,7 @@ export default function AllQueriesPage() {
                 id="note"
                 placeholder="Provide a reason for declining, waitlisting, or any initial note..."
                 value={updateNote}
-                onChange={(e) => setUpdateNote(e.g.et.value)}
+                onChange={(e) => setUpdateNote(e.target.value)}
               />
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
