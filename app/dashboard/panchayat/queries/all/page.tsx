@@ -260,19 +260,22 @@ export default function AllQueriesPage() {
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">{selectedQuery?.title}</DialogTitle>
-            <DialogDescription className="flex items-center pt-2 gap-4">
+            {/* FIX: Replaced DialogDescription with a div for layout to prevent p > div nesting */}
+            <div className="flex items-center pt-2 gap-4 text-sm">
               <Badge variant="outline">Status: {selectedQuery?.status.replace("_", " ")}</Badge>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground">
                 Submitted on {selectedQuery && new Date(selectedQuery.createdAt).toLocaleString()}
               </span>
-            </DialogDescription>
+            </div>
           </DialogHeader>
 
           <div className="max-h-[65vh] overflow-y-auto p-1 pr-4 my-4 space-y-6">
             {/* Description */}
             <div>
               <h3 className="font-semibold mb-2 text-foreground">Detailed Description</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedQuery?.description}</p>
+              <DialogDescription asChild>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedQuery?.description}</p>
+              </DialogDescription>
             </div>
 
             {/* Details Grid */}
@@ -320,7 +323,7 @@ export default function AllQueriesPage() {
                     Coordinates: {selectedQuery.latitude.toFixed(5)}, {selectedQuery.longitude.toFixed(5)}
                   </p>
                   <a
-                    href={`https://www.google.com/maps?q=${selectedQuery.latitude},${selectedQuery.longitude}`}
+                    href={`http://googleusercontent.com/maps/place/${selectedQuery.latitude},${selectedQuery.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -360,7 +363,7 @@ export default function AllQueriesPage() {
                 id="note"
                 placeholder="Provide a reason for declining, waitlisting, or any initial note..."
                 value={updateNote}
-                onChange={(e) => setUpdateNote(e.target.value)}
+                onChange={(e) => setUpdateNote(e.g.et.value)}
               />
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
