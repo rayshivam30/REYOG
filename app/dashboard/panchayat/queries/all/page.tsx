@@ -15,21 +15,80 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Search, Users, Clock, Inbox, Check, X, Hourglass } from "lucide-react"
+import {
+  Search,
+  Users,
+  Clock,
+  Inbox,
+  Check,
+  X,
+  Hourglass,
+  ArrowUp,
+  ThumbsUp,
+  MessageSquare,
+  MapPin,
+  Building,
+  ClipboardList,
+  Home,
+  File as FileIcon,
+  FileImage,
+  FileText,
+  Download,
+} from "lucide-react"
 
+// Interface for a single comment
+interface Comment {
+  id: string
+  content: string
+  createdAt: string
+  user: {
+    name: string
+  }
+}
+
+// Interface for attachments, matching the submission form
+interface Attachment {
+  url: string
+  filename: string
+  size: number
+  type: string
+}
+
+// Fully updated Query interface
 interface Query {
   id: string
   title: string
   description: string
   status: string
   createdAt: string
+  upvoteCount: number
+  likeCount: number
+  commentCount: number
+  comments: Comment[]
+  wardNumber?: number
+  latitude?: number
+  longitude?: number
+  attachments: Attachment[]
   user: {
     id: string
+    name: string
+  }
+  panchayat?: {
     name: string
   }
   department?: {
     name: string
   }
+  office?: {
+    name: string
+  }
+}
+
+// Helper to get file icons
+const getFileIcon = (fileType: string) => {
+  if (fileType.startsWith("image/")) return <FileImage className="h-5 w-5 flex-shrink-0" />
+  if (fileType === "application/pdf") return <FileText className="h-5 w-5 flex-shrink-0" />
+  return <FileIcon className="h-5 w-5 flex-shrink-0" />
 }
 
 export default function AllQueriesPage() {
@@ -37,7 +96,8 @@ export default function AllQueriesPage() {
   const [filteredQueries, setFilteredQueries] = useState<Query[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null)
+  const [selectedQuery, setSelectedQuery] = useState<Query | null>(null) // For the action dialog
+  const [viewingCommentsFor, setViewingCommentsFor] = useState<Query | null>(null) // For the comments dialog
   const [updateNote, setUpdateNote] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
   const [actionStatus, setActionStatus] = useState<string | null>(null)
@@ -57,7 +117,7 @@ export default function AllQueriesPage() {
   const fetchQueries = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/queries")
+      const response = await fetch("/api/queries") // Assuming API returns all new fields
       if (response.ok) {
         const data = await response.json()
         const allQueries = data.queries || []
@@ -74,8 +134,6 @@ export default function AllQueriesPage() {
 
   const handleStatusUpdate = async (newStatus: string) => {
     if (!selectedQuery) return
-
-    // Making remark mandatory for declining or waitlisting
     if ((newStatus === "DECLINED" || newStatus === "WAITLISTED") && !updateNote.trim()) {
       alert("A remark is required to decline or waitlist a query.")
       return
@@ -95,7 +153,6 @@ export default function AllQueriesPage() {
         setSelectedQuery(null)
         setUpdateNote("")
       } else {
-        console.error("Failed to update status:", await response.text())
         alert("Failed to update query status. Please try again.")
       }
     } catch (error) {
@@ -109,6 +166,7 @@ export default function AllQueriesPage() {
 
   return (
     <div className="p-8">
+      {/* --- Page Header and Search --- */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">All New Queries</h1>
         <p className="text-muted-foreground">Review and take action on newly submitted queries.</p>
@@ -128,6 +186,7 @@ export default function AllQueriesPage() {
         </CardContent>
       </Card>
 
+      {/* --- Queries List --- */}
       <Card>
         <CardHeader>
           <CardTitle>Pending Review ({filteredQueries.length})</CardTitle>
@@ -136,38 +195,53 @@ export default function AllQueriesPage() {
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="animate-pulse p-4 border border-border rounded-lg">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </div>
+                <div key={i} className="animate-pulse bg-muted rounded-lg h-28"></div>
               ))}
             </div>
           ) : filteredQueries.length > 0 ? (
             <div className="space-y-4">
               {filteredQueries.map((query) => (
-                <div
-                  key={query.id}
-                  className="p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => {
-                    setSelectedQuery(query)
-                    setUpdateNote("")
-                  }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium mb-2">{query.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          Anonymous
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(query.createdAt).toLocaleDateString()}
-                        </div>
-                        {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
+                <div key={query.id} className="border border-border rounded-lg overflow-hidden">
+                  <div
+                    className="p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => {
+                      setSelectedQuery(query)
+                      setUpdateNote("")
+                    }}
+                  >
+                    <h4 className="font-medium mb-2">{query.title}</h4>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3" /> Anonymous
                       </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(query.createdAt).toLocaleDateString()}
+                      </div>
+                      {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
                     </div>
+                  </div>
+                  <div className="bg-muted/30 px-4 py-2 border-t border-border flex items-center justify-start gap-6 text-sm">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <ArrowUp className="h-4 w-4" />
+                      <span>{query.upvoteCount ?? 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <ThumbsUp className="h-4 w-4" />
+                      <span>{query.likeCount ?? 0}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center gap-1.5 h-auto py-1 px-2 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setViewingCommentsFor(query)
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      <span>{query.commentCount ?? 0}</span>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -181,49 +255,160 @@ export default function AllQueriesPage() {
         </CardContent>
       </Card>
 
+      {/* --- Dialog for Detailed View & Taking Action --- */}
       <Dialog open={!!selectedQuery} onOpenChange={(isOpen) => !isOpen && setSelectedQuery(null)}>
-        <DialogContent className="sm:max-w-[625px]">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{selectedQuery?.title}</DialogTitle>
-            <DialogDescription className="pt-4 text-base text-foreground/90 whitespace-pre-wrap">
-              {selectedQuery?.description}
+            <DialogTitle className="text-2xl">{selectedQuery?.title}</DialogTitle>
+            <DialogDescription className="flex items-center pt-2 gap-4">
+              <Badge variant="outline">Status: {selectedQuery?.status.replace("_", " ")}</Badge>
+              <span className="text-xs text-muted-foreground">
+                Submitted on {selectedQuery && new Date(selectedQuery.createdAt).toLocaleString()}
+              </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+
+          <div className="max-h-[65vh] overflow-y-auto p-1 pr-4 my-4 space-y-6">
+            {/* Description */}
+            <div>
+              <h3 className="font-semibold mb-2 text-foreground">Detailed Description</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedQuery?.description}</p>
+            </div>
+
+            {/* Details Grid */}
+            <div>
+              <h3 className="font-semibold mb-3 text-foreground">Query Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="flex items-start gap-3">
+                  <Home className="h-4 w-4 mt-1 text-muted-foreground" />
+                  <div>
+                    <span className="font-medium text-foreground">Panchayat</span>
+                    <p className="text-muted-foreground">{selectedQuery?.panchayat?.name ?? "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <ClipboardList className="h-4 w-4 mt-1 text-muted-foreground" />
+                  <div>
+                    <span className="font-medium text-foreground">Ward Number</span>
+                    <p className="text-muted-foreground">{selectedQuery?.wardNumber ?? "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Building className="h-4 w-4 mt-1 text-muted-foreground" />
+                  <div>
+                    <span className="font-medium text-foreground">Department</span>
+                    <p className="text-muted-foreground">{selectedQuery?.department?.name ?? "N/A"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Building className="h-4 w-4 mt-1 text-muted-foreground" />
+                  <div>
+                    <span className="font-medium text-foreground">Specific Office</span>
+                    <p className="text-muted-foreground">{selectedQuery?.office?.name ?? "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Location */}
+            {selectedQuery?.latitude && selectedQuery?.longitude && (
+              <div>
+                <h3 className="font-semibold mb-2 text-foreground">Location</h3>
+                <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                  <MapPin className="h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Coordinates: {selectedQuery.latitude.toFixed(5)}, {selectedQuery.longitude.toFixed(5)}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps?q=${selectedQuery.latitude},${selectedQuery.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm">View on Map</Button>
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Attachments */}
+            {selectedQuery?.attachments && selectedQuery.attachments.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2 text-foreground">Attachments</h3>
+                <div className="space-y-2">
+                  {selectedQuery.attachments.map((file) => (
+                    <a
+                      key={file.url}
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      {getFileIcon(file.type)}
+                      <span className="flex-grow text-sm text-foreground truncate">{file.filename}</span>
+                      <Download className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-col items-stretch gap-4 border-t pt-4">
             <div className="space-y-2">
               <Label htmlFor="note">Add a Remark (Required for Decline/Waitlist)</Label>
               <Textarea
                 id="note"
-                placeholder="Provide a reason for declining, waitlisting, or any initial note for acceptance..."
+                placeholder="Provide a reason for declining, waitlisting, or any initial note..."
                 value={updateNote}
                 onChange={(e) => setUpdateNote(e.target.value)}
               />
             </div>
-          </div>
-          <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-2">
-            <Button variant="outline" onClick={() => setSelectedQuery(null)} disabled={isUpdating}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleStatusUpdate("DECLINED")}
-              disabled={isUpdating}
-            >
-              {actionStatus === "DECLINED" ? "Declining..." : <><X className="h-4 w-4 mr-2" /> Decline</>}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => handleStatusUpdate("WAITLISTED")}
-              disabled={isUpdating}
-            >
-              {actionStatus === "WAITLISTED" ? "Waitlisting..." : <><Hourglass className="h-4 w-4 mr-2" /> Waitlist</>}
-            </Button>
-            <Button onClick={() => handleStatusUpdate("ACCEPTED")} disabled={isUpdating}>
-              {actionStatus === "ACCEPTED" ? "Accepting..." : <><Check className="h-4 w-4 mr-2" /> Accept</>}
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
+              <Button variant="outline" onClick={() => setSelectedQuery(null)} disabled={isUpdating}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={() => handleStatusUpdate("DECLINED")} disabled={isUpdating}>
+                {actionStatus === "DECLINED" ? "Declining..." : <><X className="h-4 w-4 mr-2" /> Decline</>}
+              </Button>
+              <Button variant="secondary" onClick={() => handleStatusUpdate("WAITLISTED")} disabled={isUpdating}>
+                {actionStatus === "WAITLISTED" ? "Waitlisting..." : <><Hourglass className="h-4 w-4 mr-2" /> Waitlist</>}
+              </Button>
+              <Button onClick={() => handleStatusUpdate("ACCEPTED")} disabled={isUpdating}>
+                {actionStatus === "ACCEPTED" ? "Accepting..." : <><Check className="h-4 w-4 mr-2" /> Accept</>}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* --- Dialog for Viewing Comments (Unchanged) --- */}
+      <Dialog open={!!viewingCommentsFor} onOpenChange={() => setViewingCommentsFor(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Comments</DialogTitle>
+            <DialogDescription>For query: "{viewingCommentsFor?.title}"</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-4 p-1 my-4">
+            {viewingCommentsFor?.comments && viewingCommentsFor.comments.length > 0 ? (
+              viewingCommentsFor.comments.map((comment) => (
+                <div key={comment.id} className="p-3 bg-muted/50 rounded-lg text-sm">
+                  <p className="text-foreground">{comment.content}</p>
+                  <div className="text-xs text-muted-foreground mt-2 flex justify-between items-center">
+                    <span>- {comment.user.name ?? "Anonymous"}</span>
+                    <span>{new Date(comment.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6">
+                <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">No comments yet.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }
