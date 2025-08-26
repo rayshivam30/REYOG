@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -7,7 +6,19 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SOSModal } from "@/components/sos-modal"
-import { Building2, FileText, MapPin, Star, MessageSquare, BarChart3, Users, Bell, Phone, Home, X } from "lucide-react"
+import {
+  Building2,
+  FileText,
+  MapPin,
+  Star,
+  MessageSquare,
+  BarChart3,
+  Users,
+  Bell,
+  Home,
+  X,
+  Inbox, // Using Inbox icon for new queries
+} from "lucide-react"
 import type { UserRole } from "@prisma/client"
 
 interface SidebarProps {
@@ -29,6 +40,7 @@ const voterNavItems = [
 
 const panchayatNavItems = [
   { href: "/dashboard/panchayat", label: "Dashboard", icon: Home },
+  { href: "/dashboard/panchayat/queries/all", label: "All Queries", icon: Inbox }, // New link added
   { href: "/dashboard/panchayat/queries", label: "Active Queries", icon: FileText },
   { href: "/dashboard/panchayat/queries/past", label: "Past Queries", icon: BarChart3 },
   { href: "/dashboard/panchayat/queries/waitlist", label: "Waitlist", icon: FileText },
@@ -71,10 +83,7 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
           <span className="text-xl font-bold text-sidebar-foreground">ReYog</span>
         </Link>
         {/* Close button for mobile */}
-        <button
-          className="md:hidden p-1 rounded-md text-sidebar-foreground"
-          onClick={() => setIsSidebarOpen(false)}
-        >
+        <button className="md:hidden p-1 rounded-md text-sidebar-foreground" onClick={() => setIsSidebarOpen(false)}>
           <X className="h-6 w-6" />
         </button>
       </div>
