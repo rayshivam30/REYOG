@@ -107,7 +107,7 @@ export default function ServiceStatsPage() {
   }
 
   return (
-  
+    <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -252,6 +252,6 @@ export default function ServiceStatsPage() {
           </Card>
         )}
       </div>
- 
+    </DashboardLayout>
   )
 }
