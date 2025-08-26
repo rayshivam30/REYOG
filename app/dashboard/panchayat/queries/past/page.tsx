@@ -8,9 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search, Eye, Clock, CheckCircle, AlertCircle, Users, MessageSquareText, FileText } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { 
+  Search, Eye, Clock, CheckCircle, AlertCircle, Users, MessageSquareText, FileText, ThumbsUp, ArrowUpCircle, MessageCircle 
+} from "lucide-react"
 
-// **MODIFICATION: Added QueryUpdate interface**
+// **MODIFICATION: Added interfaces for comments and their users**
+interface CommentUser {
+  name: string;
+}
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: CommentUser;
+}
+
 interface QueryUpdate {
   note: string | null
   status: string | null
@@ -24,17 +37,12 @@ interface Query {
   status: string
   createdAt: string
   resolvedAt?: string
-  budgetIssued?: number
-  budgetSpent: number
-  officialIncharge?: string
-  user: {
-    name: string
-  }
-  department?: {
-    name: string
-  }
-  // **MODIFICATION: Added updates array to Query interface**
+  // **MODIFICATION: Added fields for counts and comments**
+  upvoteCount: number
+  likeCount: number
+  commentCount: number
   updates?: QueryUpdate[]
+  comments?: Comment[]
 }
 
 export default function PastQueriesPage() {
@@ -43,7 +51,6 @@ export default function PastQueriesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  // **MODIFICATION: Added state for the selected query to show in the dialog**
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null)
 
   useEffect(() => {
@@ -51,24 +58,23 @@ export default function PastQueriesPage() {
   }, [])
 
   useEffect(() => {
-    let filtered = queries
+    let filtered = queries;
     if (searchTerm) {
       filtered = filtered.filter(
         (query) =>
-          query.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          query.user.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+          query.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     if (statusFilter !== "all") {
-      filtered = filtered.filter((query) => query.status === statusFilter)
+      filtered = filtered.filter((query) => query.status === statusFilter);
     }
-    setFilteredQueries(filtered)
-  }, [queries, searchTerm, statusFilter])
+    setFilteredQueries(filtered);
+  }, [queries, searchTerm, statusFilter]);
+
 
   const fetchQueries = async () => {
     setIsLoading(true)
     try {
-      // Make sure your API at `/api/queries` includes the `updates` relation
       const response = await fetch("/api/queries")
       if (response.ok) {
         const data = await response.json()
@@ -84,12 +90,10 @@ export default function PastQueriesPage() {
     }
   }
   
-  // Helper to find the final remark
   const getFinalRemark = (query: Query | null) => {
     if (!query || !query.updates || query.updates.length === 0) {
       return "No remark provided."
     }
-    // Find the last update that matches the final status and has a note
     const finalUpdate = [...query.updates].reverse().find(
       (update) => update.status === query.status && update.note
     )
@@ -117,7 +121,7 @@ export default function PastQueriesPage() {
       <div className="p-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Past Queries</h1>
-          <p className="text-muted-foreground">Review resolved and declined queries submitted to your panchayat</p>
+          <p className="text-muted-foreground">Review resolved and declined queries from your panchayat</p>
         </div>
 
         <Card className="mb-6">
@@ -127,7 +131,7 @@ export default function PastQueriesPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search queries or submitter name..."
+                    placeholder="Search by query title..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -181,7 +185,6 @@ export default function PastQueriesPage() {
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
-                        {/* **MODIFICATION: "View" button now triggers the dialog** */}
                         <DialogTrigger asChild>
                           <Button size="sm" variant="outline" onClick={() => setSelectedQuery(query)}>
                             <Eye className="h-4 w-4 mr-1" />
@@ -190,13 +193,21 @@ export default function PastQueriesPage() {
                         </DialogTrigger>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {query.user.name}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {/* **MODIFICATION: Name is now anonymized** */}
+                          A Local Resident
+                        </div>
+                        <span>Submitted: {new Date(query.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <span>Submitted: {new Date(query.createdAt).toLocaleDateString()}</span>
-                      {query.resolvedAt && <span>Closed On: {new Date(query.resolvedAt).toLocaleDateString()}</span>}
+                       {/* **MODIFICATION: Engagement counts on main card** */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1"><ArrowUpCircle className="h-4 w-4"/>{query.upvoteCount}</div>
+                        <div className="flex items-center gap-1"><ThumbsUp className="h-4 w-4"/>{query.likeCount}</div>
+                        <div className="flex items-center gap-1"><MessageCircle className="h-4 w-4"/>{query.commentCount}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -210,37 +221,63 @@ export default function PastQueriesPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* **MODIFICATION: Added Dialog Content to display query details** */}
-      <DialogContent className="sm:max-w-lg">
+      
+      <DialogContent className="sm:max-w-2xl">
         {selectedQuery && (
           <>
             <DialogHeader>
               <DialogTitle className="text-xl">{selectedQuery.title}</DialogTitle>
               <DialogDescription>
-                Submitted by {selectedQuery.user.name} on {new Date(selectedQuery.createdAt).toLocaleDateString()}
+                {/* **MODIFICATION: Anonymized submitter in dialog** */}
+                Submitted by a local resident on {new Date(selectedQuery.createdAt).toLocaleDateString()}
               </DialogDescription>
+              {/* **MODIFICATION: Engagement counts in dialog** */}
+              <div className="flex items-center gap-4 pt-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5"><ArrowUpCircle className="h-4 w-4"/>{selectedQuery.upvoteCount} Upvotes</div>
+                <div className="flex items-center gap-1.5"><ThumbsUp className="h-4 w-4"/>{selectedQuery.likeCount} Likes</div>
+                <div className="flex items-center gap-1.5"><MessageCircle className="h-4 w-4"/>{selectedQuery.comments?.length || 0} Comments</div>
+              </div>
             </DialogHeader>
-            <div className="mt-4 space-y-6">
-              <div>
-                <h3 className="font-semibold text-foreground mb-2 flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Full Description
-                </h3>
-                <ScrollArea className="h-32 w-full rounded-md border p-4 text-sm text-muted-foreground">
-                  {selectedQuery.description}
-                </ScrollArea>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground mb-2 flex items-center">
-                  <MessageSquareText className="h-4 w-4 mr-2" />
-                  Authority's Remark
-                </h3>
-                <div className="w-full rounded-md border bg-muted/50 p-4 text-sm text-foreground">
-                  <p className="italic">{getFinalRemark(selectedQuery)}</p>
+
+            <ScrollArea className="max-h-[70vh] pr-6">
+              <div className="mt-4 space-y-6">
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2 flex items-center"><FileText className="h-4 w-4 mr-2" />Full Description</h3>
+                  <div className="w-full rounded-md border p-4 text-sm text-muted-foreground bg-background">
+                    {selectedQuery.description}
+                  </div>
                 </div>
+
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2 flex items-center"><MessageSquareText className="h-4 w-4 mr-2" />Authority's Remark</h3>
+                  <div className="w-full rounded-md border bg-muted/50 p-4 text-sm text-foreground">
+                    <p className="italic">{getFinalRemark(selectedQuery)}</p>
+                  </div>
+                </div>
+
+                <Separator />
+                
+                {/* **MODIFICATION: Added Comments Section** */}
+                <div>
+                  <h3 className="font-semibold text-foreground mb-4 flex items-center"><MessageCircle className="h-4 w-4 mr-2" />Community Discussion</h3>
+                  <div className="space-y-4">
+                    {selectedQuery.comments && selectedQuery.comments.length > 0 ? (
+                      selectedQuery.comments.map((comment) => (
+                        <div key={comment.id} className="p-3 border rounded-lg bg-background">
+                          <p className="text-sm text-foreground">{comment.content}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            - A Resident on {new Date(comment.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No comments on this query yet.</p>
+                    )}
+                  </div>
+                </div>
+
               </div>
-            </div>
+            </ScrollArea>
           </>
         )}
       </DialogContent>
