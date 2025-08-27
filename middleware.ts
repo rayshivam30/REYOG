@@ -12,12 +12,14 @@ export async function middleware(request: NextRequest) {
     "/offices", 
     "/auth/login", 
     "/auth/register",
-    "/api/panchayats"
+    "/api/panchayats",
+    "/api/uploads"  // Add uploads to public routes since we handle auth in the route
   ]
   const isPublicRoute = publicRoutes.some((route) => 
     pathname === route || 
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/panchayats")
+    pathname.startsWith("/api/panchayats") ||
+    pathname.startsWith("/api/uploads")  // Also check for uploads path
   )
 
   if (isPublicRoute) {
@@ -46,7 +48,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // API route protection
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth") && !pathname.startsWith("/api/panchayats")) {
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth") && !pathname.startsWith("/api/panchayats") && !pathname.startsWith("/api/uploads")) {
     // Add user info to headers for API routes
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set("x-user-id", user.userId)

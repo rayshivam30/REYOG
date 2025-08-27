@@ -17,6 +17,7 @@ import { createQuerySchema } from "@/lib/validations"
 import { MapPin } from "lucide-react"
 import type { z } from "zod"
 import { useAuth } from "@/lib/auth-context"
+import { FileText, Image as ImageIcon, X } from "lucide-react"
 
 type QueryFormData = z.infer<typeof createQuerySchema>
 
@@ -45,18 +46,26 @@ interface UploadedFile {
   size: number
   type: string
   url: string
+  publicId: string
 }
 
 export function QueryForm() {
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [panchayats, setPanchayats] = useState<Panchayat[]>([])
-  const [offices, setOffices] = useState<Office[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [selectedDepartment, setSelectedDepartment] = useState("default")
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [attachments, setAttachments] = useState<UploadedFile[]>([])
+  const [attachments, setAttachments] = useState<Array<{
+    id: string
+    url: string
+    filename: string
+    type: string
+    size: number
+    publicId: string
+  }>>([])
   const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [offices, setOffices] = useState<Office[]>([])
+  const [panchayats, setPanchayats] = useState<Panchayat[]>([])
   const { user } = useAuth()
   const router = useRouter()
 
@@ -77,12 +86,38 @@ export function QueryForm() {
   const watchedDepartmentId = watch("departmentId")
 
   useEffect(() => {
-    // Fetch departments
-    fetch("/api/departments")
-      .then((res) => res.json())
-      .then((data) => setDepartments(data.departments || []))
-      .catch((err) => console.error("Failed to fetch departments:", err))
+    const fetchDepartments = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/departments');
+        if (!response.ok) {
+          throw new Error('Failed to fetch departments');
+        }
+        const data = await response.json();
+        setDepartments(data.departments || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load departments');
+        console.error('Error fetching departments:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (watchedDepartmentId && departments.length > 0) {
+      const selectedDept = departments.find(dept => dept.id === watchedDepartmentId);
+      if (selectedDept) {
+        setOffices(selectedDept.offices || []);
+      }
+    } else {
+      setOffices([]);
+    }
+  }, [watchedDepartmentId, departments]);
+
+  useEffect(() => {
     // Fetch panchayats
     fetch("/api/panchayats")
       .then((res) => res.json())
@@ -96,21 +131,6 @@ export function QueryForm() {
       })
       .catch((err) => console.error("Failed to fetch panchayats:", err))
   }, [user, setValue])
-
-  useEffect(() => {
-    // Fetch offices when department changes
-    if (watchedDepartmentId) {
-      const dept = departments.find((d) => d.id === watchedDepartmentId)
-      if (dept) {
-        fetch(`/api/offices?dept=${encodeURIComponent(dept.name)}`)
-          .then((res) => res.json())
-          .then((data) => setOffices(data.offices || []))
-          .catch((err) => console.error("Failed to fetch offices:", err))
-      }
-    } else {
-      setOffices([])
-    }
-  }, [watchedDepartmentId, departments])
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -140,18 +160,30 @@ export function QueryForm() {
     setValue("longitude", selectedLocation.lng)
   }
 
+  const handleFilesChange = (files: Array<{
+    id: string
+    url: string
+    filename: string
+    type: string
+    size: number
+    publicId: string
+  }>) => {
+    setAttachments(files)
+  }
+
   const onSubmit = async (data: QueryFormData) => {
     setIsLoading(true)
-    setError("")
+    setError(null)
 
     try {
       const queryData = {
         ...data,
         attachments: attachments.map((file) => ({
-          filename: file.name,
           url: file.url,
-          size: file.size,
+          filename: file.filename,
           type: file.type,
+          size: file.size,
+          publicId: file.publicId,
         })),
       }
 
@@ -327,14 +359,61 @@ export function QueryForm() {
             <p className="text-xs text-muted-foreground">Adding your location helps us route your query to the nearest office</p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Attachments (Optional)</Label>
-            <FileUpload
-              onFilesChange={setAttachments}
-              maxFiles={5}
-              maxSize={10}
-              acceptedTypes={["image/*", "application/pdf", ".doc", ".docx"]}
-            />
+          <div className="space-y-4">
+            <div>
+              <Label>Attachments (Optional)</Label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Upload supporting documents or images (max 10MB each)
+              </p>
+              <FileUpload
+                onFilesChange={handleFilesChange}
+                maxFiles={5}
+                maxSize={10}
+                acceptedTypes={["image/*", "application/pdf", ".doc", ".docx", ".xls", ".xlsx"]}
+              />
+            </div>
+
+            {/* Attachments Preview */}
+            {attachments.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Attachments ({attachments.length}/5)</p>
+                <div className="space-y-2">
+                  {attachments.map((file) => (
+                    <div 
+                      key={file.id}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-md bg-white border">
+                          {file.type.startsWith('image/') ? (
+                            <ImageIcon className="h-5 w-5 text-blue-500" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-blue-500" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{file.filename}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => {
+                          setAttachments(attachments.filter((f) => f.id !== file.id))
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4">
