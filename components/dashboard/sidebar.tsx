@@ -17,7 +17,8 @@ import {
   Bell,
   Home,
   X,
-  Inbox, // Using Inbox icon for new queries
+  Inbox,
+  User, // Added User icon for profile
 } from "lucide-react"
 import type { UserRole } from "@prisma/client"
 
@@ -31,6 +32,7 @@ interface SidebarProps {
 
 const voterNavItems = [
   { href: "/dashboard/voter", label: "Dashboard", icon: Home },
+  { href: "/dashboard/voter/profile", label: "My Profile", icon: User }, // Added profile link
   { href: "/dashboard/voter/queries", label: "All Queries", icon: FileText },
   { href: "/dashboard/voter/queries/new", label: "Raise Query", icon: FileText },
   { href: "/dashboard/voter/location", label: "Location Tracker", icon: MapPin },

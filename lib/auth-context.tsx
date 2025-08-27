@@ -10,10 +10,12 @@ interface User {
   email: string
   name: string
   role: UserRole
+  phone?: string
   panchayat?: {
     id: string
     name: string
   }
+  wardNumber?: number
 }
 
 interface AuthContextType {

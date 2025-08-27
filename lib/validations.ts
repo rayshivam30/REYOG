@@ -12,6 +12,8 @@ export const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().optional(),
+  panchayatId: z.string().min(1, "Please select a Panchayat"),
+  wardNumber: z.number().int().min(1, "Ward number must be a positive integer"),
 })
 
 // Query schemas
@@ -106,6 +108,15 @@ export const createUserSchema = z.object({
   phone: z.string().optional(),
   role: z.nativeEnum(UserRole),
   panchayatId: z.string().optional(),
+})
+
+// User update schema
+export const updateUserSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  phone: z.string().optional(),
+  panchayatId: z.string().min(1, "Please select a Panchayat").optional(),
+  wardNumber: z.number().int().min(1, "Ward number must be a positive integer").optional(),
 })
 
 // NGO schema

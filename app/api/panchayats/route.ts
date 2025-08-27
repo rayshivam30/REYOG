@@ -1,23 +1,52 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
+    console.log("Fetching panchayats from database...")
     const panchayats = await prisma.panchayat.findMany({
       select: {
         id: true,
         name: true,
+        district: true,
+        state: true,
       },
-      orderBy: {
-        name: "asc",
-      },
-    });
-    return NextResponse.json({ panchayats });
+      orderBy: [
+        {
+          state: 'asc',
+        },
+        {
+          district: 'asc',
+        },
+        {
+          name: 'asc',
+        },
+      ],
+    })
+
+    console.log(`Found ${panchayats.length} panchayats`)
+    
+    // Set the content type explicitly
+    const response = NextResponse.json(panchayats)
+    response.headers.set('Content-Type', 'application/json')
+    
+    return response
   } catch (error) {
-    console.error("Failed to fetch panchayats:", error);
+    console.error("Error in panchayats API:", error)
     return NextResponse.json(
-      { error: { message: "An error occurred while fetching panchayats" } },
-      { status: 500 }
-    );
+      { 
+        error: { 
+          code: "INTERNAL_ERROR", 
+          message: "Failed to fetch panchayats",
+          details: error instanceof Error ? error.message : String(error)
+        } 
+      },
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      },
+    )
   }
 }

@@ -44,7 +44,9 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.name,
         role: user.role,
+        phone: user.phone || undefined,
         panchayat: user.panchayat,
+        wardNumber: user.wardNumber || undefined,
       },
     })
   } catch (error) {
