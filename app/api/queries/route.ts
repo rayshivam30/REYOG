@@ -210,6 +210,7 @@
 //     )
 //   }
 // }
+
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createQuerySchema } from "@/lib/validations"
@@ -230,6 +231,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status")
     const limit = Number.parseInt(searchParams.get("limit") || "50")
     const offset = Number.parseInt(searchParams.get("offset") || "0")
+    
+    // --- NEW LINE ADDED ---
+    // Get the panchayat filter ID from the dashboard's dropdown
+    const panchayatFilterId = searchParams.get("panchayatId")
 
     const whereClause: any = {}
 
@@ -237,6 +242,13 @@ export async function GET(request: NextRequest) {
       whereClause.userId = userId
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
       whereClause.panchayatId = panchayatId
+    }
+
+    // --- NEW LOGIC BLOCK ADDED ---
+    // If an admin is using the filter, add it to the where clause.
+    // This doesn't affect the rules for VOTER or PANCHAYAT roles.
+    if (userRole === UserRole.ADMIN && panchayatFilterId && panchayatFilterId !== "all") {
+      whereClause.panchayatId = panchayatFilterId
     }
 
     if (status) {
