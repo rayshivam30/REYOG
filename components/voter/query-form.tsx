@@ -176,8 +176,16 @@ export function QueryForm() {
     setError(null)
 
     try {
+      // Get the selected panchayat's name
+      const selectedPanchayat = panchayats.find(p => p.id === data.panchayatId);
+      
+      if (!selectedPanchayat) {
+        throw new Error('Please select a valid panchayat');
+      }
+
       const queryData = {
         ...data,
+        panchayatName: selectedPanchayat.name, // Add panchayatName to the request
         attachments: attachments.map((file) => ({
           url: file.url,
           filename: file.filename,

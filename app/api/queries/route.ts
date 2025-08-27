@@ -102,12 +102,28 @@ export async function POST(request: NextRequest) {
     const data = await request.json()
     const { attachments = [], ...queryData } = data
 
-    const { title, description, panchayatName, departmentId, officeId, latitude, longitude } =
+    const { title, description, panchayatName, panchayatId: panchayatIdFromRequest, departmentId, officeId, latitude, longitude } =
       createQuerySchema.parse(queryData)
 
-    // Find or create panchayat
-    let panchayatId: string
-    if (panchayatName) {
+    // Get user to get ward number
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { wardNumber: true, panchayatId: true }
+    });
+
+    // Use the user's panchayatId if not provided in the request
+    const panchayatId = panchayatIdFromRequest || user?.panchayatId;
+
+    if (!panchayatId && !panchayatName) {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "Panchayat information is required" } },
+        { status: 400 }
+      )
+    }
+
+    // Find or create panchayat if only name is provided
+    let finalPanchayatId = panchayatId;
+    if (!finalPanchayatId && panchayatName) {
       const existingPanchayat = await prisma.panchayat.findFirst({
         where: {
           name: {
@@ -118,7 +134,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (existingPanchayat) {
-        panchayatId = existingPanchayat.id
+        finalPanchayatId = existingPanchayat.id;
       } else {
         const newPanchayat = await prisma.panchayat.create({
           data: {
@@ -128,16 +144,11 @@ export async function POST(request: NextRequest) {
             pincode: "000000",
           },
         })
-        panchayatId = newPanchayat.id
+        finalPanchayatId = newPanchayat.id;
       }
-    } else {
-      return NextResponse.json(
-        { error: { code: "VALIDATION_ERROR", message: "Panchayat name is required" } },
-        { status: 400 }
-      )
     }
 
-    // Create the query
+    // Create the query with the user's ward number
     const newQuery = await prisma.query.create({
       data: {
         title,
@@ -145,10 +156,11 @@ export async function POST(request: NextRequest) {
         userId,
         departmentId,
         officeId,
-        panchayatId,
+        panchayatId: finalPanchayatId,
         latitude,
         longitude,
         status: 'PENDING_REVIEW',
+        wardNumber: user?.wardNumber || 1, // Use user's ward number or default to 1
       },
       include: {
         user: {
@@ -184,11 +196,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Notify panchayat users
-    if (panchayatId) {
+    if (finalPanchayatId) {
       const panchayatUsers = await prisma.user.findMany({
         where: {
           role: UserRole.PANCHAYAT,
-          panchayatId,
+          panchayatId: finalPanchayatId,
         },
       })
 
