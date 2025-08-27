@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status")
     const limit = Number.parseInt(searchParams.get("limit") || "50")
     const offset = Number.parseInt(searchParams.get("offset") || "0")
+    const panchayatFilterId = searchParams.get("panchayatId")
 
     const whereClause: any = {}
 
@@ -25,6 +26,10 @@ export async function GET(request: NextRequest) {
       whereClause.userId = userId
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
       whereClause.panchayatId = panchayatId
+    }
+
+    if (userRole === UserRole.ADMIN && panchayatFilterId && panchayatFilterId !== "all") {
+      whereClause.panchayatId = panchayatFilterId
     }
 
     if (status) {
@@ -98,21 +103,70 @@ export async function POST(request: NextRequest) {
     const data = await request.json()
     const { attachments = [], ...queryData } = data
 
-    // Create the query first without attachments
+    const { title, description, panchayatName, departmentId, officeId, latitude, longitude } =
+      createQuerySchema.parse(queryData)
+
+    // Find or create panchayat
+    let panchayatId: string
+    if (panchayatName) {
+      const existingPanchayat = await prisma.panchayat.findFirst({
+        where: {
+          name: {
+            equals: panchayatName,
+            mode: "insensitive",
+          },
+        },
+      })
+
+      if (existingPanchayat) {
+        panchayatId = existingPanchayat.id
+      } else {
+        const newPanchayat = await prisma.panchayat.create({
+          data: {
+            name: panchayatName,
+            district: "Not Specified",
+            state: "Not Specified",
+            pincode: "000000",
+          },
+        })
+        panchayatId = newPanchayat.id
+      }
+    } else {
+      return NextResponse.json(
+        { error: { code: "VALIDATION_ERROR", message: "Panchayat name is required" } },
+        { status: 400 }
+      )
+    }
+
+    // Create the query
     const newQuery = await prisma.query.create({
       data: {
-        ...queryData,
-        userId: userId,
-        // Set default values for required fields if not provided
-        status: queryData.status || 'PENDING_REVIEW',
-        description: queryData.description || '',
-        title: queryData.title || 'Untitled Query'
-      }
+        title,
+        description,
+        userId,
+        departmentId,
+        officeId,
+        panchayatId,
+        latitude,
+        longitude,
+        status: 'PENDING_REVIEW',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        department: true,
+        office: true,
+        panchayat: true,
+      },
     })
 
-    // Create attachments in a separate operation if they exist
+    // Handle attachments if any
     if (attachments?.length > 0) {
-      // Process attachments in batches to avoid overwhelming the database
       const BATCH_SIZE = 5
       for (let i = 0; i < attachments.length; i += BATCH_SIZE) {
         const batch = attachments.slice(i, i + BATCH_SIZE)
@@ -130,13 +184,51 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return a simplified response with just the essential data
+    // Notify panchayat users
+    if (panchayatId) {
+      const panchayatUsers = await prisma.user.findMany({
+        where: {
+          role: UserRole.PANCHAYAT,
+          panchayatId,
+        },
+      })
+
+      await Promise.all(
+        panchayatUsers.map((panchayatUser) =>
+          prisma.notification.create({
+            data: {
+              title: "New Query Submitted",
+              message: `A new query "${title}" has been submitted and requires review.`,
+              type: "query_created",
+              userId: panchayatUser.id,
+              queryId: newQuery.id,
+              metadata: {
+                queryId: newQuery.id,
+                submittedBy: newQuery.user.name,
+              } as any,
+            },
+          })
+        )
+      )
+    }
+
+    // Create audit log
+    await prisma.auditLog.create({
+      data: {
+        action: "query_created",
+        details: `Query "${title}" created`,
+        userId,
+        metadata: {
+          queryId: newQuery.id,
+          title,
+          department: newQuery.department?.name,
+        } as any,
+      },
+    })
+
+    // Return the created query with attachment count
     return NextResponse.json({
-      id: newQuery.id,
-      title: newQuery.title,
-      status: newQuery.status,
-      createdAt: newQuery.createdAt,
-      // Include attachment count instead of full attachment data
+      ...newQuery,
       _count: {
         attachments: attachments.length
       }
@@ -146,17 +238,12 @@ export async function POST(request: NextRequest) {
     console.error("Query creation error:", error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: { code: "BAD_REQUEST", issues: error.issues } }, 
+        { error: { code: "VALIDATION_ERROR", issues: error.issues } }, 
         { status: 400 }
       )
     }
     return NextResponse.json(
-      { 
-        error: { 
-          code: "INTERNAL_ERROR", 
-          message: error instanceof Error ? error.message : "An error occurred while creating the query" 
-        } 
-      }, 
+      { error: { code: "INTERNAL_ERROR", message: "An error occurred while creating query" } },
       { status: 500 }
     )
   }
