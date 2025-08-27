@@ -16,6 +16,7 @@ import { LocationPicker } from "@/components/maps/location-picker"
 import { createQuerySchema } from "@/lib/validations"
 import { MapPin } from "lucide-react"
 import type { z } from "zod"
+import { useAuth } from "@/lib/auth-context"
 
 type QueryFormData = z.infer<typeof createQuerySchema>
 
@@ -56,6 +57,7 @@ export function QueryForm() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const { user } = useAuth()
   const router = useRouter()
 
   const {
@@ -66,6 +68,10 @@ export function QueryForm() {
     formState: { errors },
   } = useForm<QueryFormData>({
     resolver: zodResolver(createQuerySchema),
+    defaultValues: {
+      panchayatId: user?.panchayat?.id || "",
+      wardNumber: user?.wardNumber || 1,
+    },
   })
 
   const watchedDepartmentId = watch("departmentId")
@@ -80,9 +86,16 @@ export function QueryForm() {
     // Fetch panchayats
     fetch("/api/panchayats")
       .then((res) => res.json())
-      .then((data) => setPanchayats(data.panchayats || []))
+      .then((data) => {
+        setPanchayats(Array.isArray(data) ? data : [])
+
+        // If user has a panchayat, set it in the form
+        if (user?.panchayat?.id) {
+          setValue("panchayatId", user.panchayat.id)
+        }
+      })
       .catch((err) => console.error("Failed to fetch panchayats:", err))
-  }, [])
+  }, [user, setValue])
 
   useEffect(() => {
     // Fetch offices when department changes
@@ -200,10 +213,14 @@ export function QueryForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="panchayatId">Panchayat *</Label>
-              <Select onValueChange={(value) => setValue("panchayatId", value)} value={watch("panchayatId")}>
+              <Label htmlFor="panchayatId">Panchayat</Label>
+              <Select 
+                value={user?.panchayat?.id ? user.panchayat.id : undefined} 
+                onValueChange={(value) => setValue("panchayatId", value)}
+                disabled={!!user?.panchayat?.id}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select your Panchayat" />
+                  <SelectValue placeholder="Select panchayat" />
                 </SelectTrigger>
                 <SelectContent>
                   {panchayats.map((panchayat) => (
@@ -213,18 +230,35 @@ export function QueryForm() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.panchayatId && <p className="text-sm text-destructive">{errors.panchayatId.message}</p>}
+              {user?.panchayat?.id && (
+                <p className="text-xs text-muted-foreground">
+                  Your panchayat is set based on your profile
+                </p>
+              )}
+              {errors.panchayatId && (
+                <p className="text-sm text-destructive">{errors.panchayatId.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="wardNumber">Ward Number *</Label>
+              <Label htmlFor="wardNumber">Ward Number</Label>
               <Input
                 id="wardNumber"
                 type="number"
-                placeholder="Enter your ward number"
+                min="1"
+                placeholder="Enter ward number"
                 {...register("wardNumber", { valueAsNumber: true })}
+                defaultValue={user?.wardNumber || 1}
+                disabled={!!user?.wardNumber}
               />
-              {errors.wardNumber && <p className="text-sm text-destructive">{errors.wardNumber.message}</p>}
+              {user?.wardNumber && (
+                <p className="text-xs text-muted-foreground">
+                  Your ward number is set based on your profile
+                </p>
+              )}
+              {errors.wardNumber && (
+                <p className="text-sm text-destructive">{errors.wardNumber.message}</p>
+              )}
             </div>
           </div>
 

@@ -7,7 +7,7 @@ import { UserRole } from "@prisma/client"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, password, phone } = registerSchema.parse(body)
+    const { name, email, password, phone, panchayatId, wardNumber } = registerSchema.parse(body)
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -21,6 +21,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if panchayat exists
+    const panchayat = await prisma.panchayat.findUnique({
+      where: { id: panchayatId },
+    })
+
+    if (!panchayat) {
+      return NextResponse.json(
+        { error: { code: "INVALID_PANCHAYAT", message: "Selected panchayat does not exist" } },
+        { status: 400 },
+      )
+    }
+
     // Hash password
     const hashedPassword = await hashPassword(password)
 
@@ -30,8 +42,25 @@ export async function POST(request: NextRequest) {
         name,
         email,
         password: hashedPassword,
-        phone,
-        role: UserRole.VOTER,
+        phone: phone || null,
+        role: "VOTER",
+        panchayat: panchayatId ? {
+          connect: { id: panchayatId }
+        } : undefined,
+        wardNumber: wardNumber || 1,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        panchayat: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        wardNumber: true,
       },
     })
 
@@ -40,6 +69,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      panchayatId: user.panchayatId,
     })
 
     return NextResponse.json({
@@ -48,6 +78,8 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.name,
         role: user.role,
+        panchayatId: user.panchayatId,
+        wardNumber: user.wardNumber,
       },
     })
   } catch (error) {

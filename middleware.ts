@@ -7,8 +7,18 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/", "/offices", "/auth/login", "/auth/register"]
-  const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith("/api/auth"))
+  const publicRoutes = [
+    "/", 
+    "/offices", 
+    "/auth/login", 
+    "/auth/register",
+    "/api/panchayats"
+  ]
+  const isPublicRoute = publicRoutes.some((route) => 
+    pathname === route || 
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/panchayats")
+  )
 
   if (isPublicRoute) {
     return NextResponse.next()
@@ -36,7 +46,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // API route protection
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/auth") && !pathname.startsWith("/api/panchayats")) {
     // Add user info to headers for API routes
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set("x-user-id", user.userId)
