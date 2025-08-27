@@ -1,8 +1,7 @@
 // app/api/users/route.ts
 import { NextResponse } from "next/server"
-import { PrismaClient, UserRole } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { prisma } from "@/lib/prisma"
+import { UserRole } from "@prisma/client"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
