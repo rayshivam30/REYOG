@@ -1,3 +1,4 @@
+// app/api/panchayats/route.ts (Updated to add user count)
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
@@ -6,10 +7,17 @@ export async function GET() {
     console.log("Fetching panchayats from database...")
     const panchayats = await prisma.panchayat.findMany({
       select: {
+        // --- Existing fields (unchanged) ---
         id: true,
         name: true,
         district: true,
         state: true,
+
+        // --- New field ADDED ---
+        // This will count the number of related users for each panchayat
+        _count: {
+          select: { users: true },
+        },
       },
       orderBy: [
         {
@@ -24,9 +32,8 @@ export async function GET() {
       ],
     })
 
-    console.log(`Found ${panchayats.length} panchayats`)
+    console.log(`Found ${panchayats.length} panchayats with user counts`)
     
-    // Set the content type explicitly
     const response = NextResponse.json(panchayats)
     response.headers.set('Content-Type', 'application/json')
     

@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
       whereClause.panchayatId = panchayatId
     }
-
     if (userRole === UserRole.ADMIN && panchayatFilterId && panchayatFilterId !== "all") {
       whereClause.panchayatId = panchayatFilterId
     }
