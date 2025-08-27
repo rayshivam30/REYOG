@@ -1,9 +1,28 @@
 import { PrismaClient } from "@prisma/client"
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+const prisma = global.prisma || new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  datasources: {
+    db: {
+      // Configure connection pool settings
+      url: process.env.DATABASE_URL,
+    },
+  },
+  // Configure transaction options
+  transactionOptions: {
+    maxWait: 5000, // Max wait time in ms
+    timeout: 10000, // Overall timeout in ms
+  },
+})
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+// Enable connection pooling in development
+if (process.env.NODE_ENV !== 'production') {
+  global.prisma = prisma
+}
+
+export { prisma }

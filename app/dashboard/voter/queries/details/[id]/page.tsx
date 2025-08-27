@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar, MapPin } from "lucide-react"
 import Link from "next/link"
 import { SocialActions } from "@/components/voter/social-actions"
+import { AttachmentItem } from "@/components/voter/attachment-item"
+import { FileText, ImageIcon, Download } from "lucide-react"
 
 interface QueryWithRelations {
   id: string
@@ -40,6 +42,13 @@ interface QueryWithRelations {
       role: string
     }
   }>
+  attachments: Array<{
+    id: string
+    url: string
+    filename: string
+    type: string
+    size: number
+  }>
 }
 
 const statusVariant = {
@@ -58,7 +67,7 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
 
   try {
     // Fetch the specific query
-    const queryId = params.id
+    const queryId = (await params).id
     const query = await prisma.query.findUnique({
       where: { id: queryId },
       include: {
@@ -87,7 +96,8 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
               }
             }
           }
-        }
+        },
+        attachments: true,
       }
     })
 
@@ -137,6 +147,26 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Query Details</h3>
                 <p className="text-gray-700 text-base leading-relaxed">{query.description}</p>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Attachments</h3>
+              {query.attachments?.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {query.attachments.map((file) => (
+                    <AttachmentItem
+                      key={file.id}
+                      id={file.id}
+                      url={file.url}
+                      filename={file.filename}
+                      type={file.type}
+                      size={file.size}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No attachments</p>
+              )}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
