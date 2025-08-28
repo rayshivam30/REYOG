@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { GoogleMap } from "@/components/maps/google-map"
+import { MapWrapper, Marker } from "@/components/maps/map-wrapper"
 import {
   Dialog,
   DialogContent,
@@ -134,14 +134,36 @@ export default function LocationTrackerPage() {
 
   const fetchNearbyOffices = async (userLocation: { lat: number; lng: number }) => {
     try {
-      const response = await fetch(`/api/offices?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=10`)
+      setIsLoading(true)
+      const response = await fetch(
+        `/api/offices?lat=${userLocation.lat}&lng=${userLocation.lng}&radius=10`
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        console.error('Expected JSON but got:', text.substring(0, 200))
+        throw new Error(`Expected JSON but got: ${contentType}`)
+      }
+
       const data = await response.json()
 
-      if (response.ok) {
-        setNearbyOffices(data.offices || [])
+      if (Array.isArray(data)) {
+        setNearbyOffices(data)
+      } else if (data && Array.isArray(data.offices)) {
+        // Handle case where response has offices property
+        setNearbyOffices(data.offices)
+      } else {
+        console.error('Unexpected API response format:', data)
+        setNearbyOffices([])
       }
     } catch (error) {
-      console.error("Error fetching nearby offices:", error)
+      console.error('Error in fetchNearbyOffices:', error)
+      setNearbyOffices([])
     } finally {
       setIsLoading(false)
     }
@@ -189,8 +211,8 @@ export default function LocationTrackerPage() {
             <CardContent>
               <div className="relative h-96">
                 {location ? (
-                  <GoogleMap
-                    center={location}
+                  <MapWrapper
+                    center={[location.lat, location.lng]}
                     zoom={12}
                     markers={mapMarkers}
                     onMarkerClick={(markerId) => {

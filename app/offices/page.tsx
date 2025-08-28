@@ -1,11 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { OfficeSearch } from "@/components/offices/office-search"
 import { OfficeList } from "@/components/offices/office-list"
-import { GoogleMap } from "@/components/maps/google-map"
+import { Card } from "@/components/ui/card"
+
+// Import MapWrapper dynamically (client-side only)
+const MapWrapper = dynamic(() => import("@/components/maps/map-wrapper").then(m => m.MapWrapper), { ssr: false })
+const Marker = dynamic(() => import("@/components/maps/map-wrapper").then(m => m.Marker), { ssr: false })
+const Popup = dynamic(() => import("@/components/maps/map-wrapper").then(m => m.Popup), { ssr: false })
 
 interface Office {
   id: string
@@ -33,7 +39,9 @@ export default function OfficesPage() {
   const [offices, setOffices] = useState<Office[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedOffice, setSelectedOffice] = useState<Office | null>(null)
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [mapCenter, setMapCenter] = useState<[number, number]>([23.2599, 77.4126]) // Default Bhopal
+  const [zoom, setZoom] = useState(10)
 
   useEffect(() => {
     // Load all offices initially
@@ -55,7 +63,9 @@ export default function OfficesPage() {
       if (filters.location) {
         params.append("lat", filters.location.lat.toString())
         params.append("lng", filters.location.lng.toString())
-        setUserLocation(filters.location)
+        setUserLocation([filters.location.lat, filters.location.lng])
+        setMapCenter([filters.location.lat, filters.location.lng])
+        setZoom(13)
       }
       if (filters.radius) params.append("radius", filters.radius.toString())
 
@@ -64,6 +74,9 @@ export default function OfficesPage() {
 
       if (response.ok) {
         setOffices(data.offices || [])
+        if (data.offices?.length > 0) {
+          setSelectedOffice(data.offices[0])
+        }
       } else {
         console.error("Failed to fetch offices:", data.error)
         setOffices([])
@@ -76,82 +89,81 @@ export default function OfficesPage() {
     }
   }
 
-  // Create map markers
-  const mapMarkers = offices.map((office) => ({
-    id: office.id,
-    position: { lat: office.latitude, lng: office.longitude },
-    title: office.name,
-    info: `${office.department.name} • ${office.avgRating > 0 ? `${office.avgRating}★` : "No ratings"}`,
-  }))
-
-  // Add user location marker if available
-  if (userLocation) {
-    mapMarkers.push({
-      id: "user",
-      position: userLocation,
-      title: "Your Location",
-      info: "You are here",
-    })
+  const handleOfficeSelect = (office: Office) => {
+    setSelectedOffice(office)
+    setMapCenter([office.latitude, office.longitude])
+    setZoom(15)
   }
 
-  // Default center (Bhopal, MP)
-  const mapCenter =
-    userLocation || selectedOffice
-      ? { lat: userLocation?.lat || selectedOffice!.latitude, lng: userLocation?.lng || selectedOffice!.longitude }
-      : { lat: 23.2599, lng: 77.4126 }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col">
       <Header />
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Government Offices</h1>
-          <p className="text-muted-foreground">Find and connect with government offices in your area</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Search and List */}
-          <div className="lg:col-span-2 space-y-6">
+      
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Find Government Offices</h1>
+          
+          <div className="mb-8">
             <OfficeSearch onSearch={handleSearch} isLoading={isLoading} />
-            <OfficeList offices={offices} isLoading={isLoading} onOfficeSelect={setSelectedOffice} />
           </div>
 
-          {/* Map */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <div className="p-4 border-b">
-                  <h3 className="font-semibold">Office Locations</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {offices.length} offices {userLocation ? "near you" : "in the area"}
-                  </p>
-                </div>
-                <div className="relative h-96">
-                  <GoogleMap
-                    center={mapCenter}
-                    zoom={userLocation ? 12 : 10}
-                    markers={mapMarkers}
-                    onMarkerClick={(markerId) => {
-                      const office = offices.find((o) => o.id === markerId)
-                      if (office) setSelectedOffice(office)
-                    }}
-                    className="w-full h-full"
-                  />
-                </div>
-                {selectedOffice && (
-                  <div className="p-4 border-t bg-muted/50">
-                    <h4 className="font-medium text-sm">{selectedOffice.name}</h4>
-                    <p className="text-xs text-muted-foreground mt-1">{selectedOffice.address}</p>
-                    <p className="text-xs text-muted-foreground">{selectedOffice.department.name}</p>
-                  </div>
-                )}
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card className="h-[600px] overflow-hidden">
+                <MapWrapper 
+                  center={mapCenter} 
+                  zoom={zoom}
+                  className="h-full w-full"
+                >
+                  {/* User location marker */}
+                  {userLocation && (
+                    <Marker position={userLocation}>
+                      <Popup>
+                        <div className="text-center">
+                          <h3 className="font-bold">Your Location</h3>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+
+                  {/* Office markers */}
+                  {offices.map((office) => (
+                    <Marker 
+                      key={office.id} 
+                      position={[office.latitude, office.longitude]}
+                      eventHandlers={{
+                        click: () => handleOfficeSelect(office)
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-center">
+                          <h3 className="font-bold">{office.name}</h3>
+                          <p className="text-sm">{office.department.name}</p>
+                          {office.distance && (
+                            <p className="text-xs text-muted-foreground">
+                              {office.distance.toFixed(1)} km away
+                            </p>
+                          )}
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapWrapper>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-1">
+              <OfficeList 
+                offices={offices} 
+                selectedOfficeId={selectedOffice?.id}
+                onSelectOffice={handleOfficeSelect}
+                isLoading={isLoading}
+              />
             </div>
           </div>
         </div>
-      </div>
-
+      </main>
+      
       <Footer />
     </div>
   )

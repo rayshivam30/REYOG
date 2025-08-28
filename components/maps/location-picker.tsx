@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { GoogleMap } from "./google-map"
 import { MapPin, Target } from "lucide-react"
+import { MapWrapper, Marker, Popup } from "./map-wrapper"
 
 interface LocationPickerProps {
   onLocationSelect: (location: { lat: number; lng: number }) => void
@@ -15,8 +15,11 @@ interface LocationPickerProps {
 export function LocationPicker({ onLocationSelect, initialLocation, className }: LocationPickerProps) {
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(initialLocation || null)
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [mapReady, setMapReady] = useState(false)
 
+  // Set initial location when component mounts
   useEffect(() => {
+    setMapReady(true)
     if (initialLocation) {
       setSelectedLocation(initialLocation)
     }
@@ -44,6 +47,15 @@ export function LocationPicker({ onLocationSelect, initialLocation, className }:
     }
   }
 
+  const handleMapClick = (e: any) => {
+    const location = {
+      lat: e.latlng.lat,
+      lng: e.latlng.lng
+    }
+    setSelectedLocation(location)
+    onLocationSelect(location)
+  }
+
   const defaultCenter = selectedLocation || currentLocation || { lat: 23.2599, lng: 77.4126 } // Bhopal, MP
 
   return (
@@ -69,23 +81,25 @@ export function LocationPicker({ onLocationSelect, initialLocation, className }:
         </div>
 
         <div className="relative h-64">
-          <GoogleMap
-            center={defaultCenter}
-            zoom={13}
-            markers={
-              selectedLocation
-                ? [
-                    {
-                      id: "selected",
-                      position: selectedLocation,
-                      title: "Selected Location",
-                      info: "Your selected location",
-                    },
-                  ]
-                : []
-            }
-            className="w-full h-full"
-          />
+          {mapReady && (
+            <MapWrapper 
+              center={[defaultCenter.lat, defaultCenter.lng]} 
+              zoom={13}
+              className="h-full w-full"
+              onClick={handleMapClick}
+            >
+              {selectedLocation && (
+                <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
+                  <Popup>
+                    <div className="text-center">
+                      <h3 className="font-bold">Selected Location</h3>
+                      <p>{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+            </MapWrapper>
+          )}
         </div>
 
         <p className="text-xs text-muted-foreground">
