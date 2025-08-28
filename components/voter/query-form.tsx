@@ -365,6 +365,52 @@ export function QueryForm() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">Adding your location helps us route your query to the nearest office</p>
+            
+            {/* Location Picker Dialog */}
+            {showLocationPicker && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="bg-white rounded-lg p-4 w-full max-w-3xl h-[80vh] flex flex-col">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Select a location on the map</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowLocationPicker(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                  <div className="flex-1 relative">
+                    <LocationPicker 
+                      initialLocation={location || undefined}
+                      onLocationSelect={handleLocationSelect}
+                      style={{ height: '100%', width: '100%' }}
+                    />
+                  </div>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setShowLocationPicker(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="button"
+                      onClick={() => {
+                        if (location) {
+                          setShowLocationPicker(false);
+                        } else {
+                          alert('Please select a location on the map');
+                        }
+                      }}
+                    >
+                      Confirm Location
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
