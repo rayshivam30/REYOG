@@ -22,7 +22,7 @@ export async function POST(
     }
 
     // Allow PANCHAYAT, PANCHAYAT_ADMIN and ADMIN roles
-    if (!['PANCHAYAT', 'PANCHAYAT_ADMIN', 'ADMIN'].includes(user.role)) {
+    if (!['PANCHAYAT', 'ADMIN'].includes(user.role)) {
       return NextResponse.json(
         { error: 'Forbidden - Insufficient permissions' },
         { status: 403 }
@@ -42,7 +42,7 @@ export async function POST(
     }
 
     // Validate status value
-    const validStatuses = ['IN_PROGRESS', 'RESOLVED', 'WAITLISTED', 'REJECTED', 'ACCEPTED']
+    const validStatuses = ['IN_PROGRESS', 'RESOLVED', 'WAITLISTED', 'DECLINED', 'ACCEPTED']
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status value' },
@@ -67,7 +67,8 @@ export async function POST(
     }
 
     // If user is PANCHAYAT or PANCHAYAT_ADMIN, verify they have access to this query's panchayat
-    if ((user.role === 'PANCHAYAT' || user.role === 'PANCHAYAT_ADMIN') && existingQuery.panchayatId !== user.panchayatId) {
+    if ((user.role === 'PANCHAYAT') && existingQuery.panchayat?.id !== user.panchayatId)
+ {
       return NextResponse.json(
         { error: 'Forbidden - Query does not belong to your panchayat' },
         { status: 403 }
@@ -75,14 +76,14 @@ export async function POST(
     }
 
     // If moving to WAITLISTED, ensure user has permission (ADMIN or PANCHAYAT_ADMIN or PANCHAYAT)
-    if (status === 'WAITLISTED' && !['ADMIN', 'PANCHAYAT_ADMIN', 'PANCHAYAT'].includes(user.role)) {
+    if (status === 'WAITLISTED' && !['ADMIN', 'PANCHAYAT'].includes(user.role)) {
       return NextResponse.json(
         { error: 'Forbidden - Only admins, panchayat admins and panchayats can move queries to waitlist' },
         { status: 403 }
       )
     }
 
-    console.log('Creating update with user ID:', user.userId); // Debug log
+    console.log('Creating update with user ID:', user.id); // Debug log
     
     // Create the update record first
     await prisma.queryUpdate.create({
@@ -91,7 +92,7 @@ export async function POST(
           connect: { id }
         },
         user: {
-          connect: { id: user.userId }
+          connect: { id: user.id }
         },
         status,
         note,

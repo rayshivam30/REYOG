@@ -13,10 +13,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         { status: 401 }
       )
     }
-
+     const { id } = await params; 
     // Fetch the query with related data
     const query = await prisma.query.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     // Check if user has permission to view this query
     // Panchayat admins can only view queries from their panchayat
-    if (user.role === 'PANCHAYAT_ADMIN' && query.panchayatId !== user.panchayatId) {
+    if (user.role === 'PANCHAYAT' && query.panchayatId !== user.panchayatId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only view queries from your panchayat' },
         { status: 403 }

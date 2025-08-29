@@ -1,209 +1,77 @@
-"use client"
+// app/dashboard/panchayat/queries/[queryId]/QueryDetailsClient.tsx
 
-import { notFound, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Calendar, MapPin, User, Mail, Phone, Loader2, AlertCircle } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import Link from "next/link"
-import { useAuth } from "@/lib/auth-context"
+"use client";
 
-interface QueryWithRelations {
-  id: string
-  title: string
-  description: string
-  status: string
-  wardNumber: string
-  createdAt: string
-  upvoteCount: number
-  user: {
-    name: string
-    email: string
-    phone: string | null
-  }
-  panchayat: {
-    name: string
-    district: string
-    state: string
-  } | null
-  department: {
-    id: string
-    name: string
-  } | null
-  updates: Array<{
-    id: string
-    note: string
-    status: string
-    createdAt: string
-    user: {
-      name: string
-      role: string
-    }
-  }>
-}
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Calendar, Loader2, Mail, MapPin, Phone, User } from "lucide-react";
+import { Button } from "@/components/ui/button"; // Adjust imports for your project structure
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner"; // Using sonner for notifications, you can use any library
+import type { QueryWithDetails } from "./page"; // Import the type from the server component
+import { QueryStatus } from "@prisma/client";
 
+// Status color mapping
 const statusVariant = {
-  PENDING_REVIEW: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
-  IN_PROGRESS: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
-  RESOLVED: 'bg-green-100 text-green-800 hover:bg-green-200',
-  REJECTED: 'bg-red-100 text-red-800 hover:bg-red-200',
-  WAITLISTED: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
-  ACCEPTED: 'bg-green-100 text-green-800 hover:bg-green-200'
+  PENDING_REVIEW: "bg-yellow-100 text-yellow-800",
+  ACCEPTED: "bg-blue-100 text-blue-800",
+  IN_PROGRESS: "bg-cyan-100 text-cyan-800",
+  RESOLVED: "bg-green-100 text-green-800",
+  CLOSED: "bg-gray-100 text-gray-800",
+  DECLINED: "bg-red-100 text-red-800",
+  WAITLISTED: "bg-purple-100 text-purple-800",
+};
+
+interface QueryDetailsClientProps {
+  query: QueryWithDetails;
 }
 
-export default function PanchayatQueryDetailsPage({ params }: { params: { id: string } }) {
-  const { toast } = useToast()
-  const router = useRouter()
-  const { user, isLoading: isAuthLoading } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
-  const [query, setQuery] = useState<QueryWithRelations | null>(null)
-  const [note, setNote] = useState('')
-  const [status, setStatus] = useState('')
-  const [queryId, setQueryId] = useState('')
-
-  // Set the query ID from params when component mounts
-  useEffect(() => {
-    if (params?.id) {
-      setQueryId(params.id)
-    }
-  }, [params])
-
-  // Fetch query details when queryId changes
-  useEffect(() => {
-    const fetchQuery = async () => {
-      if (isAuthLoading || !queryId) return
-      
-      try {
-        const res = await fetch(`/api/queries/${queryId}`)
-        if (!res.ok) {
-          throw new Error('Failed to fetch query')
-        }
-        const data = await res.json()
-        setQuery(data)
-        setStatus(data.status)
-      } catch (error) {
-        console.error('Error fetching query:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load query details",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (queryId) {
-      fetchQuery()
-    }
-  }, [queryId, toast, isAuthLoading])
+export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
+  const router = useRouter();
+  const [status, setStatus] = useState<QueryStatus | "">("");
+  const [note, setNote] = useState("");
+  const [updating, setUpdating] = useState(false);
 
   const handleStatusUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!note.trim() || !status) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      })
-      return
+    e.preventDefault();
+    if (!status || !note) {
+      toast.error("Please select a status and provide a note.");
+      return;
     }
+    setUpdating(true);
 
     try {
-      setUpdating(true)
-      const res = await fetch(`/api/queries/${queryId}/status`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status,
-          note,
-        }),
-      })
+      const response = await fetch(`/api/queries/${query.id}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, note }),
+      });
 
-      // Log response details for debugging
-      console.log('Response status:', res.status)
-      console.log('Response headers:', Object.fromEntries([...res.headers.entries()]))
-      
-      const responseText = await res.text()
-      let responseData
-      
-      try {
-        responseData = responseText ? JSON.parse(responseText) : {}
-      } catch (e) {
-        console.error('Failed to parse JSON response:', responseText)
-        throw new Error('Invalid response from server')
-      }
-      
-      if (!res.ok) {
-        console.error('API Error:', {
-          status: res.status,
-          statusText: res.statusText,
-          response: responseData
-        })
-        throw new Error(responseData.error || `Failed to update status (${res.status})`)
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update status.");
       }
 
-      setQuery(responseData)
-      setNote('')
-      toast({
-        title: "Success",
-        description: "Query status updated successfully",
-      })
-      // Refresh the page to show updated data
-      router.refresh()
-    } catch (error: any) {
-      console.error('Error updating status:', error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update query status",
-        variant: "destructive",
-      })
+      toast.success("Query updated successfully!");
+      setNote("");
+      setStatus("");
+      router.refresh(); // This is the key Next.js 13+ feature to refresh server-side data
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "An unknown error occurred.");
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
-
-  if (isAuthLoading || loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  // Redirect to login if not authenticated
-  if (!isAuthLoading && !user) {
-    router.push('/auth/login')
-    return null
-  }
-
-  if (!query) {
-    return (
-      <div className="container mx-auto p-6 max-w-5xl">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Query Not Found</h2>
-          <p className="text-muted-foreground mb-6">The query you're looking for doesn't exist or you don't have permission to view it.</p>
-          <Button asChild>
-            <Link href="/dashboard/panchayat/queries">
-              Back to Queries
-            </Link>
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  };
 
   return (
+    // ... PASTE YOUR EXISTING JSX HERE ...
+    // The JSX you provided is perfect. Just paste it inside this return statement.
+    // I am pasting it below for completeness.
     <div className="container mx-auto p-4 md:p-8 max-w-5xl">
       <div className="mb-6">
         <Button variant="outline" asChild>
@@ -235,7 +103,7 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-6">
               <div className="prose max-w-none mb-8">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Query Details</h3>
@@ -256,7 +124,7 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
                       </div>
                     </div>
                   </div>
-                  
+
                   {query.department && (
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-2">Department</h3>
@@ -309,9 +177,9 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
                             <Badge variant="outline" className="text-xs">
                               {update.user.role}
                             </Badge>
-                            <Badge variant={update.status === 'RESOLVED' ? 'default' : 'outline'} className="text-xs">
-                              {update.status.replace(/_/g, ' ')}
-                            </Badge>
+                             {update.status && <Badge variant={update.status === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs">
+                                {update.status.replace(/_/g, ' ')}
+                            </Badge>}
                           </div>
                           <span className="text-xs text-muted-foreground">
                             {new Date(update.createdAt).toLocaleString()}
@@ -342,7 +210,7 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
               <form onSubmit={handleStatusUpdate} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
+                  <Select value={status} onValueChange={(value) => setStatus(value as QueryStatus)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -350,7 +218,8 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="RESOLVED">Resolved</SelectItem>
                       <SelectItem value="WAITLISTED">Waitlisted</SelectItem>
-                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="DECLINED">Declined</SelectItem>
+                      <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -365,7 +234,7 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={updating}>
+                <Button type="submit" className="w-full" disabled={updating || !status || !note}>
                   {updating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -410,5 +279,5 @@ export default function PanchayatQueryDetailsPage({ params }: { params: { id: st
         </div>
       </div>
     </div>
-  )
+  );
 }
