@@ -212,9 +212,9 @@ export default function AllQueriesPage() {
                   >
                     <h4 className="font-medium mb-2">{query.title}</h4>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
+                      {/* <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" /> Anonymous
-                      </div>
+                      </div> */}
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {new Date(query.createdAt).toLocaleDateString()}

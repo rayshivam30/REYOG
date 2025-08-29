@@ -326,9 +326,9 @@ export default function ActiveQueriesPage() {
                                 </SelectTrigger>
                                 {/* --- MODIFICATION START: Updated status options --- */}
                                 <SelectContent>
-                                  <SelectItem value="ACCEPTED">
+                                  {/* <SelectItem value="ACCEPTED">
                                     Accept
-                                  </SelectItem>
+                                  </SelectItem> */}
                                   <SelectItem value="IN_PROGRESS">
                                     Mark In Progress
                                   </SelectItem>
@@ -338,12 +338,12 @@ export default function ActiveQueriesPage() {
                                   <SelectItem value="RESOLVED">
                                     Mark Resolved
                                   </SelectItem>
-                                  <SelectItem value="DECLINED">
+                                  {/* <SelectItem value="DECLINED">
                                     Decline
-                                  </SelectItem>
-                                  <SelectItem value="REJECTED">
+                                  </SelectItem> */}
+                                  {/* <SelectItem value="REJECTED">
                                     Reject
-                                  </SelectItem>
+                                  </SelectItem> */}
                                   <SelectItem value="CLOSED">Close</SelectItem>
                                 </SelectContent>
                                 {/* --- MODIFICATION END --- */}
@@ -381,10 +381,10 @@ export default function ActiveQueriesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
+                    {/* <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
                       <span>{query.user.name}</span>
-                    </div>
+                    </div> */}
                     <span>
                       {new Date(query.createdAt).toLocaleDateString()}
                     </span>

@@ -188,7 +188,7 @@ export default function WaitlistPage() {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </TableHead>
-                  <TableHead>Submitted By</TableHead>
+                  {/* <TableHead>Submitted By</TableHead> */}
                   <TableHead>Ward</TableHead>
                   <TableHead 
                     className="cursor-pointer hover:bg-muted/50"
@@ -215,12 +215,12 @@ export default function WaitlistPage() {
                           {query.description}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <div className="font-medium">{query.user?.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {query.user?.phone || 'No contact'}
                         </div>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>Ward {query.wardNumber || 'N/A'}</TableCell>
                       <TableCell>
                         {format(new Date(query.createdAt), 'MMM d, yyyy')}
