@@ -71,25 +71,29 @@ export default function ActiveQueriesPage() {
     setFilteredQueries(filtered)
   }, [queries, searchTerm, statusFilter])
 
-  const fetchQueries = async () => {
-    try {
-      const response = await fetch("/api/queries")
-      if (response.ok) {
-        const data = await response.json()
-        const allQueries = data.queries || []
-        // Only show ACCEPTED queries in the active queries page
-        const activeQueries = allQueries.filter(
-          (q: Query) => q.status === 'ACCEPTED' && q.status !== 'RESOLVED'
-        )
-        setQueries(activeQueries)
-        setFilteredQueries(activeQueries)
-      }
-    } catch (error) {
-      console.error("Failed to fetch queries:", error)
-    } finally {
-      setIsLoading(false)
+ const fetchQueries = async () => {
+  try {
+    const response = await fetch("/api/queries");
+    if (response.ok) {
+      const data = await response.json();
+      const allQueries = data.queries || [];
+
+      // --- THE FIX IS HERE ---
+      // Only show ACCEPTED and IN_PROGRESS queries in the active queries page
+      const activeQueries = allQueries.filter(
+        (q: Query) => q.status === 'ACCEPTED' || q.status === 'IN_PROGRESS'
+      );
+      // --- END OF FIX ---
+
+      setQueries(activeQueries);
+      setFilteredQueries(activeQueries);
     }
+  } catch (error) {
+    console.error("Failed to fetch queries:", error);
+  } finally {
+    setIsLoading(false);
   }
+};
 
   const handleStatusUpdate = async () => {
     if (!selectedQuery || !updateStatus) return
@@ -178,11 +182,8 @@ export default function ActiveQueriesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="PENDING_REVIEW">Pending Review</SelectItem>
                 <SelectItem value="ACCEPTED">Accepted</SelectItem>
                 <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                <SelectItem value="WAITLISTED">Waitlisted</SelectItem>
-                <SelectItem value="RESOLVED">Resolved</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -293,7 +294,7 @@ export default function ActiveQueriesPage() {
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
                       {/* {query.user.name} */}
-                      "Ananomous"
+                     
                     </div>
                     <span>{new Date(query.createdAt).toLocaleDateString()}</span>
                     {query.budgetIssued && <span>Budget: ₹{query.budgetIssued.toLocaleString()}</span>}
