@@ -13,7 +13,6 @@ import {
   Search, Eye, Clock, CheckCircle, AlertCircle, Users, MessageSquareText, FileText, ThumbsUp, ArrowUpCircle, MessageCircle 
 } from "lucide-react"
 
-// **MODIFICATION: Added interfaces for comments and their users**
 interface CommentUser {
   name: string;
 }
@@ -37,12 +36,15 @@ interface Query {
   status: string
   createdAt: string
   resolvedAt?: string
-  // **MODIFICATION: Added fields for counts and comments**
   upvoteCount: number
   likeCount: number
   commentCount: number
   updates?: QueryUpdate[]
   comments?: Comment[]
+  // Added department for badge consistency
+  department?: {
+    name: string
+  }
 }
 
 export default function PastQueriesPage() {
@@ -70,7 +72,6 @@ export default function PastQueriesPage() {
     }
     setFilteredQueries(filtered);
   }, [queries, searchTerm, statusFilter]);
-
 
   const fetchQueries = async () => {
     setIsLoading(true)
@@ -124,48 +125,46 @@ export default function PastQueriesPage() {
           <p className="text-muted-foreground">Review resolved and declined queries from your panchayat</p>
         </div>
 
+        {/* MODIFICATION: Top card now only contains the search bar */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by query title..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Past Statuses</SelectItem>
-                  <SelectItem value="RESOLVED">Resolved</SelectItem>
-                  <SelectItem value="DECLINED">Declined</SelectItem>
-                </SelectContent>
-              </Select>
+          <CardContent className="">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by query title..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
+          {/* MODIFICATION: CardHeader now contains the title and the filter */}
+          <CardHeader className="flex flex-row justify-between items-center">
             <CardTitle>Queries ({filteredQueries.length})</CardTitle>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Past Statuses</SelectItem>
+                <SelectItem value="RESOLVED">Resolved</SelectItem>
+                <SelectItem value="DECLINED">Declined</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             {isLoading ? (
                <div className="space-y-4">
                {[...Array(5)].map((_, i) => (
-                 <div key={i} className="animate-pulse p-4 border border-border rounded-lg">
-                   <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                   <div className="h-3 bg-muted rounded w-1/2"></div>
-                 </div>
+                   <div key={i} className="animate-pulse p-4 border border-border rounded-lg">
+                       <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                       <div className="h-3 bg-muted rounded w-1/2"></div>
+                   </div>
                ))}
-             </div>
+           </div>
             ) : filteredQueries.length > 0 ? (
               <div className="space-y-4">
                 {filteredQueries.map((query) => (
@@ -197,12 +196,10 @@ export default function PastQueriesPage() {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {/* **MODIFICATION: Name is now anonymized** */}
                           A Local Resident
                         </div>
                         <span>Submitted: {new Date(query.createdAt).toLocaleDateString()}</span>
                       </div>
-                       {/* **MODIFICATION: Engagement counts on main card** */}
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1"><ArrowUpCircle className="h-4 w-4"/>{query.upvoteCount}</div>
                         <div className="flex items-center gap-1"><ThumbsUp className="h-4 w-4"/>{query.likeCount}</div>
@@ -228,10 +225,8 @@ export default function PastQueriesPage() {
             <DialogHeader>
               <DialogTitle className="text-xl">{selectedQuery.title}</DialogTitle>
               <DialogDescription>
-                {/* **MODIFICATION: Anonymized submitter in dialog** */}
                 Submitted by a local resident on {new Date(selectedQuery.createdAt).toLocaleDateString()}
               </DialogDescription>
-              {/* **MODIFICATION: Engagement counts in dialog** */}
               <div className="flex items-center gap-4 pt-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5"><ArrowUpCircle className="h-4 w-4"/>{selectedQuery.upvoteCount} Upvotes</div>
                 <div className="flex items-center gap-1.5"><ThumbsUp className="h-4 w-4"/>{selectedQuery.likeCount} Likes</div>
@@ -257,7 +252,6 @@ export default function PastQueriesPage() {
 
                 <Separator />
                 
-                {/* **MODIFICATION: Added Comments Section** */}
                 <div>
                   <h3 className="font-semibold text-foreground mb-4 flex items-center"><MessageCircle className="h-4 w-4 mr-2" />Community Discussion</h3>
                   <div className="space-y-4">

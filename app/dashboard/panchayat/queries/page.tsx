@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -79,7 +80,7 @@ export default function ActiveQueriesPage() {
       filtered = filtered.filter(
         (query) =>
           query.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          query.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+          query.user.name.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
 
@@ -91,54 +92,42 @@ export default function ActiveQueriesPage() {
   }, [queries, searchTerm, statusFilter])
 
   const fetchQueries = async () => {
-    setIsLoading(true) // Set loading at the start
+    setIsLoading(true)
     try {
       const response = await fetch("/api/queries")
       if (response.ok) {
         const data = await response.json()
         const allQueries = data.queries || []
-
-        // Only show ACCEPTED and IN_PROGRESS queries on this page
         const activeQueries = allQueries.filter(
-          (q: Query) => q.status === "ACCEPTED" || q.status === "IN_PROGRESS"
+          (q: Query) => q.status === "ACCEPTED" || q.status === "IN_PROGRESS",
         )
-
         setQueries(activeQueries)
         setFilteredQueries(activeQueries)
       }
     } catch (error) {
       console.error("Failed to fetch queries:", error)
     } finally {
-      setIsLoading(false) // Stop loading at the end
+      setIsLoading(false)
     }
   }
 
-  // --- MODIFICATION START: Updated handleStatusUpdate function ---
   const handleStatusUpdate = async () => {
     if (!selectedQuery || !updateStatus) {
       alert("Please select a status.")
       return
     }
 
-    // Define which statuses require a remark
     const requiresRemark = ["DECLINED", "REJECTED", "WAITLISTED"]
-
-    // Check if the selected status requires a remark and if the note is empty
     if (requiresRemark.includes(updateStatus) && !updateNote.trim()) {
-      alert(
-        "A remark is required to decline, reject, or waitlist this query."
-      )
-      return // Stop the submission
+      alert("A remark is required to decline, reject, or waitlist this query.")
+      return
     }
 
     setIsUpdating(true)
     try {
-      // Using the more consistent '/updates' endpoint from your first file
       const response = await fetch(`/api/queries/${selectedQuery.id}/updates`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: updateStatus,
           note: updateNote,
@@ -149,7 +138,7 @@ export default function ActiveQueriesPage() {
         setSelectedQuery(null)
         setUpdateStatus("")
         setUpdateNote("")
-        await fetchQueries() // Refetch to update the list
+        await fetchQueries()
       } else {
         alert("Failed to update status. Please try again.")
       }
@@ -160,7 +149,6 @@ export default function ActiveQueriesPage() {
       setIsUpdating(false)
     }
   }
-  // --- MODIFICATION END ---
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -203,39 +191,35 @@ export default function ActiveQueriesPage() {
         </p>
       </div>
 
-      {/* Filters */}
+      {/* Search Bar */}
       <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search queries or submitter name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-              </SelectContent>
-            </Select>
+        <CardContent className="">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search queries or submitter name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </CardContent>
       </Card>
 
       {/* Queries List */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Queries ({filteredQueries.length})</CardTitle>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="ACCEPTED">Accepted</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -297,8 +281,8 @@ export default function ActiveQueriesPage() {
                             size="sm"
                             onClick={() => {
                               setSelectedQuery(query)
-                              setUpdateStatus(query.status) // Pre-fill current status
-                              setUpdateNote("") // Reset note
+                              setUpdateStatus(query.status)
+                              setUpdateNote("")
                             }}
                           >
                             <Edit className="h-4 w-4 mr-1" />
@@ -308,13 +292,12 @@ export default function ActiveQueriesPage() {
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Update Query Status</DialogTitle>
+                            <DialogDescription>
+                              Select a new status and add a remark for the
+                              query: "{selectedQuery?.title}"
+                            </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4 pt-4">
-                            <div>
-                              <p className="text-sm font-medium">
-                                Query: {selectedQuery?.title}
-                              </p>
-                            </div>
                             <div className="space-y-2">
                               <Label htmlFor="status">New Status</Label>
                               <Select
@@ -324,11 +307,10 @@ export default function ActiveQueriesPage() {
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select new status" />
                                 </SelectTrigger>
-                                {/* --- MODIFICATION START: Updated status options --- */}
                                 <SelectContent>
-                                  {/* <SelectItem value="ACCEPTED">
+                                  <SelectItem value="ACCEPTED">
                                     Accept
-                                  </SelectItem> */}
+                                  </SelectItem>
                                   <SelectItem value="IN_PROGRESS">
                                     Mark In Progress
                                   </SelectItem>
@@ -338,15 +320,14 @@ export default function ActiveQueriesPage() {
                                   <SelectItem value="RESOLVED">
                                     Mark Resolved
                                   </SelectItem>
-                                  {/* <SelectItem value="DECLINED">
+                                  <SelectItem value="DECLINED">
                                     Decline
-                                  </SelectItem> */}
-                                  {/* <SelectItem value="REJECTED">
+                                  </SelectItem>
+                                  <SelectItem value="REJECTED">
                                     Reject
-                                  </SelectItem> */}
+                                  </SelectItem>
                                   <SelectItem value="CLOSED">Close</SelectItem>
                                 </SelectContent>
-                                {/* --- MODIFICATION END --- */}
                               </Select>
                             </div>
                             <div className="space-y-2">
@@ -381,10 +362,10 @@ export default function ActiveQueriesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    {/* <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
                       <span>{query.user.name}</span>
-                    </div> */}
+                    </div>
                     <span>
                       {new Date(query.createdAt).toLocaleDateString()}
                     </span>

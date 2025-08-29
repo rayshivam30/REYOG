@@ -133,7 +133,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                   )}
                 </div>
 
-                <div>
+                {/* <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Submitted By</h3>
                   <div className="space-y-2">
                     <div className="flex items-center">
@@ -144,14 +144,14 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                       <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
                       <span className="text-sm">{query.user.email}</span>
                     </div>
-                    {query.user.phone && (
+                      {query.user.phone && (
                       <div className="flex items-center">
                         <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
                         <span className="text-sm">{query.user.phone}</span>
                       </div>
                     )}
-                  </div>
-                </div>
+                  </div> 
+                </div> */}
               </div>
             </CardContent>
           </Card>
@@ -218,7 +218,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="RESOLVED">Resolved</SelectItem>
                       <SelectItem value="WAITLISTED">Waitlisted</SelectItem>
-                      <SelectItem value="DECLINED">Declined</SelectItem>
+                      
                       <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>

@@ -169,12 +169,12 @@ export default function AllQueriesPage() {
     <div className="p-8">
       {/* --- Page Header and Search --- */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">All New Queries</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">To-Do</h1>
         <p className="text-muted-foreground">Review and take action on newly submitted queries.</p>
       </div>
 
       <Card className="mb-6">
-        <CardContent className="pt-6">
+        <CardContent className="">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -186,6 +186,9 @@ export default function AllQueriesPage() {
           </div>
         </CardContent>
       </Card>
+     
+
+     
 
       {/* --- Queries List --- */}
       <Card>
