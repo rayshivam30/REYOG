@@ -6,15 +6,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Loader2, Mail, MapPin, Phone, User } from "lucide-react";
-import { Button } from "@/components/ui/button"; // Adjust imports for your project structure
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner"; // Using sonner for notifications, you can use any library
-import type { QueryWithDetails } from "./page"; // Import the type from the server component
+import { toast } from "sonner";
+import type { QueryWithDetails } from "./page";
 import { QueryStatus } from "@prisma/client";
+import { Input } from "@/components/ui/input";
 
 // Status color mapping
 const statusVariant = {
@@ -36,6 +37,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
   const [status, setStatus] = useState<QueryStatus | "">("");
   const [note, setNote] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [budgetSpentDelta, setBudgetSpentDelta] = useState("");
 
   const handleStatusUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,10 +48,20 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
     setUpdating(true);
 
     try {
+      const body: { status: QueryStatus; note: string; budgetSpentDelta?: number } = {
+        status: status as QueryStatus,
+        note,
+      };
+
+      const budgetValue = parseFloat(budgetSpentDelta);
+      if (!isNaN(budgetValue) && budgetValue > 0) {
+        body.budgetSpentDelta = budgetValue;
+      }
+
       const response = await fetch(`/api/queries/${query.id}/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, note }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -60,7 +72,8 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
       toast.success("Query updated successfully!");
       setNote("");
       setStatus("");
-      router.refresh(); // This is the key Next.js 13+ feature to refresh server-side data
+      setBudgetSpentDelta("");
+      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unknown error occurred.");
     } finally {
@@ -68,10 +81,21 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+    }).format(amount);
+  };
+
+  // **MODIFICATION 1: Create variables for safer calculations and rendering**
+  const allocatedBudget = query.budget || 0;
+  const spentBudget = query.budgetSpent || 0;
+  const hasBudgetData = allocatedBudget > 0 || spentBudget > 0;
+  const percentageSpent = allocatedBudget > 0 ? (spentBudget / allocatedBudget) * 100 : 0;
+
+
   return (
-    // ... PASTE YOUR EXISTING JSX HERE ...
-    // The JSX you provided is perfect. Just paste it inside this return statement.
-    // I am pasting it below for completeness.
     <div className="container mx-auto p-4 md:p-8 max-w-5xl">
       <div className="mb-6">
         <Button variant="outline" asChild>
@@ -95,23 +119,19 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                   <CardDescription className="mt-2 flex items-center">
                     <Calendar className="mr-2 h-4 w-4" />
                     {new Date(query.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
+                      year: 'numeric', month: 'long', day: 'numeric',
                     })}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-
             <CardContent className="pt-6">
-              <div className="prose max-w-none mb-8">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Query Details</h3>
-                <p className="text-foreground">{query.description}</p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-4">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="prose max-w-none">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Query Details</h3>
+                  <p className="text-foreground">{query.description}</p>
+                </div>
+                <div className="space-y-6">
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Location</h3>
                     <div className="space-y-2">
@@ -124,6 +144,32 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* **MODIFICATION 2: Use the new `hasBudgetData` variable for rendering** */}
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Budget</h3>
+                    {hasBudgetData ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span>Spent:</span>
+                          <span className="font-medium">{formatCurrency(spentBudget)}</span>
+                        </div>
+                         <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                          {/* **MODIFICATION 3: Use the safe `percentageSpent` variable** */}
+                          <div
+                            className="bg-primary h-2.5 rounded-full"
+                            style={{ width: `${Math.min(percentageSpent, 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-muted-foreground">
+                          <span>Allocated:</span>
+                          <span>{formatCurrency(allocatedBudget)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Not specified.</p>
+                    )}
+                  </div>
 
                   {query.department && (
                     <div>
@@ -132,31 +178,10 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                     </div>
                   )}
                 </div>
-
-                {/* <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Submitted By</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{query.user.name}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm">{query.user.email}</span>
-                    </div>
-                      {query.user.phone && (
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">{query.user.phone}</span>
-                      </div>
-                    )}
-                  </div> 
-                </div> */}
               </div>
             </CardContent>
           </Card>
-
-          {/* Updates Section */}
+          
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-4 border-b">
               <CardTitle className="text-lg font-semibold">Updates & Activity</CardTitle>
@@ -174,16 +199,10 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{update.user.name}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {update.user.role}
-                            </Badge>
-                             {update.status && <Badge variant={update.status === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs">
-                                {update.status.replace(/_/g, ' ')}
-                            </Badge>}
+                            <Badge variant="outline" className="text-xs">{update.user.role}</Badge>
+                            {update.status && <Badge variant={update.status === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs">{update.status.replace(/_/g, ' ')}</Badge>}
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(update.createdAt).toLocaleString()}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{new Date(update.createdAt).toLocaleString()}</span>
                         </div>
                         <p className="mt-1 text-sm text-foreground">{update.note}</p>
                       </div>
@@ -191,15 +210,12 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No updates available for this query.
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No updates available for this query.</div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Status Update Form */}
         <div className="space-y-6">
           <Card className="border-none shadow-sm">
             <CardHeader>
@@ -218,37 +234,32 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="RESOLVED">Resolved</SelectItem>
                       <SelectItem value="WAITLISTED">Waitlisted</SelectItem>
-                      
+                      <SelectItem value="DECLINED">Declined</SelectItem>
                       <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="note">Note</Label>
-                  <Textarea
-                    id="note"
-                    placeholder="Add an update note..."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    rows={4}
-                    required
+                  <Textarea id="note" placeholder="Add an update note..." value={note} onChange={(e) => setNote(e.target.value)} rows={4} required/>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Add to Budget Spent (Optional)</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    placeholder="e.g., 5000"
+                    value={budgetSpentDelta}
+                    onChange={(e) => setBudgetSpentDelta(e.target.value)}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={updating || !status || !note}>
-                  {updating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    'Update Status'
-                  )}
+                  {updating ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</>) : ('Update Status')}
                 </Button>
               </form>
             </CardContent>
           </Card>
-
-          {/* Query Stats */}
+          
           <Card className="border-none shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">Query Stats</CardTitle>
@@ -256,15 +267,11 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge className={statusVariant[query.status as keyof typeof statusVariant] || 'bg-gray-100 text-gray-800'}>
-                  {query.status.replace(/_/g, ' ')}
-                </Badge>
+                <Badge className={statusVariant[query.status as keyof typeof statusVariant] || 'bg-gray-100 text-gray-800'}>{query.status.replace(/_/g, ' ')}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Created</span>
-                <span className="text-sm font-medium">
-                  {new Date(query.createdAt).toLocaleDateString()}
-                </span>
+                <span className="text-sm font-medium">{new Date(query.createdAt).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Upvotes</span>
