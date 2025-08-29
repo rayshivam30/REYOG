@@ -42,7 +42,7 @@ const voterNavItems = [
 
 const panchayatNavItems = [
   { href: "/dashboard/panchayat", label: "Dashboard", icon: Home },
-  { href: "/dashboard/panchayat/queries/all", label: "All Queries", icon: Inbox }, // New link added
+  { href: "/dashboard/panchayat/queries/all", label: "Inbox", icon: Inbox }, // New link added
   { href: "/dashboard/panchayat/queries", label: "Active Queries", icon: FileText },
   { href: "/dashboard/panchayat/queries/past", label: "Past Queries", icon: BarChart3 },
   { href: "/dashboard/panchayat/queries/waitlist", label: "Waitlist", icon: FileText },

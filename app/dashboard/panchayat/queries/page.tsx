@@ -1,16 +1,35 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Search, Eye, Edit, Clock, CheckCircle, AlertCircle, Users } from "lucide-react"
+import {
+  Search,
+  Eye,
+  Edit,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Users,
+} from "lucide-react"
 import Link from "next/link"
 
 interface Query {
@@ -60,7 +79,7 @@ export default function ActiveQueriesPage() {
       filtered = filtered.filter(
         (query) =>
           query.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          query.user.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          query.user.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -71,36 +90,51 @@ export default function ActiveQueriesPage() {
     setFilteredQueries(filtered)
   }, [queries, searchTerm, statusFilter])
 
- const fetchQueries = async () => {
-  try {
-    const response = await fetch("/api/queries");
-    if (response.ok) {
-      const data = await response.json();
-      const allQueries = data.queries || [];
+  const fetchQueries = async () => {
+    setIsLoading(true) // Set loading at the start
+    try {
+      const response = await fetch("/api/queries")
+      if (response.ok) {
+        const data = await response.json()
+        const allQueries = data.queries || []
 
-      // --- THE FIX IS HERE ---
-      // Only show ACCEPTED and IN_PROGRESS queries in the active queries page
-      const activeQueries = allQueries.filter(
-        (q: Query) => q.status === 'ACCEPTED' || q.status === 'IN_PROGRESS'
-      );
-      // --- END OF FIX ---
+        // Only show ACCEPTED and IN_PROGRESS queries on this page
+        const activeQueries = allQueries.filter(
+          (q: Query) => q.status === "ACCEPTED" || q.status === "IN_PROGRESS"
+        )
 
-      setQueries(activeQueries);
-      setFilteredQueries(activeQueries);
+        setQueries(activeQueries)
+        setFilteredQueries(activeQueries)
+      }
+    } catch (error) {
+      console.error("Failed to fetch queries:", error)
+    } finally {
+      setIsLoading(false) // Stop loading at the end
     }
-  } catch (error) {
-    console.error("Failed to fetch queries:", error);
-  } finally {
-    setIsLoading(false);
   }
-};
 
+  // --- MODIFICATION START: Updated handleStatusUpdate function ---
   const handleStatusUpdate = async () => {
-    if (!selectedQuery || !updateStatus) return
+    if (!selectedQuery || !updateStatus) {
+      alert("Please select a status.")
+      return
+    }
+
+    // Define which statuses require a remark
+    const requiresRemark = ["DECLINED", "REJECTED", "WAITLISTED"]
+
+    // Check if the selected status requires a remark and if the note is empty
+    if (requiresRemark.includes(updateStatus) && !updateNote.trim()) {
+      alert(
+        "A remark is required to decline, reject, or waitlist this query."
+      )
+      return // Stop the submission
+    }
 
     setIsUpdating(true)
     try {
-      const response = await fetch(`/api/queries/${selectedQuery.id}/status`, {
+      // Using the more consistent '/updates' endpoint from your first file
+      const response = await fetch(`/api/queries/${selectedQuery.id}/updates`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,18 +146,21 @@ export default function ActiveQueriesPage() {
       })
 
       if (response.ok) {
-        // Close the dialog and refetch queries
         setSelectedQuery(null)
         setUpdateStatus("")
         setUpdateNote("")
         await fetchQueries() // Refetch to update the list
+      } else {
+        alert("Failed to update status. Please try again.")
       }
     } catch (error) {
       console.error("Failed to update status:", error)
+      alert("An error occurred. Please try again.")
     } finally {
       setIsUpdating(false)
     }
   }
+  // --- MODIFICATION END ---
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -132,6 +169,7 @@ export default function ActiveQueriesPage() {
       case "RESOLVED":
         return <CheckCircle className="h-4 w-4 text-green-500" />
       case "DECLINED":
+      case "REJECTED":
         return <AlertCircle className="h-4 w-4 text-red-500" />
       default:
         return <Clock className="h-4 w-4 text-blue-500" />
@@ -157,8 +195,12 @@ export default function ActiveQueriesPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Active Queries</h1>
-        <p className="text-muted-foreground">Manage and update queries submitted to your panchayat</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Active Queries
+        </h1>
+        <p className="text-muted-foreground">
+          Manage and update queries submitted to your panchayat
+        </p>
       </div>
 
       {/* Filters */}
@@ -199,7 +241,10 @@ export default function ActiveQueriesPage() {
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="animate-pulse p-4 border border-border rounded-lg">
+                <div
+                  key={i}
+                  className="animate-pulse p-4 border border-border rounded-lg"
+                >
                   <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-muted rounded w-1/2"></div>
                 </div>
@@ -208,19 +253,31 @@ export default function ActiveQueriesPage() {
           ) : filteredQueries.length > 0 ? (
             <div className="space-y-4">
               {filteredQueries.map((query) => (
-                <div key={query.id} className="p-4 border border-border rounded-lg">
+                <div
+                  key={query.id}
+                  className="p-4 border border-border rounded-lg"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusIcon(query.status)}
                         <h4 className="font-medium">{query.title}</h4>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{query.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {query.description}
+                      </p>
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className={getStatusColor(query.status)}>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(query.status)}
+                        >
                           {query.status.replace("_", " ")}
                         </Badge>
-                        {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
+                        {query.department && (
+                          <Badge variant="secondary">
+                            {query.department.name}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
@@ -230,14 +287,18 @@ export default function ActiveQueriesPage() {
                           View
                         </Button>
                       </Link>
-                      <Dialog>
+                      <Dialog
+                        onOpenChange={(isOpen) => {
+                          if (!isOpen) setSelectedQuery(null)
+                        }}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             size="sm"
                             onClick={() => {
                               setSelectedQuery(query)
-                              setUpdateStatus("")
-                              setUpdateNote("")
+                              setUpdateStatus(query.status) // Pre-fill current status
+                              setUpdateNote("") // Reset note
                             }}
                           >
                             <Edit className="h-4 w-4 mr-1" />
@@ -248,41 +309,70 @@ export default function ActiveQueriesPage() {
                           <DialogHeader>
                             <DialogTitle>Update Query Status</DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-4">
+                          <div className="space-y-4 pt-4">
                             <div>
-                              <Label>Query: {selectedQuery?.title}</Label>
+                              <p className="text-sm font-medium">
+                                Query: {selectedQuery?.title}
+                              </p>
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="status">New Status</Label>
-                              <Select value={updateStatus} onValueChange={setUpdateStatus}>
+                              <Select
+                                value={updateStatus}
+                                onValueChange={setUpdateStatus}
+                              >
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select new status" />
                                 </SelectTrigger>
+                                {/* --- MODIFICATION START: Updated status options --- */}
                                 <SelectContent>
-                                  <SelectItem value="ACCEPTED">Accept</SelectItem>
-                                  <SelectItem value="DECLINED">Decline</SelectItem>
-                                  <SelectItem value="WAITLISTED">Add to Waitlist</SelectItem>
-                                  <SelectItem value="IN_PROGRESS">Mark In Progress</SelectItem>
-                                  <SelectItem value="RESOLVED">Mark Resolved</SelectItem>
+                                  <SelectItem value="ACCEPTED">
+                                    Accept
+                                  </SelectItem>
+                                  <SelectItem value="IN_PROGRESS">
+                                    Mark In Progress
+                                  </SelectItem>
+                                  <SelectItem value="WAITLISTED">
+                                    Add to Waitlist
+                                  </SelectItem>
+                                  <SelectItem value="RESOLVED">
+                                    Mark Resolved
+                                  </SelectItem>
+                                  <SelectItem value="DECLINED">
+                                    Decline
+                                  </SelectItem>
+                                  <SelectItem value="REJECTED">
+                                    Reject
+                                  </SelectItem>
                                   <SelectItem value="CLOSED">Close</SelectItem>
                                 </SelectContent>
+                                {/* --- MODIFICATION END --- */}
                               </Select>
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="note">Update Note</Label>
+                              <Label htmlFor="note">
+                                Remark (Required for Decline/Reject/Waitlist)
+                              </Label>
                               <Textarea
                                 id="note"
-                                placeholder="Add a note about this update..."
+                                placeholder="Add a note about this status update..."
                                 value={updateNote}
                                 onChange={(e) => setUpdateNote(e.target.value)}
                               />
                             </div>
-                            <div className="flex gap-2">
-                              <Button onClick={handleStatusUpdate} disabled={!updateStatus || isUpdating}>
-                                {isUpdating ? "Updating..." : "Update Status"}
-                              </Button>
-                              <Button variant="outline" onClick={() => setSelectedQuery(null)}>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => setSelectedQuery(null)}
+                                disabled={isUpdating}
+                              >
                                 Cancel
+                              </Button>
+                              <Button
+                                onClick={handleStatusUpdate}
+                                disabled={!updateStatus || isUpdating}
+                              >
+                                {isUpdating ? "Updating..." : "Update Status"}
                               </Button>
                             </div>
                           </div>
@@ -293,12 +383,19 @@ export default function ActiveQueriesPage() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      {/* {query.user.name} */}
-                     
+                      <span>{query.user.name}</span>
                     </div>
-                    <span>{new Date(query.createdAt).toLocaleDateString()}</span>
-                    {query.budgetIssued && <span>Budget: ₹{query.budgetIssued.toLocaleString()}</span>}
-                    {query.officialIncharge && <span>Officer: {query.officialIncharge}</span>}
+                    <span>
+                      {new Date(query.createdAt).toLocaleDateString()}
+                    </span>
+                    {query.budgetIssued && (
+                      <span>
+                        Budget: ₹{query.budgetIssued.toLocaleString()}
+                      </span>
+                    )}
+                    {query.officialIncharge && (
+                      <span>Officer: {query.officialIncharge}</span>
+                    )}
                   </div>
                 </div>
               ))}
