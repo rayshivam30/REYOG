@@ -467,7 +467,7 @@ export function ComplaintsTable({ initialComplaints }: { initialComplaints: Comp
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="h-12 px-4 text-left align-middle font-medium">Complaint</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Complainant & Panchayat</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Panchayat</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Type</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Date</th>
@@ -491,20 +491,18 @@ export function ComplaintsTable({ initialComplaints }: { initialComplaints: Comp
                         </td>
                         <td className="p-4 align-top">
                           <div>
-                            <div className="font-medium">{complaint.user.name}</div>
-                            <div className="text-xs text-muted-foreground">{complaint.user.email}</div>
                             {complaint.user.panchayat ? (
-                              <div className="text-sm text-blue-600 font-medium mt-1">
-                                <MapPin className="h-3 w-3 inline mr-1" />
-                                {complaint.user.panchayat.name}
+                              <div>
+                                <div className="text-sm text-blue-600 font-medium">
+                                  <MapPin className="h-3 w-3 inline mr-1" />
+                                  {complaint.user.panchayat.name}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {complaint.user.panchayat.district}, {complaint.user.panchayat.state}
+                                </div>
                               </div>
                             ) : (
-                              <div className="text-sm text-muted-foreground italic">No Panchayat</div>
-                            )}
-                            {complaint.user.panchayat && (
-                              <div className="text-xs text-muted-foreground">
-                                {complaint.user.panchayat.district}, {complaint.user.panchayat.state}
-                              </div>
+                              <div className="text-sm text-muted-foreground italic">Anonymous</div>
                             )}
                           </div>
                         </td>
