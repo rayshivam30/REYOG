@@ -2,17 +2,15 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { createComplaintSchema } from "@/lib/validations"
 import { UserRole } from "@prisma/client"
-import { getAuthUserFromRequest } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthUserFromRequest(request)
-    
-    if (!user) {
+    const userId = request.headers.get("x-user-id")
+    const userRole = request.headers.get("x-user-role") as UserRole
+
+    if (!userId) {
       return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "User not authenticated" } }, { status: 401 })
     }
-
-    const { userId, role: userRole } = user
 
     const whereClause: any = {}
 
@@ -50,58 +48,47 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthUserFromRequest(request)
-    
-    if (!user || user.role !== UserRole.VOTER) {
+    const userId = request.headers.get("x-user-id")
+    const userRole = request.headers.get("x-user-role") as UserRole
+
+    if (!userId || userRole !== UserRole.VOTER) {
       return NextResponse.json(
         { error: { code: "FORBIDDEN", message: "Only voters can create complaints" } },
         { status: 403 },
       )
     }
 
-    const { userId } = user
-
     const body = await request.json()
-    const validatedData = createComplaintSchema.parse(body)
-    const { subject, description, attachments, queryId } = validatedData
+    const { subject, description, attachments, queryId } = createComplaintSchema.parse(body)
 
-    // Use transaction to ensure data consistency
-    const result = await prisma.$transaction(async (tx) => {
-      // Create the complaint
-      const complaint = await tx.complaint.create({
-        data: {
-          subject,
-          description,
-          attachments,
-          userId,
-          queryId: queryId || null,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
+    const complaint = await prisma.complaint.create({
+      data: {
+        subject,
+        description,
+        attachments,
+        userId,
+        queryId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
-      })
+      },
+    })
 
-      // Get current user info for notifications
-      const currentUser = await tx.user.findUnique({
-        where: { id: userId },
-        select: { name: true },
-      })
+    // Create notifications for admin users
+    const adminUsers = await prisma.user.findMany({
+      where: { role: UserRole.ADMIN },
+    })
 
-      // Create notifications for admin users
-      const adminUsers = await tx.user.findMany({
-        where: { role: UserRole.ADMIN },
-        select: { id: true },
-      })
-
-      if (adminUsers.length > 0) {
-        await tx.notification.createMany({
-          data: adminUsers.map((admin) => ({
+    await Promise.all(
+      adminUsers.map((admin) =>
+        prisma.notification.create({
+          data: {
             title: "New Complaint Filed",
             message: `A new complaint "${subject}" has been filed and requires attention.`,
             type: "complaint_created",
@@ -109,48 +96,29 @@ export async function POST(request: NextRequest) {
             metadata: {
               complaintId: complaint.id,
               subject,
-              submittedBy: currentUser?.name || "Anonymous",
+              submittedBy: complaint.user.name,
             },
-          })),
-        })
-      }
-
-      // Create audit log
-      await tx.auditLog.create({
-        data: {
-          action: "complaint_created",
-          details: `Complaint "${subject}" filed`,
-          userId,
-          metadata: {
-            complaintId: complaint.id,
-            subject,
           },
-        },
-      })
+        }),
+      ),
+    )
 
-      return complaint
+    // Create audit log
+    await prisma.auditLog.create({
+      data: {
+        action: "complaint_created",
+        details: `Complaint "${subject}" filed`,
+        userId,
+        metadata: {
+          complaintId: complaint.id,
+          subject,
+        },
+      },
     })
 
-    return NextResponse.json({ complaint: result })
+    return NextResponse.json({ complaint })
   } catch (error) {
     console.error("Complaint creation error:", error)
-    
-    // Handle specific Prisma errors
-    if (error instanceof Error) {
-      if (error.message.includes('Foreign key constraint')) {
-        return NextResponse.json(
-          { error: { code: "INVALID_REFERENCE", message: "Referenced query does not exist" } },
-          { status: 400 },
-        )
-      }
-      if (error.message.includes('Unique constraint')) {
-        return NextResponse.json(
-          { error: { code: "DUPLICATE_ENTRY", message: "Duplicate complaint entry" } },
-          { status: 409 },
-        )
-      }
-    }
-    
     return NextResponse.json(
       { error: { code: "INTERNAL_ERROR", message: "An error occurred while creating complaint" } },
       { status: 500 },

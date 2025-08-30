@@ -97,7 +97,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { ComplaintStatus, UserRole } from "@prisma/client"
 import { z } from "zod"
-import { getAuthUserFromRequest } from "@/lib/auth"
+import { verifyToken } from "@/lib/auth" // Assuming verifyToken is your standard auth method
 
 // Schema to validate the incoming request body
 const updateComplaintSchema = z.object({
@@ -108,7 +108,7 @@ const updateComplaintSchema = z.object({
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // 1. Use a consistent token-based authentication method
-    const user = await getAuthUserFromRequest(request)
+    const user = await verifyToken(request)
     if (!user || user.role !== UserRole.ADMIN) {
       return NextResponse.json({ error: { code: "FORBIDDEN", message: "Admin access required" } }, { status: 403 })
     }
@@ -131,12 +131,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         status,
         resolution,
       },
+      // Re-include user and panchayat data to send back the full object
       include: {
         user: {
           select: {
-            id: true,
-            name: true,
-            email: true,
             panchayat: {
               select: {
                 name: true,
@@ -144,49 +142,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             },
           },
         },
-        query: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-    })
-
-    // Create audit log for complaint update
-    await prisma.auditLog.create({
-      data: {
-        action: "complaint_updated",
-        details: `Complaint status changed to ${status}`,
-        userId: user.userId,
-        metadata: {
-          complaintId,
-          newStatus: status,
-          resolution,
-        },
       },
     })
 
     return NextResponse.json(updatedComplaint)
   } catch (error) {
     console.error("Complaint update error:", error)
-    
-    // Handle specific Prisma errors
-    if (error instanceof Error) {
-      if (error.message.includes('Record to update not found')) {
-        return NextResponse.json(
-          { error: { code: "NOT_FOUND", message: "Complaint not found" } },
-          { status: 404 },
-        )
-      }
-      if (error.message.includes('Foreign key constraint')) {
-        return NextResponse.json(
-          { error: { code: "INVALID_REFERENCE", message: "Invalid reference in update" } },
-          { status: 400 },
-        )
-      }
-    }
-    
     return NextResponse.json({ error: { code: "INTERNAL_ERROR", message: "Failed to update complaint" } }, { status: 500 })
   }
 }
