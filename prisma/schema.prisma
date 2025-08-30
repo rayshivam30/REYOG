@@ -209,9 +209,9 @@ model Complaint {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   userId      String
-  queryId     String
+  queryId     String?
   user        User            @relation(fields: [userId], references: [id])
-  query       Query           @relation(fields: [queryId], references: [id])
+  query       Query?          @relation(fields: [queryId], references: [id])
 
   @@map("complaints")
 }
