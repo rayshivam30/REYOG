@@ -176,3 +176,39 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     )
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params
+    const userId = request.headers.get("x-user-id")
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const query = await prisma.query.findUnique({
+      where: { id },
+      select: { userId: true },
+    })
+
+    if (!query) {
+      return NextResponse.json({ error: "Query not found" }, { status: 404 })
+    }
+
+    if (query.userId !== userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    await prisma.query.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ message: "Query deleted successfully" }, { status: 200 })
+  } catch (error) {
+    console.error("Error deleting query:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
+  }
+}
