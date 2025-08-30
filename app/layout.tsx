@@ -47,7 +47,7 @@ html {
 }
         `}</style>
       </head>
-      <body className="leaflet-container">{children}</body>
+      <body>{children}</body>
     </html>
   )
 }

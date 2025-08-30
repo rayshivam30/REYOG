@@ -57,7 +57,7 @@ export default function OfficesPage() {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
-
+  
       if (filters.query) params.append("q", filters.query)
       if (filters.department) params.append("dept", filters.department)
       if (filters.location) {
@@ -68,18 +68,24 @@ export default function OfficesPage() {
         setZoom(13)
       }
       if (filters.radius) params.append("radius", filters.radius.toString())
-
+  
       const response = await fetch(`/api/offices?${params}`)
+      
+      // Check if response is OK before parsing JSON
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`)
+      }
+      
+      // Check content type to ensure it's JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error(`Expected JSON response but got ${contentType}`)
+      }
+      
       const data = await response.json()
-
-      if (response.ok) {
-        setOffices(data.offices || [])
-        if (data.offices?.length > 0) {
-          setSelectedOffice(data.offices[0])
-        }
-      } else {
-        console.error("Failed to fetch offices:", data.error)
-        setOffices([])
+      setOffices(data.offices || [])
+      if (data.offices?.length > 0) {
+        setSelectedOffice(data.offices[0])
       }
     } catch (error) {
       console.error("Error fetching offices:", error)

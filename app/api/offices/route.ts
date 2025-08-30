@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const q = searchParams.get("q") // Get the search query parameter
     const dept = searchParams.get("dept")
     const panchayatId = searchParams.get("panchayatId")
     const lat = searchParams.get("lat")
@@ -12,13 +13,26 @@ export async function GET(request: NextRequest) {
 
     const whereClause: any = {}
 
-    if (dept) {
-      whereClause.department = {
-        name: {
-          contains: dept,
-          mode: "insensitive",
+    // Add search query filter
+    if (q) {
+      whereClause.OR = [
+        {
+          name: {
+            contains: q,
+            mode: "insensitive",
+          },
         },
-      }
+        {
+          address: {
+            contains: q,
+            mode: "insensitive",
+          },
+        },
+      ]
+    }
+
+    if (dept) {
+      whereClause.departmentId = dept
     }
 
     if (panchayatId) {

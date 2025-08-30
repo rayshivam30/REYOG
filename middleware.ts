@@ -13,13 +13,17 @@ export async function middleware(request: NextRequest) {
     "/auth/login", 
     "/auth/register",
     "/api/panchayats",
-    "/api/uploads"  // Add uploads to public routes since we handle auth in the route
+    "/api/uploads",  // Add uploads to public routes since we handle auth in the route
+    "/api/offices",  // Add offices API to public routes
+    "/api/departments" // Add departments API to public routes (needed for office search)
   ]
   const isPublicRoute = publicRoutes.some((route) => 
     pathname === route || 
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/panchayats") ||
-    pathname.startsWith("/api/uploads")  // Also check for uploads path
+    pathname.startsWith("/api/uploads") ||
+    pathname.startsWith("/api/offices") ||  // Also check for offices path
+    pathname.startsWith("/api/departments")  // Also check for departments path
   )
 
   if (isPublicRoute) {

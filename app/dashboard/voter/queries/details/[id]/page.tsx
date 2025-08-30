@@ -10,6 +10,7 @@ import Link from "next/link"
 import { SocialActions } from "@/components/voter/social-actions"
 import { AttachmentItem } from "@/components/voter/attachment-item"
 import { FileText, ImageIcon, Download } from "lucide-react"
+import { QueryLocationMap } from "@/components/voter/query-location-map"
 
 interface QueryWithRelations {
   id: string
@@ -19,6 +20,8 @@ interface QueryWithRelations {
   wardNumber: string
   createdAt: string | Date
   upvoteCount: number
+  latitude: number | null  // Added latitude field
+  longitude: number | null // Added longitude field
   user: {
     name: string
     email: string
@@ -189,6 +192,17 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                     <p className="text-gray-900">
                       {query.panchayat?.district || 'N/A'}, {query.panchayat?.state || 'N/A'}
                     </p>
+                  </div>
+                  
+                  {/* Map display when coordinates are available */}
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Location on Map</p>
+                    <QueryLocationMap 
+                      latitude={query.latitude} 
+                      longitude={query.longitude} 
+                      title={query.title}
+                      panchayatName={query.panchayat?.name}
+                    />
                   </div>
                 </div>
               </div>
