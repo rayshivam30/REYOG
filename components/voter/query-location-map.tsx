@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import L from "leaflet";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 
 // Dynamically import each component (named exports)
 const MapWrapper = dynamic(
@@ -42,19 +44,19 @@ export function QueryLocationMap({
     );
   }
 
-  const handleMapClick = (_e: L.LeafletMouseEvent) => {
+  const handleOpenGoogleMaps = () => {
     window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, "_blank");
   };
 
   return (
-    <div className="h-48 w-full rounded-md overflow-hidden border border-gray-200 cursor-pointer">
+    <div className="relative h-48 w-full rounded-md overflow-hidden border border-gray-200">
       <MapWrapper
         center={[latitude, longitude]}
         zoom={15}
         scrollWheelZoom={false}
         dragging={true}
         zoomControl={true}
-        onClick={handleMapClick}
+        // Removed onClick
       >
         <Marker position={[latitude, longitude]}>
           <Popup>
@@ -67,6 +69,15 @@ export function QueryLocationMap({
           </Popup>
         </Marker>
       </MapWrapper>
+      <Button
+        variant="secondary"
+        size="sm"
+        className="absolute bottom-2 right-2 z-[1000] flex items-center gap-1"
+        onClick={handleOpenGoogleMaps}
+      >
+        <ExternalLink className="h-4 w-4" />
+        Google Maps
+      </Button>
     </div>
   );
 }
