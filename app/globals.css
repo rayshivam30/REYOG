@@ -122,3 +122,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add this to your globals.css file */
+/* Add these rules to fix link styling */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:visited {
+  color: inherit;
+}
+
+/* Fix for scrolling issues */
+html, body {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
