@@ -93,7 +93,41 @@ export default function VoterQueriesPage() {
     }
   }, [authUser, statusFilter]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+      <div className="mb-6">
+        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
+          <h1 className="text-3xl font-bold text-gray-800">Community Queries</h1>
+          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        
+        <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-8 w-20 bg-gray-200 rounded-full animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="border border-gray-200 rounded-lg p-6 animate-pulse">
+            <div className="flex justify-between items-start mb-4">
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-6 w-20 bg-gray-200 rounded"></div>
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            </div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
   if (error) return <div>Error: {error}</div>;
 
   return (

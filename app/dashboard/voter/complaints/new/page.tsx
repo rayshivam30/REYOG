@@ -80,7 +80,37 @@ function NewComplaintContent() {
   };
 
   if (loadingQuery) {
-    return <div className="p-6">Loading query details...</div>;
+    return (
+      <div className="container mx-auto p-6 max-w-3xl">
+        <div className="mb-6">
+          <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+        </div>
+        
+        <div className="border border-gray-200 rounded-lg p-6 animate-pulse">
+          <div className="mb-6">
+            <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+          
+          <div className="space-y-6">
+            {/* Subject field skeleton */}
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-10 bg-gray-200 rounded"></div>
+            </div>
+            
+            {/* Description field skeleton */}
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-24 bg-gray-200 rounded"></div>
+            </div>
+            
+            {/* Submit button skeleton */}
+            <div className="h-10 bg-gray-200 rounded w-32 mt-6"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
