@@ -8,11 +8,9 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-  },
-  transpilePackages: ['@react-leaflet', 'react-leaflet'],
-  images: {
     domains: ['tile.openstreetmap.org'],
   },
+  transpilePackages: ['@react-leaflet', 'react-leaflet'],
   webpack: (config) => {
     config.module.rules.push({
       test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
