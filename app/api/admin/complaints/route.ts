@@ -16,12 +16,79 @@ export async function GET(request: NextRequest) {
       include: {
         user: {
           select: {
+            id: true,
             name: true,
             email: true,
+            phone: true,
             // Include the related panchayat data for the user
             panchayat: {
               select: {
+                id: true,
                 name: true,
+                district: true,
+                state: true,
+              },
+            },
+          },
+        },
+        // Include full query details when complaint is related to a query
+        query: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            latitude: true,
+            longitude: true,
+            attachments: {
+              select: {
+                id: true,
+                url: true,
+                filename: true,
+                type: true,
+                size: true,
+              },
+            },
+            department: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+              },
+            },
+            panchayat: {
+              select: {
+                id: true,
+                name: true,
+                district: true,
+                state: true,
+              },
+            },
+            office: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+                contactPhone: true,
+                contactEmail: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                panchayat: {
+                  select: {
+                    id: true,
+                    name: true,
+                    district: true,
+                    state: true,
+                  },
+                },
               },
             },
           },

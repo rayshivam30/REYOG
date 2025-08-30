@@ -2,9 +2,10 @@ import { getAuthUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
-import { FileText, Plus } from "lucide-react"
+import { FileText, Plus, Eye, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 export default async function VoterComplaintsPage() {
   const authUser = await getAuthUser()
@@ -24,6 +25,25 @@ export default async function VoterComplaintsPage() {
           id: true,
           name: true,
           email: true
+        }
+      },
+      query: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          createdAt: true,
+          department: {
+            select: {
+              name: true
+            }
+          },
+          panchayat: {
+            select: {
+              name: true
+            }
+          }
         }
       }
     },
@@ -61,10 +81,29 @@ export default async function VoterComplaintsPage() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{complaint.title}</CardTitle>
+                    <CardTitle className="text-lg">{complaint.subject}</CardTitle>
                     <CardDescription className="mt-1">
                       Status: {complaint.status.replace('_', ' ').toLowerCase()}
                     </CardDescription>
+                    {complaint.query && (
+                      <div className="mt-2 p-2 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                        <div className="flex items-center gap-2 mb-1">
+                          <AlertCircle className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">Related to Query:</span>
+                        </div>
+                        <p className="text-sm text-blue-700 font-medium">{complaint.query.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs bg-red-100 text-red-800">
+                            {complaint.query.status.replace('_', ' ')}
+                          </Badge>
+                          {complaint.query.department && (
+                            <Badge variant="secondary" className="text-xs">
+                              {complaint.query.department.name}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <span className="text-sm text-muted-foreground">
                     {new Date(complaint.createdAt).toLocaleDateString()}
@@ -72,24 +111,34 @@ export default async function VoterComplaintsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{complaint.description}</p>
+                <p className="text-sm text-muted-foreground mb-4">{complaint.description}</p>
                 <div className="mt-4 flex justify-between items-center">
                   <div className="flex space-x-2">
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       complaint.status === 'RESOLVED' 
                         ? 'bg-green-100 text-green-800' 
-                        : complaint.status === 'IN_PROGRESS'
+                        : complaint.status === 'UNDER_REVIEW'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}>
                       {complaint.status.replace('_', ' ').toLowerCase()}
                     </span>
                   </div>
-                  <Link href={`/dashboard/voter/complaints/${complaint.id}`}>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </Link>
+                  <div className="flex gap-2">
+                    {complaint.query && (
+                      <Link href={`/dashboard/voter/complaints/${complaint.id}?showQuery=true`}>
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          View with Query
+                        </Button>
+                      </Link>
+                    )}
+                    <Link href={`/dashboard/voter/complaints/${complaint.id}`}>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
