@@ -58,7 +58,7 @@ const statusVariant = {
   WAITLISTED: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
 };
 
-export default function VoterQueriesPage() {
+export default function VoterMyQueriesPage() {
   const { user: authUser } = useAuth();
   const router = useRouter();
   const [queries, setQueries] = useState<Query[]>([]);
@@ -69,11 +69,13 @@ export default function VoterQueriesPage() {
   useEffect(() => {
     async function fetchQueries() {
       try {
-        const url = statusFilter !== 'all' 
-          ? `/api/queries?status=${statusFilter}`
-          : '/api/queries';
-          
-        const response = await fetch(url);
+        const url = new URL('/api/queries', window.location.origin);
+        url.searchParams.append('scope', 'user');
+        if (statusFilter !== 'all') {
+          url.searchParams.append('status', statusFilter);
+        }
+        
+        const response = await fetch(url.toString());
         if (!response.ok) {
           throw new Error('Failed to fetch queries');
         }
@@ -100,7 +102,7 @@ export default function VoterQueriesPage() {
     <div className="container mx-auto p-4 md:p-8 max-w-4xl">
       <div className="mb-6">
         <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Community Queries</h1>
+          <h1 className="text-3xl font-bold text-gray-800">My Queries</h1>
           <Link href="/dashboard/voter/queries/new">
             <Button>Raise New Query</Button>
           </Link>
@@ -109,12 +111,7 @@ export default function VoterQueriesPage() {
         <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setStatusFilter('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              statusFilter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${statusFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
             All
           </button>
           {Object.entries({
@@ -129,12 +126,7 @@ export default function VoterQueriesPage() {
             <button
               key={value}
               onClick={() => setStatusFilter(value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                statusFilter === value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${statusFilter === value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
               {label}
             </button>
           ))}
@@ -166,9 +158,6 @@ export default function VoterQueriesPage() {
                     {query.panchayat.name}
                   </span>
                 )}
-                {query.user?.id === authUser?.id && (
-                  <Badge variant="outline" className="text-xs">Your Query</Badge>
-                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -181,8 +170,7 @@ export default function VoterQueriesPage() {
                       href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-                    >
+                      className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
                       <Paperclip className="h-3 w-3 mr-1.5" />
                       {file.filename || 'Attachment'}
                     </a>
@@ -197,11 +185,28 @@ export default function VoterQueriesPage() {
                   shareCount={query.shareCount || 0}
                   retweetCount={query.retweetCount || 0}
                 />
-                <Link href={`/dashboard/voter/queries/details/${query.id}`}>
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                </Link>
+                <div className="flex items-center space-x-2">
+                  {query.status === 'DECLINED' ? (
+                    <>
+                      <Link href={`/dashboard/voter/complaints/new?queryId=${query.id}`}>
+                        <Button variant="destructive" size="sm">
+                          Complain
+                        </Button>
+                      </Link>
+                      <Link href={`/dashboard/voter/queries/new?resubmit=${query.id}`}>
+                        <Button variant="secondary" size="sm">
+                          Resubmit
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <Link href={`/dashboard/voter/queries/details/${query.id}`}>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -24,6 +24,7 @@ type QueryFormData = z.infer<typeof createQuerySchema>
 interface Department {
   id: string
   name: string
+  offices?: Office[]
 }
 
 interface Panchayat {
@@ -49,7 +50,12 @@ interface UploadedFile {
   publicId: string
 }
 
-export function QueryForm() {
+interface QueryFormProps {
+  initialData?: any | null;
+  resubmitId?: string | null;
+}
+
+export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedDepartment, setSelectedDepartment] = useState("default")
@@ -74,14 +80,28 @@ export function QueryForm() {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<QueryFormData>({
     resolver: zodResolver(createQuerySchema),
-    defaultValues: {
+    defaultValues: initialData || {
       panchayatId: user?.panchayat?.id || "",
       wardNumber: user?.wardNumber || 1,
     },
   })
+
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+      if (initialData.latitude && initialData.longitude) {
+        const loc = { lat: initialData.latitude, lng: initialData.longitude };
+        setLocation(loc);
+      }
+      if (initialData.attachments) {
+        setAttachments(initialData.attachments.map((att: any) => ({...att, id: att.publicId || att.id})));
+      }
+    }
+  }, [initialData, reset]);
 
   const watchedDepartmentId = watch("departmentId")
 
@@ -210,6 +230,13 @@ export function QueryForm() {
         return
       }
 
+      // If this was a resubmission, delete the old query
+      if (resubmitId) {
+        await fetch(`/api/queries/${resubmitId}`, {
+          method: 'DELETE',
+        });
+      }
+
       router.push("/dashboard/voter/queries")
     } catch (err) {
       setError("An error occurred. Please try again.")
@@ -221,9 +248,11 @@ export function QueryForm() {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Raise a New Query</CardTitle>
+        <CardTitle>{initialData ? 'Resubmit Query' : 'Raise a New Query'}</CardTitle>
         <CardDescription>
-          Submit your concerns, requests, or complaints about government services in your area
+          {initialData 
+            ? 'Review and edit the details of your declined query before submitting again.'
+            : 'Submit your concerns, requests, or complaints about government services in your area'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -384,7 +413,7 @@ export function QueryForm() {
                     <LocationPicker 
                       initialLocation={location || undefined}
                       onLocationSelect={handleLocationSelect}
-                      style={{ height: '100%', width: '100%' }}
+                      className="h-full w-full"
                     />
                   </div>
                   <div className="mt-4 flex justify-end gap-2">

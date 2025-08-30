@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { subject, description, attachments } = createComplaintSchema.parse(body)
+    const { subject, description, attachments, queryId } = createComplaintSchema.parse(body)
 
     const complaint = await prisma.complaint.create({
       data: {
@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         description,
         attachments,
         userId,
+        queryId,
       },
       include: {
         user: {

@@ -131,6 +131,24 @@ export async function POST(
       }
     });
 
+    // Create a notification if the query is declined
+    if (status === 'DECLINED' && existingQuery.user) {
+      await prisma.notification.create({
+        data: {
+          title: 'Query Declined',
+          message: `Your query "${existingQuery.title}" has been declined. Reason: ${note}`,
+          type: 'query_declined',
+          userId: existingQuery.userId,
+          queryId: id,
+          metadata: {
+            queryId: id,
+            queryTitle: existingQuery.title,
+            reason: note,
+          }
+        }
+      });
+    }
+
     return NextResponse.json(updatedQuery)
   } catch (error) {
     console.error('Error updating query status:', error)
