@@ -200,7 +200,6 @@ export function QueriesTable({
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="h-12 px-4 text-left align-middle font-medium">Query</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">User</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Panchayat</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">Budget</th>
@@ -215,9 +214,6 @@ export function QueriesTable({
                             <div className="font-medium">{query.title}</div>
                             <div className="text-sm text-muted-foreground">{query.department?.name || "N/A"}</div>
                           </div>
-                        </td>
-                        <td className="p-4 align-top">
-                          <div className="font-medium">Anonymous</div>
                         </td>
                         <td className="p-4 align-top">
                           <div className="font-medium">{query.panchayat?.name || "N/A"}</div>

@@ -34,7 +34,7 @@ export async function GET() {
 
     console.log(`Found ${panchayats.length} panchayats with user counts`)
     
-    const response = NextResponse.json(panchayats)
+    const response = NextResponse.json({ panchayats })
     response.headers.set('Content-Type', 'application/json')
     
     return response

@@ -413,7 +413,13 @@ type User = {
   email: string
   role: "ADMIN" | "PANCHAYAT" | "VOTER"
   status: "ACTIVE" | "INACTIVE"
-  updatedAt: string // Using 'updatedAt' from schema instead of 'lastLogin'
+  updatedAt: string
+  panchayat?: {
+    id: string
+    name: string
+    district: string
+    state: string
+  } | null
 }
 
 // Hardcoded mock data for non-voter roles
@@ -517,50 +523,66 @@ function EditUserDialog({
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
+  const [panchayats, setPanchayats] = useState<{id: string, name: string}[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [panchayatFilter, setPanchayatFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    role: "VOTER" as const,
+    role: "VOTER" as "ADMIN" | "PANCHAYAT" | "VOTER",
     password: "",
   })
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch("/api/admin/users")
-        if (!response.ok) {
+        const [usersResponse, panchayatsResponse] = await Promise.all([
+          fetch("/api/admin/users"),
+          fetch("/api/panchayats")
+        ])
+        
+        if (!usersResponse.ok) {
           throw new Error("Failed to fetch users")
         }
-        const data = await response.json()
         
-        const realVoters = data.users.map((user: any) => ({
+        const usersData = await usersResponse.json()
+        const realUsers = usersData.users.map((user: any) => ({
           ...user,
           status: "ACTIVE",
         }))
 
-        setUsers([...mockUsers, ...realVoters])
+        setUsers(realUsers)
+
+        if (panchayatsResponse.ok) {
+          const panchayatsData = await panchayatsResponse.json()
+          setPanchayats(panchayatsData.panchayats || [])
+        }
 
       } catch (error) {
-        console.error("Error fetching users:", error)
+        console.error("Error fetching data:", error)
         setUsers(mockUsers)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchUsers()
+    fetchData()
   }, [])
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    
+    const matchesPanchayat = panchayatFilter === "all" || 
+      (panchayatFilter === "none" && !user.panchayat) ||
+      user.panchayat?.id === panchayatFilter
+    
+    return matchesSearch && matchesPanchayat
+  })
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -647,7 +669,7 @@ export default function UsersPage() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="role" className="text-right">Role</Label>
-                  <Select value={newUser.role} onValueChange={(value: "ADMIN" | "PANCHAYAT" | "VOTER") => setNewUser({ ...newUser, role: value })}>
+                  <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value as "ADMIN" | "PANCHAYAT" | "VOTER" })}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
@@ -674,10 +696,26 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Users</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input type="search" placeholder="Search users..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
+            <CardTitle>Registered Voters</CardTitle>
+            <div className="flex gap-4">
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input type="search" placeholder="Search voters..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
+              </div>
+              <Select value={panchayatFilter} onValueChange={setPanchayatFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Panchayat" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Panchayats</SelectItem>
+                  <SelectItem value="none">No Panchayat</SelectItem>
+                  {panchayats.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -692,7 +730,7 @@ export default function UsersPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Panchayat</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last Activity</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -705,9 +743,16 @@ export default function UsersPage() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <span className="px-2 py-1 text-xs rounded-full bg-secondary text-secondary-foreground">
-                          {user.role}
-                        </span>
+                        {user.panchayat ? (
+                          <div>
+                            <div className="font-medium text-sm">{user.panchayat.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {user.panchayat.district}, {user.panchayat.state}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic text-sm">No Panchayat</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span
@@ -749,7 +794,7 @@ export default function UsersPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8">
-                      No users found
+                      No voters found
                     </TableCell>
                   </TableRow>
                 )}

@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const voters = await prisma.user.findMany({
+    const users = await prisma.user.findMany({
       where: {
         role: UserRole.VOTER,
       },
@@ -104,14 +104,22 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         role: true,
-        updatedAt: true, // Use updatedAt as a proxy for 'last activity'
+        updatedAt: true,
+        panchayat: {
+          select: {
+            id: true,
+            name: true,
+            district: true,
+            state: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
       },
     })
 
-    return NextResponse.json({ users: voters })
+    return NextResponse.json({ users: users })
   } catch (error) {
     console.error("Failed to fetch users:", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
