@@ -4,7 +4,9 @@ import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Clock, CheckCircle, AlertCircle, Users, TrendingUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { FileText, Clock, CheckCircle, AlertCircle, Users, TrendingUp, Eye } from "lucide-react"
+import Link from "next/link"
 
 interface QueryStats {
   total: number
@@ -183,8 +185,17 @@ export default function PanchayatDashboard() {
         {/* Recent Queries */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Queries</CardTitle>
-            <CardDescription>Latest queries submitted to your panchayat</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Queries</CardTitle>
+                <CardDescription>Latest queries submitted to your panchayat</CardDescription>
+              </div>
+              <Link href="/dashboard/panchayat/queries">
+                <Button variant="outline" size="sm">
+                  View All
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -214,11 +225,18 @@ export default function PanchayatDashboard() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {query.panchayat?.name}
+                          {query.user.name}
                         </div>
                         <span>{new Date(query.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
+                    {/* View Button */}
+                    <Link href={`/dashboard/panchayat/queries/${query.id}`}>
+                      <Button variant="outline" size="sm" className="flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                    </Link>
                   </div>
                 ))}
               </div>

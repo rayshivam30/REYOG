@@ -21,6 +21,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if user is banned
+    if (user.status === "BANNED") {
+      return NextResponse.json(
+        { error: { code: "ACCOUNT_BANNED", message: "Your account has been banned due to some reason" } },
+        { status: 403 },
+      )
+    }
+
     // Verify password
     const isValidPassword = await verifyPassword(password, user.password)
     if (!isValidPassword) {

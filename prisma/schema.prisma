@@ -14,6 +14,7 @@ model User {
   name          String
   phone         String?
   role          UserRole       @default(VOTER)
+  status        UserStatus     @default(ACTIVE)
   wardNumber    Int            @default(1)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -294,6 +295,11 @@ enum UserRole {
   VOTER
   PANCHAYAT
   ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
 }
 
 enum QueryStatus {

@@ -1,195 +1,3 @@
-// // app/admin/notifications/page.tsx (or your component's path)
-// "use client"
-
-// import { useState, useEffect } from "react"
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog"
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select"
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table"
-// import { Bell, Users, CheckCircle, AlertCircle, Info } from "lucide-react"
-
-// // Define types for the data we'll fetch
-// type Panchayat = {
-//   id: string
-//   name: string
-// }
-
-// type User = {
-//   id: string
-//   name: string
-//   email: string
-//   role: string
-//   createdAt: string
-//   panchayat: {
-//     name: string
-//   } | null
-// }
-
-// export default function NotificationsPage() {
-//   const [users, setUsers] = useState<User[]>([])
-//   const [panchayats, setPanchayats] = useState<Panchayat[]>([])
-//   const [selectedPanchayat, setSelectedPanchayat] = useState("all")
-//   const [loading, setLoading] = useState(false)
-
-//   // Fetch all panchayats for the filter dropdown on component mount
-//   useEffect(() => {
-//     const fetchPanchayats = async () => {
-//       const response = await fetch("/api/panchayats")
-//       const data = await response.json()
-//       setPanchayats(data)
-//     }
-//     fetchPanchayats()
-//   }, [])
-
-//   // Fetch users whenever the selectedPanchayat filter changes
-//   useEffect(() => {
-//     const fetchUsers = async () => {
-//       setLoading(true)
-//       const response = await fetch(`/api/users?panchayatId=${selectedPanchayat}`)
-//       const data = await response.json()
-//       setUsers(data)
-//       setLoading(false)
-//     }
-//     fetchUsers()
-//   }, [selectedPanchayat])
-
-//   return (
-//     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-//       <div className="flex items-center justify-between">
-//         <div>
-//           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-//             <Bell className="h-8 w-8" />
-//             Notifications & Activities
-//           </h2>
-//           <p className="text-muted-foreground">
-//             Review recent system activities and notifications.
-//           </p>
-//         </div>
-//       </div>
-
-//       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-//         {/* This card will now trigger the modal to show registered users */}
-//         <Dialog>
-//           <DialogTrigger asChild>
-//             <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-//               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                 <CardTitle className="text-sm font-medium">
-//                   Recent Registrations
-//                 </CardTitle>
-//                 <Users className="h-4 w-4 text-muted-foreground" />
-//               </CardHeader>
-//               <CardContent>
-//                 <div className="text-2xl font-bold">{users.length} Users</div>
-//                 <p className="text-xs text-muted-foreground">
-//                   Click to view all registered users
-//                 </p>
-//               </CardContent>
-//             </Card>
-//           </DialogTrigger>
-//           <DialogContent className="max-w-4xl">
-//             <DialogHeader>
-//               <DialogTitle>Registered Users</DialogTitle>
-//             </DialogHeader>
-//             <div className="flex items-center py-4">
-//               <Select
-//                 value={selectedPanchayat}
-//                 onValueChange={setSelectedPanchayat}
-//               >
-//                 <SelectTrigger className="w-[280px]">
-//                   <SelectValue placeholder="Filter by Panchayat" />
-//                 </SelectTrigger>
-//                 <SelectContent>
-//                   <SelectItem value="all">All Panchayats</SelectItem>
-//                   {panchayats.map((panchayat) => (
-//                     <SelectItem key={panchayat.id} value={panchayat.id}>
-//                       {panchayat.name}
-//                     </SelectItem>
-//                   ))}
-//                 </SelectContent>
-//               </Select>
-//             </div>
-//             <div className="rounded-md border">
-//               <Table>
-//                 <TableHeader>
-//                   <TableRow>
-//                     <TableHead>Name</TableHead>
-//                     <TableHead>Email</TableHead>
-//                     <TableHead>Panchayat</TableHead>
-//                     <TableHead>Role</TableHead>
-//                     <TableHead>Registered On</TableHead>
-//                   </TableRow>
-//                 </TableHeader>
-//                 <TableBody>
-//                   {loading ? (
-//                     <TableRow>
-//                       <TableCell colSpan={5} className="h-24 text-center">
-//                         Loading...
-//                       </TableCell>
-//                     </TableRow>
-//                   ) : users.length > 0 ? (
-//                     users.map((user) => (
-//                       <TableRow key={user.id}>
-//                         <TableCell className="font-medium">{user.name}</TableCell>
-//                         <TableCell>{user.email}</TableCell>
-//                         <TableCell>
-//                           {user.panchayat?.name || "N/A"}
-//                         </TableCell>
-//                         <TableCell>{user.role}</TableCell>
-//                         <TableCell>
-//                           {new Date(user.createdAt).toLocaleDateString()}
-//                         </TableCell>
-//                       </TableRow>
-//                     ))
-//                   ) : (
-//                     <TableRow>
-//                       <TableCell colSpan={5} className="h-24 text-center">
-//                         No users found.
-//                       </TableCell>
-//                     </TableRow>
-//                   )}
-//                 </TableBody>
-//               </Table>
-//             </div>
-//           </DialogContent>
-//         </Dialog>
-        
-//         {/* You can add other static or dynamic notification cards here */}
-//         <Card>
-//            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//                 <CardTitle className="text-sm font-medium">Scheduled Maintenance</CardTitle>
-//                 <AlertCircle className="h-4 w-4 text-muted-foreground" />
-//               </CardHeader>
-//               <CardContent>
-//                 <div className="text-2xl font-bold">Tomorrow 2 AM</div>
-//                 <p className="text-xs text-muted-foreground">
-//                   System will be offline for updates
-//                 </p>
-//               </CardContent>
-//         </Card>
-//       </div>
-//     </div>
-//   )
-// }
-
 // app/admin/notifications/page.tsx (or your component's path)
 // app/admin/notifications/page.tsx (or your component's path)
 "use client"
@@ -263,9 +71,14 @@ export default function NotificationsPage() {
   // Fetch all panchayats for the filter dropdowns on component mount
   useEffect(() => {
     const fetchPanchayats = async () => {
-      const response = await fetch("/api/panchayats")
-      const data = await response.json()
-      setPanchayats(data)
+      try {
+        const response = await fetch("/api/panchayats")
+        const data = await response.json()
+        setPanchayats(data.panchayats || [])
+      } catch (error) {
+        console.error("Error fetching panchayats:", error)
+        setPanchayats([])
+      }
     }
     fetchPanchayats()
   }, [])
@@ -274,10 +87,16 @@ export default function NotificationsPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       setLoadingUsers(true)
-      const response = await fetch(`/api/users?panchayatId=${selectedPanchayatForUsers}`)
-      const data = await response.json()
-      setUsers(data)
-      setLoadingUsers(false)
+      try {
+        const response = await fetch(`/api/users?panchayatId=${selectedPanchayatForUsers}`)
+        const data = await response.json()
+        setUsers(data || [])
+      } catch (error) {
+        console.error("Error fetching users:", error)
+        setUsers([])
+      } finally {
+        setLoadingUsers(false)
+      }
     }
     fetchUsers()
   }, [selectedPanchayatForUsers])
@@ -286,11 +105,17 @@ export default function NotificationsPage() {
   useEffect(() => {
     const fetchQueries = async () => {
       setLoadingQueries(true)
-      const response = await fetch(`/api/queries?panchayatId=${selectedPanchayatForQueries}`)
-      const data = await response.json()
-      // Adjusting based on your API's response shape
-      setQueries(data.queries || [])
-      setLoadingQueries(false)
+      try {
+        const response = await fetch(`/api/queries?panchayatId=${selectedPanchayatForQueries}`)
+        const data = await response.json()
+        // Adjusting based on your API's response shape
+        setQueries(data.queries || [])
+      } catch (error) {
+        console.error("Error fetching queries:", error)
+        setQueries([])
+      } finally {
+        setLoadingQueries(false)
+      }
     }
     fetchQueries()
   }, [selectedPanchayatForQueries])
