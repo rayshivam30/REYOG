@@ -125,7 +125,6 @@ model Query {
   upvotes          QueryUpvote[]
   likes            QueryLike[]
   comments         Comment[]
-  complaints       Complaint[]
 
   @@map("queries")
 }
@@ -209,9 +208,7 @@ model Complaint {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   userId      String
-  queryId     String
   user        User            @relation(fields: [userId], references: [id])
-  query       Query           @relation(fields: [queryId], references: [id])
 
   @@map("complaints")
 }

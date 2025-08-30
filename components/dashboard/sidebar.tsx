@@ -34,7 +34,6 @@ const voterNavItems = [
   { href: "/dashboard/voter", label: "Dashboard", icon: Home },
   { href: "/dashboard/voter/profile", label: "My Profile", icon: User }, // Added profile link
   { href: "/dashboard/voter/queries", label: "All Queries", icon: FileText },
-  { href: "/dashboard/voter/my-queries", label: "My Queries", icon: FileText },
   { href: "/dashboard/voter/queries/new", label: "Raise Query", icon: FileText },
   { href: "/dashboard/voter/location", label: "Location Tracker", icon: MapPin },
   { href: "/dashboard/voter/top-rated", label: "Top Rated Offices", icon: Star },

@@ -14,10 +14,6 @@ interface SocialActionsProps {
   initialComments?: number;
   initialShares?: number;
   initialUpvotes?: number;
-  likeCount?: number;
-  commentCount?: number;
-  shareCount?: number;
-  retweetCount?: number;
   className?: string;
 }
 
@@ -27,14 +23,10 @@ export function SocialActions({
   initialComments = 0,
   initialShares = 0,
   initialUpvotes = 0,
-  likeCount,
-  commentCount,
-  shareCount,
-  retweetCount,
   className = '',
 }: SocialActionsProps) {
-  const [likes, setLikes] = useState(likeCount ?? initialLikes);
-  const [comments, setComments] = useState(commentCount ?? initialComments);
+  const [likes, setLikes] = useState(initialLikes);
+  const [comments, setComments] = useState(initialComments);
   const [commentsList, setCommentsList] = useState<Array<{
     id: string;
     content: string;

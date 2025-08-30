@@ -13,41 +13,6 @@ import Link from "next/link"
 import { SocialActions } from "@/components/voter/social-actions"
 import { MapPin, Calendar, Paperclip } from "lucide-react"
 
-interface Attachment {
-  id: string;
-  url: string;
-  filename: string;
-  type: string;
-  size: number;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-}
-
-interface Panchayat {
-  id: string;
-  name: string;
-}
-
-interface Query {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  user: User;
-  panchayat?: Panchayat;
-  attachments: Attachment[];
-  likeCount?: number;
-  commentCount?: number;
-  shareCount?: number;
-  retweetCount?: number;
-}
-
 const statusVariant = {
   PENDING_REVIEW: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
   ACCEPTED: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
@@ -61,26 +26,21 @@ const statusVariant = {
 export default function VoterQueriesPage() {
   const { user: authUser } = useAuth();
   const router = useRouter();
-  const [queries, setQueries] = useState<Query[]>([]);
+  const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchQueries() {
       try {
-        const url = statusFilter !== 'all' 
-          ? `/api/queries?status=${statusFilter}`
-          : '/api/queries';
-          
-        const response = await fetch(url);
+        const response = await fetch('/api/queries');
         if (!response.ok) {
           throw new Error('Failed to fetch queries');
         }
         const { queries } = await response.json();
         setQueries(queries || []);
-      } catch (err: any) {
-        setError(err.message || 'An error occurred');
+      } catch (err) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -91,54 +51,18 @@ export default function VoterQueriesPage() {
     } else {
       redirect('/auth/login');
     }
-  }, [authUser, statusFilter]);
+  }, [authUser]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-4xl">
-      <div className="mb-6">
-        <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Community Queries</h1>
-          <Link href="/dashboard/voter/queries/new">
-            <Button>Raise New Query</Button>
-          </Link>
-        </div>
-        
-        <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              statusFilter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          {Object.entries({
-            'PENDING_REVIEW': 'Pending Review',
-            'ACCEPTED': 'Accepted',
-            'IN_PROGRESS': 'In Progress',
-            'RESOLVED': 'Resolved',
-            'DECLINED': 'Declined',
-            'CLOSED': 'Closed',
-            'WAITLISTED': 'Waitlisted'
-          }).map(([value, label]) => (
-            <button
-              key={value}
-              onClick={() => setStatusFilter(value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                statusFilter === value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-800">My Queries</h1>
+        <Link href="/dashboard/voter/queries/new">
+          <Button>Raise New Query</Button>
+        </Link>
       </div>
 
       <div className="space-y-4">
@@ -155,19 +79,15 @@ export default function VoterQueriesPage() {
                   {query.status.replace('_', ' ')}
                 </Badge>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1">
-                <span className="inline-flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {format(new Date(query.createdAt), 'MMM d, yyyy')}
-                </span>
+              <div className="flex items-center text-sm text-muted-foreground mt-1">
+                <Calendar className="h-4 w-4 mr-1" />
+                {format(new Date(query.createdAt), 'MMM d, yyyy')}
                 {query.panchayat && (
-                  <span className="inline-flex items-center">
+                  <>
+                    <span className="mx-2">•</span>
                     <MapPin className="h-4 w-4 mr-1" />
                     {query.panchayat.name}
-                  </span>
-                )}
-                {query.user?.id === authUser?.id && (
-                  <Badge variant="outline" className="text-xs">Your Query</Badge>
+                  </>
                 )}
               </div>
             </CardHeader>

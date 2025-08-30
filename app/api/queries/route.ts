@@ -19,26 +19,11 @@ export async function GET(request: NextRequest) {
     const limit = Number.parseInt(searchParams.get("limit") || "50")
     const offset = Number.parseInt(searchParams.get("offset") || "0")
     const panchayatFilterId = searchParams.get("panchayatId")
-    const scope = searchParams.get("scope")
 
     const whereClause: any = {}
 
-    if (scope === 'user') {
-      whereClause.userId = userId;
-    } else if (userRole === UserRole.VOTER) {
-      // Get the current user's panchayat
-      const currentUser = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { panchayatId: true }
-      });
-      
-      if (currentUser?.panchayatId) {
-        // Show all queries from the same panchayat
-        whereClause.panchayatId = currentUser.panchayatId;
-      } else {
-        // If no panchayat assigned, only show user's own queries
-        whereClause.userId = userId;
-      }
+    if (userRole === UserRole.VOTER) {
+      whereClause.userId = userId
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
       whereClause.panchayatId = panchayatId
     }
