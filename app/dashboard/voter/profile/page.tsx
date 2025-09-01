@@ -64,10 +64,23 @@ export default function ProfilePage() {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      panchayatId: user?.panchayatId || "",
+      panchayatId: user?.panchayat?.id || "",
       wardNumber: user?.wardNumber || 1,
     },
   })
+
+  // Keep form values in sync with the latest user data
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        panchayatId: user.panchayat?.id || "",
+        wardNumber: user.wardNumber || 1,
+      })
+    }
+  }, [user, form])
 
   useEffect(() => {
     // Fetch panchayats for the dropdown
@@ -78,6 +91,8 @@ export default function ProfilePage() {
           const data = await response.json()
           if (Array.isArray(data)) {
             setPanchayats(data)
+          } else if (data && Array.isArray((data as any).panchayats)) {
+            setPanchayats((data as any).panchayats)
           } else {
             console.error("Expected an array of panchayats but got:", data)
             setPanchayats([])
@@ -216,7 +231,7 @@ export default function ProfilePage() {
     );
   }
 
-  const selectedPanchayat = panchayats.find(p => p.id === user.panchayatId)
+  const selectedPanchayat = panchayats.find(p => p.id === user.panchayat?.id)
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -458,6 +473,13 @@ export default function ProfilePage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <div className="p-2 text-xs text-muted-foreground">
+                                {selectedPanchayat ? (
+                                  <span>Current: {selectedPanchayat.name}, {selectedPanchayat.district}</span>
+                                ) : (
+                                  <span>No panchayat set</span>
+                                )}
+                              </div>
                               {Array.isArray(panchayats) && panchayats.length > 0 ? (
                                 panchayats.map((panchayat) => (
                                   <SelectItem key={panchayat.id} value={panchayat.id}>

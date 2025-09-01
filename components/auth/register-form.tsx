@@ -51,6 +51,8 @@ export function RegisterForm() {
           // Ensure data is an array before setting it
           if (Array.isArray(data)) {
             setPanchayats(data)
+          } else if (data && Array.isArray((data as any).panchayats)) {
+            setPanchayats((data as any).panchayats)
           } else {
             console.error("Expected an array of panchayats but got:", data)
             setPanchayats([])
