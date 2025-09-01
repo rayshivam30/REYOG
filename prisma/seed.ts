@@ -1,3 +1,5 @@
+// prisma/seed.ts
+
 import { PrismaClient, UserRole, QueryStatus, ComplaintStatus } from "@prisma/client"
 import { hashPassword } from "../lib/auth"
 
@@ -24,12 +26,19 @@ async function main() {
   // Only try to clear tables that exist
   if (tableNames.length > 0) {
     console.log("🧹 Clearing existing data...");
-    // Explicitly listing tables to truncate in the correct order to avoid foreign key issues
-    const tablesToTruncate = ['Rating', 'Complaint', 'QueryUpdate', 'Query', 'User', 'NGO', 'Office', 'Panchayat', 'Department'];
+    
+    // ## THIS IS THE CORRECTED LINE ##
+    // Names are now lowercase and plural to match the actual table names in the database.
+    const tablesToTruncate = [
+      'ratings', 'complaints', 'query_updates', 'queries', 'users', 
+      'ngos', 'offices', 'panchayats', 'departments'
+    ];
     
     for (const table of tablesToTruncate) {
-      if (tableNames.includes(table.toLowerCase())) {
+      // The check now correctly finds the table name (e.g., 'departments') in the list of found tables.
+      if (tableNames.includes(table)) {
         console.log(`- Clearing ${table}...`);
+        // Using the correct table name in the TRUNCATE command.
         await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${table}" CASCADE;`);
       }
     }
