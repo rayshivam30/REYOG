@@ -141,3 +141,26 @@ export const serviceStatSchema = z.object({
   value: z.number().min(0, "Value must be non-negative"),
   unit: z.string().optional(),
 })
+
+// Query assignment schema
+export const queryAssignmentSchema = z.object({
+  officeIds: z.array(z.string()).optional(),
+  ngoIds: z.array(z.string()).optional(),
+})
+
+// Query rating schema
+export const queryRatingSchema = z.object({
+  ratings: z.array(z.object({
+    officeId: z.string().optional(),
+    ngoId: z.string().optional(),
+    rating: z.number().min(1).max(5),
+    comment: z.string().optional(),
+  })).min(1, "At least one rating is required"),
+})
+
+// NGO rating schema  
+export const createNgoRatingSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional(),
+  ngoId: z.string(),
+})

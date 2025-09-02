@@ -28,6 +28,8 @@ model User {
   ratings       Rating[]
   comments      Comment[]
   likes         QueryLike[]
+  queryRatings  QueryRating[]  // New relation
+  ngoRatings    NgoRating[]    // New relation
   panchayat     Panchayat?     @relation(fields: [panchayatId], references: [id])
 
   @@map("users")
@@ -82,6 +84,9 @@ model Office {
   panchayat    Panchayat  @relation(fields: [panchayatId], references: [id])
   queries      Query[]
   ratings      Rating[]
+  // New relations
+  assignedQueries QueryOfficeAssignment[]
+  queryRatings    QueryRating[]
 
   @@map("offices")
 }
@@ -127,6 +132,10 @@ model Query {
   likes            QueryLike[]
   comments         Comment[]
   complaints       Complaint[]
+  // New relations for assigned offices and NGOs
+  assignedOffices  QueryOfficeAssignment[]
+  assignedNgos     QueryNgoAssignment[]
+  queryRatings     QueryRating[]
 
   @@map("queries")
 }
@@ -244,6 +253,10 @@ model NGO {
   website      String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  // New relations
+  assignedQueries QueryNgoAssignment[]
+  ngoRatings      NgoRating[]
+  queryRatings    QueryRating[]  // Add missing relation
 
   @@map("ngos")
 }
@@ -317,4 +330,68 @@ enum ComplaintStatus {
   UNDER_REVIEW
   RESOLVED
   CLOSED
+}
+
+// New models for office and NGO assignments
+model QueryOfficeAssignment {
+  id        String   @id @default(cuid())
+  queryId   String
+  officeId  String
+  assignedAt DateTime @default(now())
+  assignedBy String   // User ID of who assigned
+  query     Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  office    Office   @relation(fields: [officeId], references: [id])
+
+  @@unique([queryId, officeId])
+  @@map("query_office_assignments")
+}
+
+model QueryNgoAssignment {
+  id        String   @id @default(cuid())
+  queryId   String
+  ngoId     String
+  assignedAt DateTime @default(now())
+  assignedBy String   // User ID of who assigned
+  query     Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  ngo       NGO      @relation(fields: [ngoId], references: [id])
+
+  @@unique([queryId, ngoId])
+  @@map("query_ngo_assignments")
+}
+
+// New rating system for queries
+model QueryRating {
+  id        String   @id @default(cuid())
+  queryId   String
+  userId    String
+  officeId  String?
+  ngoId     String?
+  rating    Int      // 1-5 rating
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  query     Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  office    Office?  @relation(fields: [officeId], references: [id])
+  ngo       NGO?     @relation(fields: [ngoId], references: [id])
+
+  @@unique([queryId, userId, officeId])
+  @@unique([queryId, userId, ngoId])
+  @@map("query_ratings")
+}
+
+// NGO ratings (separate from office ratings)
+model NgoRating {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  ngoId     String
+  ngo       NGO      @relation(fields: [ngoId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, ngoId])
+  @@map("ngo_ratings")
 }

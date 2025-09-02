@@ -43,17 +43,19 @@ export async function PATCH(
     }
 
     // Update user
+    const updateData: any = {};
+    
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.panchayatId !== undefined) updateData.panchayatId = data.panchayatId;
+    if (data.wardNumber !== undefined) updateData.wardNumber = data.wardNumber;
+
+    console.log('Updating user with data:', updateData);
+    
     const user = await prisma.user.update({
       where: { id: params.id },
-      data: {
-        ...data,
-        // Only update fields that are provided
-        ...(data.name && { name: data.name }),
-        ...(data.email && { email: data.email }),
-        ...(data.phone !== undefined && { phone: data.phone }),
-        ...(data.panchayatId && { panchayatId: data.panchayatId }),
-        ...(data.wardNumber !== undefined && { wardNumber: data.wardNumber }),
-      },
+      data: updateData,
       select: {
         id: true,
         name: true,

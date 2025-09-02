@@ -12,7 +12,7 @@ export async function POST(
       return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    const queryId = params.id;
+    const queryId = (await params).id;
 
     // In a real app, you might want to track shares in a separate table
     // For now, we'll just return a success response

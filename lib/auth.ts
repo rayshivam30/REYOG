@@ -12,6 +12,7 @@ export interface JWTPayload {
   email: string
   role: UserRole
   panchayatId?: string
+  [key: string]: any // This allows the interface to be compatible with jose's JWTPayload
 }
 
 export async function signToken(payload: JWTPayload): Promise<string> {

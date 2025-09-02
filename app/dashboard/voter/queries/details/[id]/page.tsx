@@ -1,16 +1,17 @@
 import { notFound, redirect } from "next/navigation"
 import { getAuthUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar, MapPin } from "lucide-react"
+import { ArrowLeft, Calendar, MapPin, Star } from "lucide-react"
 import Link from "next/link"
 import { SocialActions } from "@/components/voter/social-actions"
 import { AttachmentItem } from "@/components/voter/attachment-item"
-import { FileText, ImageIcon, Download } from "lucide-react"
+import { FileText, ImageIcon, Download, Building, Users } from "lucide-react"
 import { QueryLocationMap } from "@/components/voter/query-location-map"
+import { RatingForm } from "@/components/voter/rating-form"
 
 interface QueryWithRelations {
   id: string
@@ -20,8 +21,8 @@ interface QueryWithRelations {
   wardNumber: string
   createdAt: string | Date
   upvoteCount: number
-  latitude: number | null  // Added latitude field
-  longitude: number | null // Added longitude field
+  latitude: number | null
+  longitude: number | null
   user: {
     name: string
     email: string
@@ -52,10 +53,24 @@ interface QueryWithRelations {
     type: string
     size: number
   }>
+  assignedOffices: Array<{
+    office: {
+      id: string
+      name: string
+      department: {
+        id: string
+        name: string
+      }
+      rating: number | null
+    }
+  }>
 }
 
 const statusVariant = {
-  PENDING_REVIEW: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+  PENDING_REVIEW: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+  ACCEPTED: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+  IN_PROGRESS: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
+  RESOLVED: 'bg-green-100 text-green-800 hover:bg-green-200',
   ACCEPTED: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
   IN_PROGRESS: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
   RESOLVED: 'bg-green-100 text-green-800 hover:bg-green-200',
@@ -101,6 +116,20 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
           }
         },
         attachments: true,
+        assignedOffices: {
+          include: {
+            office: {
+              include: {
+                department: true
+              }
+            }
+          }
+        },
+        assignedNgos: {
+          include: {
+            ngo: true
+          }
+        },
       }
     })
 
@@ -222,6 +251,46 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                     <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium">
                       {query.department.name}
                     </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Add Assigned Office Information */}
+              {query.assignedOffices && query.assignedOffices.length > 0 && (
+                <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm mt-4 md:mt-0">
+                  <h3 className="text-sm font-medium text-gray-500 flex items-center mb-3">
+                    <Building className="mr-2 h-4 w-4 text-indigo-500" />
+                    Assigned Office
+                  </h3>
+                  <div className="space-y-3">
+                    {query.assignedOffices.map((assignment) => (
+                      <div key={assignment.office.id} className="border-l-2 border-indigo-400 pl-3">
+                        <p className="font-medium text-gray-900">{assignment.office.name}</p>
+                        <p className="text-sm text-gray-500">{assignment.office.address}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {assignment.office.department?.name || 'Department not specified'}
+                        </p>
+                        
+                        {/* Rating Section for Resolved Queries */}
+                        {query.status === 'RESOLVED' && (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                              <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                              Rate this Office
+                            </h4>
+                            <p className="text-xs text-gray-500 mb-2">
+                              How would you rate the service provided by {assignment.office.name}?
+                            </p>
+                            <RatingForm 
+                              officeId={assignment.office.id}
+                              officeName={assignment.office.name}
+                              departmentName={assignment.office.department?.name || 'the department'}
+                              queryId={query.id}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
