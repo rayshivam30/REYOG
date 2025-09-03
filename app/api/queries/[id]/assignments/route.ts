@@ -40,10 +40,10 @@ export async function POST(
       )
     }
 
-    // Verify query status is ACCEPTED (can only assign to accepted queries)
-    if (query.status !== "ACCEPTED") {
+    // Verify query status is ACCEPTED, WAITLISTED, or IN_PROGRESS (can assign to these statuses)
+    if (!["ACCEPTED", "WAITLISTED", "IN_PROGRESS"].includes(query.status)) {
       return NextResponse.json(
-        { error: { code: "INVALID_STATUS", message: "Can only assign offices/NGOs to accepted queries" } },
+        { error: { code: "INVALID_STATUS", message: "Can only assign offices/NGOs to accepted, waitlisted, or in-progress queries" } },
         { status: 400 }
       )
     }

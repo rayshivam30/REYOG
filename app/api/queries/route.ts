@@ -44,7 +44,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      whereClause.status = status
+      const statuses = status.split(',')
+      if (statuses.length === 1) {
+        whereClause.status = statuses[0]
+      } else {
+        whereClause.status = { in: statuses }
+      }
     }
 
     const queries = await prisma.query.findMany({

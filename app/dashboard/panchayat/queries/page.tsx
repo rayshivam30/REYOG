@@ -116,7 +116,9 @@ export default function ActiveQueriesPage() {
   const fetchQueries = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/queries")
+      // Only fetch queries with these statuses
+      const statuses = ["IN_PROGRESS", "ACCEPTED", "WAITLISTED"]
+      const response = await fetch(`/api/queries?status=${statuses.join(",")}`)
       if (response.ok) {
         const data = await response.json()
         setQueries(data.queries || [])
@@ -274,12 +276,9 @@ const handleSaveAssignment = async () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="PENDING_REVIEW">Pending Review</SelectItem>
               <SelectItem value="ACCEPTED">Accepted</SelectItem>
+              <SelectItem value="WAITLISTED">Waitlisted</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-              <SelectItem value="RESOLVED">Resolved</SelectItem>
-              <SelectItem value="CLOSED">Closed</SelectItem>
-              <SelectItem value="DECLINED">Declined</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>

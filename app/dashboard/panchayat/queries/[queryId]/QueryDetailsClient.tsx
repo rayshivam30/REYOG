@@ -265,12 +265,12 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
             </Card>
           )}
 
-          {/* Assignment Section - Show only for ACCEPTED queries */}
-          {query.status === 'ACCEPTED' && (
+          {/* Assignment Section - Show for ACCEPTED, WAITLISTED, and IN_PROGRESS queries */}
+          {['ACCEPTED', 'WAITLISTED', 'IN_PROGRESS'].includes(query.status) && (
             <Card className="border-none shadow-sm">
               <CardHeader className="pb-4 border-b">
                 <CardTitle className="text-lg font-semibold">Assign Offices & NGOs</CardTitle>
-                <CardDescription>Assign offices and NGOs to handle this accepted query</CardDescription>
+                <CardDescription>Assign offices and NGOs to handle this query</CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
                 <QueryAssignment 

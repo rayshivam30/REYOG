@@ -49,8 +49,8 @@ export function QueryAssignment({ queryId, queryTitle, queryStatus, onAssignment
   const [success, setSuccess] = useState<string | null>(null)
   const { user } = useAuth()
 
-  // Check if query can be assigned (must be ACCEPTED status)
-  const canAssign = queryStatus === "ACCEPTED"
+  // Check if query can be assigned (must be ACCEPTED, WAITLISTED, or IN_PROGRESS status)
+  const canAssign = ["ACCEPTED", "WAITLISTED", "IN_PROGRESS"].includes(queryStatus)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -182,7 +182,7 @@ export function QueryAssignment({ queryId, queryTitle, queryStatus, onAssignment
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Queries can only be assigned after they have been accepted. 
+              Queries can only be assigned when they are in ACCEPTED, WAITLISTED, or IN_PROGRESS status. 
               Current status: <Badge>{queryStatus}</Badge>
             </AlertDescription>
           </Alert>
