@@ -30,6 +30,11 @@ interface Department {
 interface Panchayat {
   id: string
   name: string
+  district: string
+  state: string
+  _count?: {
+    users: number
+  }
 }
 
 interface Office {
@@ -139,18 +144,31 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
 
   useEffect(() => {
     // Fetch panchayats
-    fetch("/api/panchayats")
-      .then((res) => res.json())
-      .then((data) => {
-        setPanchayats(Array.isArray(data) ? data : [])
+    const fetchPanchayats = async () => {
+      try {
+        const response = await fetch("/api/panchayats");
+        if (!response.ok) {
+          throw new Error('Failed to fetch panchayats');
+        }
+        const data = await response.json();
+        const panchayatList = Array.isArray(data.panchayats) ? data.panchayats : [];
+        setPanchayats(panchayatList);
 
         // If user has a panchayat, set it in the form
         if (user?.panchayat?.id) {
-          setValue("panchayatId", user.panchayat.id)
+          setValue("panchayatId", user.panchayat.id);
+        } else if (panchayatList.length > 0) {
+          // Set default panchayat if user doesn't have one
+          setValue("panchayatId", panchayatList[0].id);
         }
-      })
-      .catch((err) => console.error("Failed to fetch panchayats:", err))
-  }, [user, setValue])
+      } catch (err) {
+        console.error("Failed to fetch panchayats:", err);
+        setError('Failed to load panchayats. Please try again later.');
+      }
+    };
+
+    fetchPanchayats();
+  }, [user, setValue]);
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -284,19 +302,29 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
             <div className="space-y-2">
               <Label htmlFor="panchayatId">Panchayat</Label>
               <Select 
-                value={user?.panchayat?.id ? user.panchayat.id : undefined} 
+                value={watch("panchayatId")}
                 onValueChange={(value) => setValue("panchayatId", value)}
-                disabled={!!user?.panchayat?.id}
+                disabled={!!user?.panchayat?.id || isLoading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select panchayat" />
+                  <SelectValue placeholder={
+                    isLoading ? "Loading panchayats..." : 
+                    user?.panchayat?.name || "Select panchayat"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {panchayats.map((panchayat) => (
-                    <SelectItem key={panchayat.id} value={panchayat.id}>
-                      {panchayat.name}
-                    </SelectItem>
-                  ))}
+                  {panchayats.length > 0 ? (
+                    panchayats.map((panchayat) => (
+                      <SelectItem key={panchayat.id} value={panchayat.id}>
+                        {panchayat.name} 
+                        {panchayat.district ? `, ${panchayat.district}` : ''}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-muted-foreground">
+                      {isLoading ? 'Loading...' : 'No panchayats available'}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               {user?.panchayat?.id && (
