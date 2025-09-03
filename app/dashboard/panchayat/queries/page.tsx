@@ -19,6 +19,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -30,8 +32,20 @@ import {
   CheckCircle,
   AlertCircle,
   Users,
+  Briefcase,
+  HeartHandshake,
 } from "lucide-react"
 import Link from "next/link"
+
+interface Office {
+  id: string
+  name: string
+}
+
+interface NGO {
+  id: string
+  name: string
+}
 
 interface Query {
   id: string
@@ -53,9 +67,8 @@ interface Query {
   department?: {
     name: string
   }
-  office?: {
-    name: string
-  }
+  assignedOffices: { office: Office }[]
+  assignedNgos: { ngo: NGO }[]
 }
 
 export default function ActiveQueriesPage() {
@@ -64,10 +77,22 @@ export default function ActiveQueriesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+
+  // State for status update dialog
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null)
   const [updateStatus, setUpdateStatus] = useState("")
   const [updateNote, setUpdateNote] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false)
+
+  // State for assignment dialog
+  const [queryToAssign, setQueryToAssign] = useState<Query | null>(null)
+  const [offices, setOffices] = useState<Office[]>([])
+  const [ngos, setNgos] = useState<NGO[]>([])
+  const [selectedOfficeId, setSelectedOfficeId] = useState<string>('')
+  const [selectedNgoId, setSelectedNgoId] = useState<string>('')
+  const [isAssigning, setIsAssigning] = useState(false)
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchQueries()
@@ -75,7 +100,6 @@ export default function ActiveQueriesPage() {
 
   useEffect(() => {
     let filtered = queries
-
     if (searchTerm) {
       filtered = filtered.filter(
         (query) =>
@@ -83,11 +107,9 @@ export default function ActiveQueriesPage() {
           query.user.name.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
-
     if (statusFilter !== "all") {
       filtered = filtered.filter((query) => query.status === statusFilter)
     }
-
     setFilteredQueries(filtered)
   }, [queries, searchTerm, statusFilter])
 
@@ -97,12 +119,7 @@ export default function ActiveQueriesPage() {
       const response = await fetch("/api/queries")
       if (response.ok) {
         const data = await response.json()
-        const allQueries = data.queries || []
-        const activeQueries = allQueries.filter(
-          (q: Query) => q.status === "ACCEPTED" || q.status === "IN_PROGRESS",
-        )
-        setQueries(activeQueries)
-        setFilteredQueries(activeQueries)
+        setQueries(data.queries || [])
       }
     } catch (error) {
       console.error("Failed to fetch queries:", error)
@@ -111,6 +128,65 @@ export default function ActiveQueriesPage() {
     }
   }
 
+  const handleOpenAssignDialog = async (query: Query) => {
+    setQueryToAssign(query)
+    setSelectedOfficeId(query.assignedOffices?.[0]?.office.id || '')
+    setSelectedNgoId(query.assignedNgos?.[0]?.ngo.id || '')
+    setIsAssignDialogOpen(true)
+    
+    try {
+      const [officesRes, ngosRes] = await Promise.all([
+        fetch("/api/offices?for=assignment"),
+        fetch("/api/ngos?for=assignment"),
+      ])
+      if (officesRes.ok) setOffices(await officesRes.json())
+      if (ngosRes.ok) setNgos(await ngosRes.json())
+    } catch (error) {
+      console.error("Failed to fetch offices/NGOs:", error)
+    }
+  }
+const handleSaveAssignment = async () => {
+    if (!queryToAssign) return
+    setIsAssigning(true)
+
+    try {
+      const payload = {
+        officeId: selectedOfficeId || null,
+        ngoId: selectedNgoId || null,
+      }
+      console.log("Sending payload:", payload)
+
+      const response = await fetch(
+        `/api/queries/${queryToAssign.id}/assignments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      )
+
+      if (response.ok) {
+        setIsAssignDialogOpen(false)
+        await fetchQueries()
+      } else {
+        // This new block can handle empty or non-JSON responses
+        const errorText = await response.text() // Get raw text from the response
+        console.error("Failed to save. Server raw response:", errorText)
+        try {
+          const errorData = JSON.parse(errorText) // Try to parse it as JSON
+          alert(`Failed to save: ${errorData.error || JSON.stringify(errorData)}`)
+        } catch (e) {
+          // If it fails to parse, show the raw text
+          alert(`Failed to save. Server returned an invalid response: ${errorText || "Empty error response"}`)
+        }
+      }
+    } catch (error) {
+      console.error("A client-side error occurred:", error)
+      alert("A client-side error occurred while saving.")
+    } finally {
+      setIsAssigning(false)
+    }
+  }
   const handleStatusUpdate = async () => {
     if (!selectedQuery || !updateStatus) {
       alert("Please select a status.")
@@ -119,7 +195,7 @@ export default function ActiveQueriesPage() {
 
     const requiresRemark = ["DECLINED", "REJECTED", "WAITLISTED"]
     if (requiresRemark.includes(updateStatus) && !updateNote.trim()) {
-      alert("A remark is required to decline, reject, or waitlist this query.")
+      alert("A remark is required for this status.")
       return
     }
 
@@ -135,16 +211,13 @@ export default function ActiveQueriesPage() {
       })
 
       if (response.ok) {
-        setSelectedQuery(null)
-        setUpdateStatus("")
-        setUpdateNote("")
+        setIsUpdateDialogOpen(false)
         await fetchQueries()
       } else {
-        alert("Failed to update status. Please try again.")
+        alert("Failed to update status.")
       }
     } catch (error) {
       console.error("Failed to update status:", error)
-      alert("An error occurred. Please try again.")
     } finally {
       setIsUpdating(false)
     }
@@ -152,48 +225,34 @@ export default function ActiveQueriesPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "PENDING_REVIEW":
-        return <Clock className="h-4 w-4 text-yellow-500" />
-      case "RESOLVED":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "DECLINED":
-      case "REJECTED":
-        return <AlertCircle className="h-4 w-4 text-red-500" />
-      default:
-        return <Clock className="h-4 w-4 text-blue-500" />
+      case "PENDING_REVIEW": return <Clock className="h-4 w-4 text-yellow-500" />
+      case "RESOLVED": return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "DECLINED": case "REJECTED": return <AlertCircle className="h-4 w-4 text-red-500" />
+      default: return <Clock className="h-4 w-4 text-blue-500" />
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "PENDING_REVIEW":
-        return "bg-yellow-100 text-yellow-800"
-      case "ACCEPTED":
-      case "IN_PROGRESS":
-        return "bg-blue-100 text-blue-800"
-      case "RESOLVED":
-        return "bg-green-100 text-green-800"
-      case "WAITLISTED":
-        return "bg-purple-100 text-purple-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+      case "PENDING_REVIEW": return "bg-yellow-100 text-yellow-800"
+      case "ACCEPTED": case "IN_PROGRESS": return "bg-blue-100 text-blue-800"
+      case "RESOLVED": return "bg-green-100 text-green-800"
+      case "WAITLISTED": return "bg-purple-100 text-purple-800"
+      default: return "bg-gray-100 text-gray-800"
     }
   }
+
+ const eligibleForAssignment = (status: string) => ["PENDING_REVIEW", "ACCEPTED", "WAITLISTED", "IN_PROGRESS"].includes(status)
 
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Active Queries
-        </h1>
-        <p className="text-muted-foreground">
-          Manage and update queries submitted to your panchayat
-        </p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Active Queries</h1>
+        <p className="text-muted-foreground">Manage and update queries submitted to your panchayat</p>
       </div>
 
-      {/* Search Bar */}
       <Card className="mb-6">
-        <CardContent className="">
+        <CardContent className="pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -206,7 +265,6 @@ export default function ActiveQueriesPage() {
         </CardContent>
       </Card>
 
-      {/* Queries List */}
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Queries ({filteredQueries.length})</CardTitle>
@@ -216,8 +274,12 @@ export default function ActiveQueriesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="PENDING_REVIEW">Pending Review</SelectItem>
               <SelectItem value="ACCEPTED">Accepted</SelectItem>
               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="RESOLVED">Resolved</SelectItem>
+              <SelectItem value="CLOSED">Closed</SelectItem>
+              <SelectItem value="DECLINED">Declined</SelectItem>
             </SelectContent>
           </Select>
         </CardHeader>
@@ -225,10 +287,7 @@ export default function ActiveQueriesPage() {
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse p-4 border border-border rounded-lg"
-                >
+                <div key={i} className="animate-pulse p-4 border border-border rounded-lg">
                   <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                   <div className="h-3 bg-muted rounded w-1/2"></div>
                 </div>
@@ -237,146 +296,60 @@ export default function ActiveQueriesPage() {
           ) : filteredQueries.length > 0 ? (
             <div className="space-y-4">
               {filteredQueries.map((query) => (
-                <div
-                  key={query.id}
-                  className="p-4 border border-border rounded-lg"
-                >
-                  <div className="flex items-start justify-between mb-3">
+                <div key={query.id} className="p-4 border border-border rounded-lg flex flex-col gap-3">
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusIcon(query.status)}
                         <h4 className="font-medium">{query.title}</h4>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                        {query.description}
-                      </p>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge
-                          variant="outline"
-                          className={getStatusColor(query.status)}
-                        >
-                          {query.status.replace("_", " ")}
-                        </Badge>
-                        {query.department && (
-                          <Badge variant="secondary">
-                            {query.department.name}
-                          </Badge>
-                        )}
-                      </div>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{query.description}</p>
                     </div>
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex flex-col sm:flex-row gap-2 ml-4">
                       <Link href={`/dashboard/panchayat/queries/${query.id}`}>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                        <Button size="sm" variant="outline" className="w-full"><Eye className="h-4 w-4 mr-1" /> View</Button>
                       </Link>
-                      <Dialog
-                        onOpenChange={(isOpen) => {
-                          if (!isOpen) setSelectedQuery(null)
-                        }}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedQuery(query)
-                              setUpdateStatus(query.status)
-                              setUpdateNote("")
-                            }}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Update
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Update Query Status</DialogTitle>
-                            <DialogDescription>
-                              Select a new status and add a remark for the
-                              query: "{selectedQuery?.title}"
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 pt-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="status">New Status</Label>
-                              <Select
-                                value={updateStatus}
-                                onValueChange={setUpdateStatus}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select new status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="ACCEPTED">
-                                    Accept
-                                  </SelectItem>
-                                  <SelectItem value="IN_PROGRESS">
-                                    Mark In Progress
-                                  </SelectItem>
-                                  <SelectItem value="WAITLISTED">
-                                    Add to Waitlist
-                                  </SelectItem>
-                                  <SelectItem value="RESOLVED">
-                                    Mark Resolved
-                                  </SelectItem>
-                                  <SelectItem value="DECLINED">
-                                    Decline
-                                  </SelectItem>
-                                  <SelectItem value="REJECTED">
-                                    Reject
-                                  </SelectItem>
-                                  <SelectItem value="CLOSED">Close</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="note">
-                                Remark (Required for Decline/Reject/Waitlist)
-                              </Label>
-                              <Textarea
-                                id="note"
-                                placeholder="Add a note about this status update..."
-                                value={updateNote}
-                                onChange={(e) => setUpdateNote(e.target.value)}
-                              />
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                onClick={() => setSelectedQuery(null)}
-                                disabled={isUpdating}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={handleStatusUpdate}
-                                disabled={!updateStatus || isUpdating}
-                              >
-                                {isUpdating ? "Updating..." : "Update Status"}
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedQuery(query);
+                        setUpdateStatus(query.status);
+                        setUpdateNote("");
+                        setIsUpdateDialogOpen(true);
+                      }}>
+                        <Edit className="h-4 w-4 mr-1" /> Update
+                      </Button>
+                      {eligibleForAssignment(query.status) && (
+                        <Button size="sm" onClick={() => handleOpenAssignDialog(query)}>
+                          <Briefcase className="h-4 w-4 mr-1" /> Assign
+                        </Button>
+                      )}
                     </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className={getStatusColor(query.status)}>
+                      {query.status.replace("_", " ")}
+                    </Badge>
+                    {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
+                    {query.assignedOffices.length > 0 && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Briefcase className="h-3 w-3" />
+                        {query.assignedOffices[0].office.name}
+                      </Badge>
+                    )}
+                    {query.assignedNgos.length > 0 && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <HeartHandshake className="h-3 w-3" />
+                        {query.assignedNgos[0].ngo.name}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
                       <span>{query.user.name}</span>
                     </div>
-                    <span>
-                      {new Date(query.createdAt).toLocaleDateString()}
-                    </span>
-                    {query.budgetIssued && (
-                      <span>
-                        Budget: ₹{query.budgetIssued.toLocaleString()}
-                      </span>
-                    )}
-                    {query.officialIncharge && (
-                      <span>Officer: {query.officialIncharge}</span>
-                    )}
+                    <span>{new Date(query.createdAt).toLocaleDateString()}</span>
+                    {query.budgetIssued && <span>Budget: ₹{query.budgetIssued.toLocaleString()}</span>}
+                    {query.officialIncharge && <span>Officer: {query.officialIncharge}</span>}
                   </div>
                 </div>
               ))}
@@ -384,11 +357,89 @@ export default function ActiveQueriesPage() {
           ) : (
             <div className="text-center py-8">
               <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No active queries found</p>
+              <p className="text-muted-foreground">No queries found for the selected filters.</p>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isUpdateDialogOpen} onOpenChange={setIsUpdateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Query Status</DialogTitle>
+            <DialogDescription>
+              Select a new status and add a remark for: "{selectedQuery?.title}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">New Status</Label>
+              <Select value={updateStatus} onValueChange={setUpdateStatus}>
+                <SelectTrigger><SelectValue placeholder="Select new status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACCEPTED">Accept</SelectItem>
+                  <SelectItem value="IN_PROGRESS">Mark In Progress</SelectItem>
+                  <SelectItem value="WAITLISTED">Add to Waitlist</SelectItem>
+                  <SelectItem value="RESOLVED">Mark Resolved</SelectItem>
+                  <SelectItem value="DECLINED">Decline</SelectItem>
+                  <SelectItem value="CLOSED">Close</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="note">Remark</Label>
+              <Textarea id="note" placeholder="Add a note about this status update..." value={updateNote} onChange={(e) => setUpdateNote(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleStatusUpdate} disabled={!updateStatus || isUpdating}>
+              {isUpdating ? "Updating..." : "Update Status"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Office & NGO</DialogTitle>
+            <DialogDescription>For query: "{queryToAssign?.title}"</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="office">Assign Office</Label>
+              <Select value={selectedOfficeId} onValueChange={(value) => setSelectedOfficeId(value)}>
+                <SelectTrigger><SelectValue placeholder="Select an office" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {offices.map((office) => (
+                    <SelectItem key={office.id} value={office.id}>{office.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ngo">Assign NGO (Optional)</Label>
+              <Select value={selectedNgoId} onValueChange={(value) => setSelectedNgoId(value)}>
+                <SelectTrigger><SelectValue placeholder="Select an NGO" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {ngos.map((ngo) => (
+                    <SelectItem key={ngo.id} value={ngo.id}>{ngo.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={handleSaveAssignment} disabled={isAssigning}>
+              {isAssigning ? "Saving..." : "Save Assignments"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

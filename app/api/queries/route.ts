@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { createQuerySchema } from "@/lib/validations" 
+import { createQuerySchema } from "@/lib/validations"
 import { UserRole } from "@prisma/client"
 import { z } from "zod"
 
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
-    const limit = Number.parseInt(searchParams.get("limit") || "50")
-    const offset = Number.parseInt(searchParams.get("offset") || "0")
+    const limit = parseInt(searchParams.get("limit") || "50")
+    const offset = parseInt(searchParams.get("offset") || "0")
     const panchayatFilterId = searchParams.get("panchayatId")
     const scope = searchParams.get("scope")
 
@@ -26,17 +26,14 @@ export async function GET(request: NextRequest) {
     if (scope === 'user') {
       whereClause.userId = userId;
     } else if (userRole === UserRole.VOTER) {
-      // Get the current user's panchayat
       const currentUser = await prisma.user.findUnique({
         where: { id: userId },
         select: { panchayatId: true }
       });
       
       if (currentUser?.panchayatId) {
-        // Show all queries from the same panchayat
         whereClause.panchayatId = currentUser.panchayatId;
       } else {
-        // If no panchayat assigned, only show user's own queries
         whereClause.userId = userId;
       }
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
@@ -84,6 +81,28 @@ export async function GET(request: NextRequest) {
           },
         },
         attachments: true,
+        // MODIFICATION START: Include assignments
+        assignedOffices: {
+          select: {
+            office: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        assignedNgos: {
+          select: {
+            ngo: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        // MODIFICATION END
       },
       orderBy: {
         createdAt: "desc",

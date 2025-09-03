@@ -1,18 +1,50 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getAuthUser } from "@/lib/auth" // Add this import
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const purpose = searchParams.get("for")
+
+    // =================================================================
+    // NEW LOGIC for the assignment dropdown
+    // =================================================================
+    if (purpose === "assignment") {
+      const user = await getAuthUser()
+      // Ensure only authenticated panchayat or admin users can get this list
+      if (!user || (user.role !== "PANCHAYAT" && user.role !== "ADMIN")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+
+      const ngos = await prisma.nGO.findMany({
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      })
+      // Return the simple list
+      return NextResponse.json(ngos)
+    }
+
+    // =================================================================
+    // EXISTING LOGIC for fetching all NGO data (runs if 'for' is not 'assignment')
+    // =================================================================
     const ngos = await prisma.nGO.findMany({
       orderBy: { createdAt: "desc" },
     })
     return NextResponse.json(ngos)
+
   } catch (error) {
-    console.error(error)
+    console.error("NGOs fetch error:", error)
     return NextResponse.json({ error: "Failed to fetch NGOs" }, { status: 500 })
   }
 }
 
+// Your POST function remains completely unchanged.
 export async function POST(req: Request) {
   try {
     const data = await req.json()
@@ -30,7 +62,7 @@ export async function POST(req: Request) {
     })
     return NextResponse.json(newNGO, { status: 201 })
   } catch (error) {
-    console.error(error)
+    console.error("NGO creation error:", error)
     return NextResponse.json({ error: "Failed to add NGO" }, { status: 500 })
   }
 }

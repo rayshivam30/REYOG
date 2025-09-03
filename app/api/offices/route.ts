@@ -1,40 +1,57 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getAuthUser } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const q = searchParams.get("q") // Get the search query parameter
+    const purpose = searchParams.get("for")
+
+    // =================================================================
+    // NEW LOGIC for the assignment dropdown
+    // =================================================================
+    if (purpose === "assignment") {
+      const user = await getAuthUser()
+      if (!user || (user.role !== "PANCHAYAT" && user.role !== "ADMIN")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      }
+
+      const offices = await prisma.office.findMany({
+        where: {
+          // For Panchayat users, only show offices within their panchayat
+          panchayatId: user.role === "PANCHAYAT" ? user.panchayatId : undefined,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      })
+      return NextResponse.json(offices)
+    }
+
+    // =================================================================
+    // EXISTING LOGIC for public office search
+    // =================================================================
+    const q = searchParams.get("q")
     const dept = searchParams.get("dept")
     const panchayatId = searchParams.get("panchayatId")
     const lat = searchParams.get("lat")
     const lng = searchParams.get("lng")
-    const radius = searchParams.get("radius") || "10" // Default 10km radius
+    const radius = searchParams.get("radius") || "10"
 
     const whereClause: any = {}
-
-    // Add search query filter
     if (q) {
       whereClause.OR = [
-        {
-          name: {
-            contains: q,
-            mode: "insensitive",
-          },
-        },
-        {
-          address: {
-            contains: q,
-            mode: "insensitive",
-          },
-        },
+        { name: { contains: q, mode: "insensitive" } },
+        { address: { contains: q, mode: "insensitive" } },
       ]
     }
-
     if (dept) {
       whereClause.departmentId = dept
     }
-
     if (panchayatId) {
       whereClause.panchayatId = panchayatId
     }
@@ -44,36 +61,27 @@ export async function GET(request: NextRequest) {
       include: {
         department: true,
         panchayat: true,
-        ratings: {
-          select: {
-            rating: true,
-          },
-        },
-        _count: {
-          select: {
-            ratings: true,
-          },
-        },
+        ratings: { select: { rating: true } },
+        _count: { select: { ratings: true } },
       },
-      orderBy: {
-        name: "asc",
-      },
+      orderBy: { name: "asc" },
     })
 
-    // Calculate average ratings and filter by distance if coordinates provided
     const officesWithRatings = offices.map((office) => {
       const avgRating =
-        office.ratings.length > 0 ? office.ratings.reduce((sum, r) => sum + r.rating, 0) / office.ratings.length : 0
+        office.ratings.length > 0
+          ? office.ratings.reduce((sum, r) => sum + r.rating, 0) /
+            office.ratings.length
+          : 0
 
       let distance = null
       if (lat && lng) {
-        // Haversine formula for distance calculation
-        const R = 6371 // Earth's radius in km
-        const dLat = ((office.latitude - Number.parseFloat(lat)) * Math.PI) / 180
-        const dLng = ((office.longitude - Number.parseFloat(lng)) * Math.PI) / 180
+        const R = 6371
+        const dLat = ((office.latitude - parseFloat(lat)) * Math.PI) / 180
+        const dLng = ((office.longitude - parseFloat(lng)) * Math.PI) / 180
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos((Number.parseFloat(lat) * Math.PI) / 180) *
+          Math.cos((parseFloat(lat) * Math.PI) / 180) *
             Math.cos((office.latitude * Math.PI) / 180) *
             Math.sin(dLng / 2) *
             Math.sin(dLng / 2)
@@ -86,16 +94,15 @@ export async function GET(request: NextRequest) {
         avgRating: Math.round(avgRating * 10) / 10,
         ratingCount: office._count.ratings,
         distance: distance ? Math.round(distance * 10) / 10 : null,
-        ratings: undefined, // Remove individual ratings from response
+        ratings: undefined,
         _count: undefined,
       }
     })
 
-    // Filter by radius if coordinates provided
     let filteredOffices = officesWithRatings
     if (lat && lng) {
       filteredOffices = officesWithRatings.filter(
-        (office) => !office.distance || office.distance <= Number.parseFloat(radius),
+        (office) => !office.distance || office.distance <= parseFloat(radius),
       )
     }
 
