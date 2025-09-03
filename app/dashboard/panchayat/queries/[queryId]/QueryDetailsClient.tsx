@@ -2,10 +2,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Loader2, Mail, MapPin, Phone, User } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, Mail, MapPin, Phone, User, Building, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { QueryWithDetails } from "./page";
 import { QueryStatus } from "@prisma/client";
 import { Input } from "@/components/ui/input";
+import { QueryAssignment } from "@/components/panchayat/query-assignment";
 
 // Status color mapping
 const statusVariant = {
@@ -38,6 +39,31 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
   const [note, setNote] = useState("");
   const [updating, setUpdating] = useState(false);
   const [budgetSpentDelta, setBudgetSpentDelta] = useState("");
+  const [currentAssignments, setCurrentAssignments] = useState<{
+    offices: any[]
+    ngos: any[]
+  }>({ offices: [], ngos: [] });
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true);
+
+  // Fetch current assignments
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        setAssignmentsLoading(true);
+        const response = await fetch(`/api/queries/${query.id}/assignments`);
+        if (response.ok) {
+          const assignmentsData = await response.json();
+          setCurrentAssignments(assignmentsData);
+        }
+      } catch (err) {
+        console.error("Error fetching assignments:", err);
+      } finally {
+        setAssignmentsLoading(false);
+      }
+    };
+
+    fetchAssignments();
+  }, [query.id]);
 
   const handleStatusUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,6 +208,97 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
             </CardContent>
           </Card>
           
+          {/* Current Assignments Display - Show for all queries that have assignments */}
+          {!assignmentsLoading && (currentAssignments.offices.length > 0 || currentAssignments.ngos.length > 0) && (
+            <Card className="border-none shadow-sm">
+              <CardHeader className="pb-4 border-b">
+                <CardTitle className="text-lg font-semibold">Assigned Offices & NGOs</CardTitle>
+                <CardDescription>Organizations currently handling this query</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-4">
+                {/* Assigned Offices */}
+                {currentAssignments.offices.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Building className="h-4 w-4 text-blue-600" />
+                      <h4 className="font-medium text-blue-900">Assigned Offices</h4>
+                      <Badge variant="secondary">{currentAssignments.offices.length}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {currentAssignments.offices.map((assignment: any) => (
+                        <div key={assignment.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                          <div>
+                            <div className="font-medium text-blue-900">{assignment.office.name}</div>
+                            <div className="text-sm text-blue-700">{assignment.office.department.name}</div>
+                            <div className="text-xs text-blue-600">{assignment.office.address}</div>
+                          </div>
+                          <Badge variant="outline" className="bg-blue-100 text-blue-800">Office</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assigned NGOs */}
+                {currentAssignments.ngos.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Users className="h-4 w-4 text-green-600" />
+                      <h4 className="font-medium text-green-900">Assigned NGOs</h4>
+                      <Badge variant="secondary">{currentAssignments.ngos.length}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {currentAssignments.ngos.map((assignment: any) => (
+                        <div key={assignment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                          <div>
+                            <div className="font-medium text-green-900">{assignment.ngo.name}</div>
+                            <div className="text-sm text-green-700">{assignment.ngo.focusArea}</div>
+                            <div className="text-xs text-green-600">Contact: {assignment.ngo.contactName}</div>
+                          </div>
+                          <Badge variant="outline" className="bg-green-100 text-green-800">NGO</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Assignment Section - Show only for ACCEPTED queries */}
+          {query.status === 'ACCEPTED' && (
+            <Card className="border-none shadow-sm">
+              <CardHeader className="pb-4 border-b">
+                <CardTitle className="text-lg font-semibold">Assign Offices & NGOs</CardTitle>
+                <CardDescription>Assign offices and NGOs to handle this accepted query</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <QueryAssignment 
+                  queryId={query.id} 
+                  queryTitle={query.title}
+                  queryStatus={query.status}
+                  onAssignmentComplete={() => {
+                    toast.success("Assignment updated successfully!");
+                    // Refresh assignments data
+                    const fetchAssignments = async () => {
+                      try {
+                        const response = await fetch(`/api/queries/${query.id}/assignments`);
+                        if (response.ok) {
+                          const assignmentsData = await response.json();
+                          setCurrentAssignments(assignmentsData);
+                        }
+                      } catch (err) {
+                        console.error("Error refreshing assignments:", err);
+                      }
+                    };
+                    fetchAssignments();
+                    router.refresh();
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
+          
           <Card className="border-none shadow-sm">
             <CardHeader className="pb-4 border-b">
               <CardTitle className="text-lg font-semibold">Updates & Activity</CardTitle>
@@ -231,6 +348,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="ACCEPTED">Accept Query</SelectItem>
                       <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                       <SelectItem value="RESOLVED">Resolved</SelectItem>
                       <SelectItem value="WAITLISTED">Waitlisted</SelectItem>

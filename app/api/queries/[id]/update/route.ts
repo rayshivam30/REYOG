@@ -17,20 +17,25 @@ export async function POST(
 
     const { id } = params;
     const body = await request.json();
-    // **MODIFICATION: Destructure budgetSpentDelta from the body**
-    const { status, note, budgetSpentDelta } = body;
+    // Destructure officeId along with other fields
+    const { status, note, budgetSpentDelta, officeId } = body;
 
     if (!status || !note || !Object.values(QueryStatus).includes(status)) {
       return NextResponse.json({ error: "Invalid input: Status and note are required." }, { status: 400 });
     }
 
-    // **MODIFICATION: Validate budgetSpentDelta if it exists**
+    // Validate budgetSpentDelta if it exists
     if (budgetSpentDelta !== undefined && typeof budgetSpentDelta !== 'number') {
       return NextResponse.json({ error: "Invalid input: budgetSpentDelta must be a number." }, { status: 400 });
     }
 
+    // Validate officeId if status is ACCEPTED
+    if (status === "ACCEPTED" && !officeId) {
+      return NextResponse.json({ error: "Invalid input: An office must be assigned when accepting a query." }, { status: 400 });
+    }
+
     const updatedQuery = await prisma.$transaction(async (tx) => {
-      // **MODIFICATION: Fetch current query inside the transaction for safety**
+      // Fetch current query inside the transaction for safety
       const currentQuery = await tx.query.findUnique({
         where: { id: id },
         select: { budgetSpent: true }
@@ -59,6 +64,12 @@ export async function POST(
       // If a budget delta was provided, calculate and add the new total
       if (budgetSpentDelta !== undefined && budgetSpentDelta !== null) {
         dataToUpdate.budgetSpent = currentQuery.budgetSpent + budgetSpentDelta;
+      }
+
+      // If status is ACCEPTED and officeId is provided, assign the office
+      if (status === "ACCEPTED" && officeId) {
+        dataToUpdate.officeId = officeId;
+        dataToUpdate.acceptedAt = new Date(); // Set the acceptedAt timestamp
       }
 
       // 3. Update the main query record
