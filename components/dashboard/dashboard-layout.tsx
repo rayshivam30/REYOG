@@ -4,8 +4,9 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { Sidebar } from "./sidebar"
 import type { UserRole } from "@prisma/client"
-import { Menu } from "lucide-react"
+import { Menu, Home, FileText, AlertCircle, User, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 interface User {
   id: string
@@ -66,46 +67,76 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden bg-background">
-      {/* Sidebar with mobile toggle */}
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Mobile header */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between">
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          aria-label="Open menu"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        <div className="text-lg font-semibold text-gray-900">
+          {user?.role === 'VOTER' ? 'Voter Dashboard' : 'Dashboard'}
+        </div>
+        <div className="w-8"></div> {/* For balance */}
+      </header>
+
+      {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 transform bg-sidebar transition-transform duration-300 ease-in-out md:static md:translate-x-0",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
-          "md:w-64"
+          "fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out bg-white shadow-xl",
+          "flex flex-col h-screen",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-        <Sidebar
-          userRole={user.role}
-          userName={user.name}
-          panchayatName={user.panchayat?.name}
+        <Sidebar 
+          userRole={user?.role || 'VOTER'} 
+          userName={user?.name || 'User'}
+          panchayatName={user?.panchayat?.name}
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         />
       </div>
 
-      {/* Backdrop for mobile */}
+      {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-screen p-4 md:p-8 md:ml-[1rem]"> {/* Adjusting margin here */}
-        {/* Mobile Header with menu button */}
-        <div className="flex items-center justify-between md:hidden mb-4">
-          <h1 className="text-xl font-bold">Dashboard</h1>
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
+      {/* Main content */}
+      <div className="md:pl-64 flex flex-col min-h-screen pt-16 md:pt-0">
+        <main className="flex-1 p-4 md:p-8">
+          {children}
+        </main>
+        
+        {/* Mobile navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 z-30">
+          <div className="flex justify-around items-center">
+            <Link href="/dashboard/voter" className="flex flex-col items-center p-2 text-blue-600">
+              <Home className="h-6 w-6" />
+              <span className="text-xs mt-1">Home</span>
+            </Link>
+            <Link href="/dashboard/voter/queries" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600">
+              <FileText className="h-6 w-6" />
+              <span className="text-xs mt-1">Queries</span>
+            </Link>
+            <Link href="/dashboard/voter/complaints" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600">
+              <AlertCircle className="h-6 w-6" />
+              <span className="text-xs mt-1">Complaints</span>
+            </Link>
+            <Link href="/dashboard/voter/profile" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600">
+              <User className="h-6 w-6" />
+              <span className="text-xs mt-1">Profile</span>
+            </Link>
+          </div>
         </div>
-        {children}
-      </main>
+      </div>
     </div>
   )
 }

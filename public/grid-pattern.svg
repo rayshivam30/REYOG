@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" fill-rule="evenodd">
+    <g fill="currentColor" fill-opacity="0.05">
+      <path d="M0 0h40v40H0z"/>
+    </g>
+    <path d="M0 0h1v40H0V0zm40 0h1v40h-1V0z" fill="currentColor" fill-opacity="0.1"/>
+    <path d="M0 0v1h40V0H0zm0 40v1h40v-1H0z" fill="currentColor" fill-opacity="0.1"/>
+    <path d="M20 0v40M0 20h40" stroke="currentColor" stroke-opacity="0.1" stroke-width="0.5"/>
+  </g>
+</svg>
