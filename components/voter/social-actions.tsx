@@ -281,25 +281,8 @@ export function SocialActions({
     <div className={`flex flex-col space-y-2 ${className}`}>
       <div className="flex items-center space-x-1">
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 px-2.5 text-muted-foreground hover:text-blue-600 hover:bg-blue-50/50 transition-colors rounded-md ${
-                  isLiked ? 'text-blue-600 bg-blue-50' : ''
-                }`}
-                onClick={handleLike}
-                disabled={isSubmitting || isLoading}
-              >
-                <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-                {likes > 0 && <span className="ml-1.5 text-xs font-medium">{likes}</span>}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{isLiked ? 'Unlike' : 'Like'}</p>
-            </TooltipContent>
-          </Tooltip>
+          
+         
 
           <Tooltip>
             <TooltipTrigger asChild>
