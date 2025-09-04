@@ -95,7 +95,17 @@ declare var SpeechRecognition: {
   new (): SpeechRecognition;
 };
 
-export const useSpeechRecognition = () => {
+interface UseSpeechRecognitionOptions {
+  continuous?: boolean;
+  interimResults?: boolean;
+  lang?: string;
+}
+
+export function useSpeechRecognition({
+  continuous = false,
+  interimResults = true,
+  lang = 'en-US'
+}: UseSpeechRecognitionOptions = {}) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -112,9 +122,9 @@ export const useSpeechRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.continuous = continuous;
+    recognition.interimResults = interimResults;
+    recognition.lang = lang;
 
     // Set up event handlers
     recognition.onresult = (event: SpeechRecognitionEvent) => {

@@ -118,18 +118,29 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     resetTranscript: resetDescriptionTranscript
   } = useSpeechRecognition()
 
-  // Handle speech recognition results
+  // Handle speech recognition results for title
+  const [lastTitleTranscript, setLastTitleTranscript] = useState('');
   useEffect(() => {
     if (titleTranscript && isTitleListening) {
       setValue('title', titleTranscript, { shouldValidate: true });
+      setLastTitleTranscript(titleTranscript);
+    } else if (!isTitleListening && titleTranscript) {
+      // When stopping, make sure to set the final value
+      setValue('title', titleTranscript, { shouldValidate: true });
     }
-  }, [titleTranscript, isTitleListening, setValue])
+  }, [titleTranscript, isTitleListening, setValue]);
 
+  // Handle speech recognition results for description
+  const [lastDescriptionTranscript, setLastDescriptionTranscript] = useState('');
   useEffect(() => {
     if (descriptionTranscript && isDescriptionListening) {
       setValue('description', descriptionTranscript, { shouldValidate: true });
+      setLastDescriptionTranscript(descriptionTranscript);
+    } else if (!isDescriptionListening && descriptionTranscript) {
+      // When stopping, make sure to set the final value
+      setValue('description', descriptionTranscript, { shouldValidate: true });
     }
-  }, [descriptionTranscript, isDescriptionListening, setValue])
+  }, [descriptionTranscript, isDescriptionListening, setValue]);
 
   // Handle speech recognition errors
   useEffect(() => {
@@ -138,32 +149,55 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   }, [titleError, descriptionError])
 
   const toggleTitleListening = () => {
-    if (isTitleListening) {
-      stopTitleListening();
-    } else {
-      // Stop description if it's listening
-      if (isDescriptionListening) {
-        stopDescriptionListening();
-        resetDescriptionTranscript();
+    try {
+      if (isTitleListening) {
+        stopTitleListening();
+      } else {
+        // Stop description if it's listening
+        if (isDescriptionListening) {
+          stopDescriptionListening();
+          resetDescriptionTranscript();
+        }
+        resetTitleTranscript();
+        startTitleListening();
       }
-      resetTitleTranscript();
-      startTitleListening();
+    } catch (error) {
+      console.error('Error in title speech recognition:', error);
+      setError('Error accessing microphone. Please ensure you have granted microphone permissions.');
     }
   }
 
   const toggleDescriptionListening = () => {
-    if (isDescriptionListening) {
-      stopDescriptionListening();
-    } else {
-      // Stop title if it's listening
-      if (isTitleListening) {
-        stopTitleListening();
-        resetTitleTranscript();
+    try {
+      if (isDescriptionListening) {
+        stopDescriptionListening();
+      } else {
+        // Stop title if it's listening
+        if (isTitleListening) {
+          stopTitleListening();
+          resetTitleTranscript();
+        }
+        resetDescriptionTranscript();
+        startDescriptionListening();
       }
-      resetDescriptionTranscript();
-      startDescriptionListening();
+    } catch (error) {
+      console.error('Error in description speech recognition:', error);
+      setError('Error accessing microphone. Please ensure you have granted microphone permissions.');
     }
   }
+
+  // Handle when speech recognition ends naturally
+  useEffect(() => {
+    if (!isTitleListening && titleTranscript) {
+      setValue('title', titleTranscript, { shouldValidate: true });
+    }
+  }, [isTitleListening, titleTranscript, setValue]);
+
+  useEffect(() => {
+    if (!isDescriptionListening && descriptionTranscript) {
+      setValue('description', descriptionTranscript, { shouldValidate: true });
+    }
+  }, [isDescriptionListening, descriptionTranscript, setValue]);
 
 
   useEffect(() => {
