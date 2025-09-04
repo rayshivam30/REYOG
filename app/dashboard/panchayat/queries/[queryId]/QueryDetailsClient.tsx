@@ -310,10 +310,10 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                         <div className="w-px h-full bg-border my-1" />
                       </div>
                       <div className="flex-1 pb-6">
-                        {/* MODIFICATION START: Added flex-wrap and gap utilities for responsiveness */}
                         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                        {/* MODIFICATION END */}
-                          <div className="flex items-center gap-2">
+                          {/* MODIFICATION START: Added flex-wrap to this inner div as well */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          {/* MODIFICATION END */}
                             <span className="font-medium">{update.user.name}</span>
                             <Badge variant="outline" className="text-xs">{update.user.role}</Badge>
                             {update.status && <Badge variant={update.status === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs">{update.status.replace(/_/g, ' ')}</Badge>}
