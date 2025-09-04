@@ -1,11 +1,317 @@
+// "use client"
+
+// import { useEffect, useState } from "react"
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { Badge } from "@/components/ui/badge"
+// import { FileText, Plus, Clock, CheckCircle, AlertCircle, Award, User, MessageSquare } from "lucide-react"
+// import Link from "next/link"
+
+// interface Query {
+//   id: string
+//   title: string
+//   status: string
+//   createdAt: string
+//   department?: {
+//     name: string
+//   }
+// }
+
+// interface Complaint {
+//   id: string
+//   subject: string
+//   status: string
+//   createdAt: string
+// }
+
+// export default function VoterDashboard() {
+//   const [recentQueries, setRecentQueries] = useState<Query[]>([])
+//   const [recentComplaints, setRecentComplaints] = useState<Complaint[]>([])
+//   const [stats, setStats] = useState({
+//     totalQueries: 0,
+//     pendingQueries: 0,
+//     resolvedQueries: 0,
+//     totalComplaints: 0,
+//   })
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   useEffect(() => {
+//     const fetchDashboardData = async () => {
+//       try {
+//         const [queriesRes, complaintsRes] = await Promise.all([
+//           fetch("/api/queries?scope=user&limit=5"),
+//           fetch("/api/complaints?scope=user&limit=3"),
+//         ])
+
+//         if (queriesRes.ok) {
+//           const queriesData = await queriesRes.json()
+//           const queries = queriesData.queries || []
+//           setRecentQueries(queries)
+
+//           const allQueriesRes = await fetch("/api/queries?scope=user")
+//           if (allQueriesRes.ok) {
+//               const allQueriesData = await allQueriesRes.json()
+//               const allQueries = allQueriesData.queries || []
+//               setStats((prev) => ({
+//                 ...prev,
+//                 totalQueries: allQueries.length,
+//                 pendingQueries: allQueries.filter((q: Query) =>
+//                   ["PENDING_REVIEW", "ACCEPTED", "IN_PROGRESS"].includes(q.status)
+//                 ).length,
+//                 resolvedQueries: allQueries.filter((q: Query) => ["RESOLVED", "CLOSED"].includes(q.status)).length,
+//               }))
+//           }
+//         }
+
+//         if (complaintsRes.ok) {
+//           const complaintsData = await complaintsRes.json()
+//           const complaints = complaintsData.complaints || []
+//           setRecentComplaints(complaints)
+//            const allComplaintsRes = await fetch("/api/complaints?scope=user");
+//            if (allComplaintsRes.ok) {
+//              const allComplaintsData = await allComplaintsRes.json();
+//              setStats((prev) => ({
+//                ...prev,
+//                totalComplaints: allComplaintsData.complaints?.length || 0,
+//              }));
+//            }
+//         }
+//       } catch (error) {
+//         console.error("Failed to fetch dashboard data:", error)
+//       } finally {
+//         setIsLoading(false)
+//       }
+//     }
+//     fetchDashboardData()
+//   }, [])
+
+//   const getStatusColor = (status: string) => {
+//     switch (status) {
+//       case "PENDING_REVIEW":
+//         return "bg-yellow-100 text-yellow-800"
+//       case "ACCEPTED":
+//       case "IN_PROGRESS":
+//         return "bg-blue-100 text-blue-800"
+//       case "RESOLVED":
+//       case "CLOSED":
+//         return "bg-green-100 text-green-800"
+//       case "DECLINED":
+//         return "bg-red-100 text-red-800"
+//       default:
+//         return "bg-gray-100 text-gray-800"
+//     }
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-muted/40">
+//       {/* Welcome Header */}
+//       <div className="mb-4 md:mb-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+//         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-5 sm:p-6 lg:p-8 text-white shadow-xl">
+//           <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row items-start sm:items-center justify-between">
+//             <div className="flex-1">
+//               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 leading-tight">Welcome back! 👋</h1>
+//               <p className="text-blue-100 text-sm sm:text-base md:text-lg max-w-2xl">
+//                 Track your queries, explore services, and stay connected with your local government.
+//               </p>
+//             </div>
+//             <div className="mt-2 sm:mt-0 sm:ml-4">
+//               <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs sm:text-sm md:text-base">
+//                 <Award className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 flex-shrink-0" />
+//                 <span>Active Voter</span>
+//               </Badge>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Stats Cards */}
+//       <div className="px-4 sm:px-6 lg:px-8">
+//         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 md:mb-8">
+//           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+//               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-blue-100">Total Queries</CardTitle>
+//               <FileText className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-blue-200" />
+//             </CardHeader>
+//             <CardContent className="p-3 sm:p-4 pt-0">
+//               <div className="text-xl xs:text-2xl sm:text-3xl font-bold">{stats.totalQueries}</div>
+//               <p className="text-[10px] xs:text-xs text-blue-200 mt-0.5">Your submitted queries</p>
+//             </CardContent>
+//           </Card>
+//           <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+//               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-yellow-100">Pending</CardTitle>
+//               <Clock className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-yellow-200" />
+//             </CardHeader>
+//             <CardContent className="p-3 sm:p-4 pt-0">
+//               <div className="text-xl xs:text-2xl sm:text-3xl font-bold">{stats.pendingQueries}</div>
+//               <p className="text-[10px] xs:text-xs text-yellow-200 mt-0.5">Awaiting response</p>
+//             </CardContent>
+//           </Card>
+//           <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+//               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-green-100">Resolved</CardTitle>
+//               <CheckCircle className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-green-200" />
+//             </CardHeader>
+//             <CardContent className="p-3 sm:p-4 pt-0">
+//               <div className="text-xl xs:text-2xl sm:text-3xl font-bold">{stats.resolvedQueries}</div>
+//               <p className="text-[10px] xs:text-xs text-green-200 mt-0.5">Successfully resolved</p>
+//             </CardContent>
+//           </Card>
+//           <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
+//             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+//               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-purple-100">Complaints</CardTitle>
+//               <MessageSquare className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-purple-200" />
+//             </CardHeader>
+//             <CardContent className="p-3 sm:p-4 pt-0">
+//               <div className="text-xl xs:text-2xl sm:text-3xl font-bold">{stats.totalComplaints}</div>
+//               <p className="text-[10px] xs:text-xs text-purple-200 mt-0.5">Filed complaints</p>
+//             </CardContent>
+//           </Card>
+//         </div>
+//       </div>
+
+//       {/* Main Content */}
+//       <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
+//         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+//           <div className="lg:col-span-2">
+//             <Card className="h-full">
+//               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+//                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+//                   <div>
+//                     <CardTitle className="text-lg sm:text-xl">Recent Queries</CardTitle>
+//                     <CardDescription className="text-sm sm:text-base">Your most recent queries and their status</CardDescription>
+//                   </div>
+//                   <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-shadow" asChild>
+//                     <Link href="/dashboard/voter/queries/new" className="!text-white flex items-center justify-center">
+//                       <Plus className="mr-2 h-4 w-4" /> New Query
+//                     </Link>
+//                   </Button>
+//                 </div>
+//               </CardHeader>
+//               <CardContent className="p-0">
+//                 {isLoading ? (
+//                   <div className="flex justify-center py-8 sm:py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+//                 ) : recentQueries.length > 0 ? (
+//                   <div className="divide-y">
+//                     {recentQueries.map((query) => (
+//                       <Link key={query.id} href={`/dashboard/voter/queries/${query.id}`} className="block hover:bg-muted/50 transition-colors">
+//                         <div className="flex items-start sm:items-center justify-between p-3 sm:p-4">
+//                           <div className="flex items-start space-x-2 sm:space-x-3">
+//                             <div className="p-1.5 sm:p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 mt-0.5">
+//                               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+//                             </div>
+//                             <div className="min-w-0 flex-1">
+//                               <h3 className="font-medium text-sm sm:text-base leading-tight sm:leading-normal line-clamp-2 sm:line-clamp-1">{query.title}</h3>
+//                               <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
+//                                 <p className="text-xs text-muted-foreground">{new Date(query.createdAt).toLocaleDateString()}</p>
+//                                 {query.department && (<span className="hidden xs:inline text-xs text-muted-foreground">• {query.department.name}</span>)}
+//                               </div>
+//                             </div>
+//                           </div>
+//                           <div className="flex-shrink-0 ml-2 mt-0.5">
+//                             <Badge className={`text-[10px] sm:text-xs ${getStatusColor(query.status)}`}>{query.status.replace(/_/g, " ")}</Badge>
+//                           </div>
+//                         </div>
+//                       </Link>
+//                     ))}
+//                     <div className="p-3 sm:p-4 border-t">
+//                       <Button variant="ghost" size="sm" className="w-full" asChild>
+//                         <Link href="/dashboard/voter/queries" className="text-sm sm:text-base">View All Queries</Link>
+//                       </Button>
+//                     </div>
+//                   </div>
+//                 ) : (
+//                   <div className="text-center p-6 sm:p-8">
+//                     <FileText className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+//                     <h3 className="mt-3 text-sm sm:text-base font-medium">No queries yet</h3>
+//                     <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-xs mx-auto">Submit your first query to get started with the platform.</p>
+//                     <Button className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-shadow" size="sm" asChild>
+//                       <Link href="/dashboard/voter/queries/new" className="!text-white text-sm">
+//                         <Plus className="mr-2 h-4 w-4" /> New Query
+//                       </Link>
+//                     </Button>
+//                   </div>
+//                 )}
+//               </CardContent>
+//             </Card>
+//           </div>
+
+//           <div className="space-y-4 sm:space-y-6">
+//             <Card>
+//               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+//                 <CardTitle className="text-lg">Quick Actions</CardTitle>
+//                 <CardDescription className="text-sm sm:text-base">Common tasks and shortcuts</CardDescription>
+//               </CardHeader>
+//               <CardContent className="p-4 sm:p-6 pt-0">
+//                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:gap-3">
+//                   {/* === THIS IS THE ONLY BUTTON THAT WAS CHANGED === */}
+//                   <Button className="w-full justify-start h-auto py-2 sm:py-3 bg-black hover:bg-zinc-800" asChild>
+//                     <Link href="/dashboard/voter/queries/new" className="!text-white text-left text-sm sm:text-base">
+//                       <Plus className="mr-2 h-4 w-4 flex-shrink-0" />
+//                       <span>New Query</span>
+//                     </Link>
+//                   </Button>
+//                   <Button variant="outline" className="w-full justify-start h-auto py-2 sm:py-3" asChild>
+//                     <Link href="/dashboard/voter/queries" className="text-left text-sm sm:text-base"><FileText className="mr-2 h-4 w-4 flex-shrink-0" /><span>All Queries</span></Link>
+//                   </Button>
+//                   <Button variant="outline" className="w-full justify-start h-auto py-2 sm:py-3" asChild>
+//                     <Link href="/dashboard/voter/complaints/new" className="text-left text-sm sm:text-base"><AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" /><span>File Complaint</span></Link>
+//                   </Button>
+//                   <Button variant="outline" className="w-full justify-start h-auto py-2 sm:py-3" asChild>
+//                     <Link href="/dashboard/voter/profile" className="text-left text-sm sm:text-base"><User className="mr-2 h-4 w-4 flex-shrink-0" /><span>My Profile</span></Link>
+//                   </Button>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//             <Card>
+//               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+//                 <CardTitle className="text-lg">Recent Complaints</CardTitle>
+//                 <CardDescription className="text-sm sm:text-base">Your recent complaints</CardDescription>
+//               </CardHeader>
+//               <CardContent className="p-0">
+//                 {isLoading ? (
+//                   <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div></div>
+//                 ) : recentComplaints.length > 0 ? (
+//                   <div className="divide-y">
+//                     {recentComplaints.map((complaint) => (
+//                       <Link key={complaint.id} href={`/dashboard/voter/complaints/${complaint.id}`} className="block hover:bg-muted/50 transition-colors">
+//                         <div className="flex items-start sm:items-center justify-between p-3 sm:p-4">
+//                           <div className="flex-1 min-w-0">
+//                             <h3 className="text-sm font-medium truncate">{complaint.subject}</h3>
+//                             <p className="text-xs text-muted-foreground mt-0.5">{new Date(complaint.createdAt).toLocaleDateString()}</p>
+//                           </div>
+//                           <Badge variant="outline" className="ml-2 flex-shrink-0 text-[10px] sm:text-xs">{complaint.status.replace(/_/g, " ")}</Badge>
+//                         </div>
+//                       </Link>
+//                     ))}
+//                     <div className="p-3 sm:p-4 border-t">
+//                       <Button variant="ghost" size="sm" className="w-full text-sm sm:text-base" asChild>
+//                         <Link href="/dashboard/voter/complaints">View All Complaints</Link>
+//                       </Button>
+//                     </div>
+//                   </div>
+//                 ) : (
+//                   <div className="text-center p-6">
+//                     <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
+//                     <h3 className="mt-3 text-sm font-medium">No complaints yet</h3>
+//                     <p className="mt-1 text-xs sm:text-sm text-muted-foreground">File a complaint if you have any issues.</p>
+//                   </div>
+//                 )}
+//               </CardContent>
+//             </Card>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
 "use client"
 
 import { useEffect, useState } from "react"
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Star, MessageSquare, Plus, Clock, CheckCircle, AlertCircle, Eye, TrendingUp, Users, Award, User } from "lucide-react"
+import { FileText, Plus, Clock, CheckCircle, AlertCircle, Award, User, MessageSquare } from "lucide-react"
 import Link from "next/link"
 
 interface Query {
@@ -39,10 +345,9 @@ export default function VoterDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch only user queries instead of all queries
         const [queriesRes, complaintsRes] = await Promise.all([
-          fetch("/api/queries?scope=user&limit=5"), 
-          fetch("/api/complaints")
+          fetch("/api/queries?scope=user&limit=5"),
+          fetch("/api/complaints?scope=user&limit=3"),
         ])
 
         if (queriesRes.ok) {
@@ -50,25 +355,33 @@ export default function VoterDashboard() {
           const queries = queriesData.queries || []
           setRecentQueries(queries)
 
-          // Calculate stats
-          setStats((prev) => ({
-            ...prev,
-            totalQueries: queries.length,
-            pendingQueries: queries.filter((q: Query) =>
-              ["PENDING_REVIEW", "ACCEPTED", "IN_PROGRESS"].includes(q.status),
-            ).length,
-            resolvedQueries: queries.filter((q: Query) => ["RESOLVED", "CLOSED"].includes(q.status)).length,
-          }))
+          const allQueriesRes = await fetch("/api/queries?scope=user")
+          if (allQueriesRes.ok) {
+              const allQueriesData = await allQueriesRes.json()
+              const allQueries = allQueriesData.queries || []
+              setStats((prev) => ({
+                ...prev,
+                totalQueries: allQueries.length,
+                pendingQueries: allQueries.filter((q: Query) =>
+                  ["PENDING_REVIEW", "ACCEPTED", "IN_PROGRESS"].includes(q.status)
+                ).length,
+                resolvedQueries: allQueries.filter((q: Query) => ["RESOLVED", "CLOSED"].includes(q.status)).length,
+              }))
+          }
         }
 
         if (complaintsRes.ok) {
           const complaintsData = await complaintsRes.json()
           const complaints = complaintsData.complaints || []
-          setRecentComplaints(complaints.slice(0, 3))
-          setStats((prev) => ({
-            ...prev,
-            totalComplaints: complaints.length,
-          }))
+          setRecentComplaints(complaints)
+           const allComplaintsRes = await fetch("/api/complaints?scope=user");
+           if (allComplaintsRes.ok) {
+             const allComplaintsData = await allComplaintsRes.json();
+             setStats((prev) => ({
+               ...prev,
+               totalComplaints: allComplaintsData.complaints?.length || 0,
+             }));
+           }
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error)
@@ -76,23 +389,8 @@ export default function VoterDashboard() {
         setIsLoading(false)
       }
     }
-
     fetchDashboardData()
   }, [])
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "PENDING_REVIEW":
-        return <Clock className="h-4 w-4 text-yellow-500" />
-      case "RESOLVED":
-      case "CLOSED":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "DECLINED":
-        return <AlertCircle className="h-4 w-4 text-red-500" />
-      default:
-        return <Clock className="h-4 w-4 text-blue-500" />
-    }
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -112,10 +410,10 @@ export default function VoterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-muted/40">
       {/* Welcome Header */}
-      <div className="mb-4 md:mb-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-5 sm:p-6 lg:p-8 text-white shadow-xl">
+      <div className="mb-4 md:mb-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-5 sm:p-6 lg:p-8 text-white shadow-xl">
           <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row items-start sm:items-center justify-between">
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 leading-tight">Welcome back! 👋</h1>
@@ -136,7 +434,7 @@ export default function VoterDashboard() {
       {/* Stats Cards */}
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 md:mb-8">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-blue-100">Total Queries</CardTitle>
               <FileText className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-blue-200" />
@@ -146,8 +444,7 @@ export default function VoterDashboard() {
               <p className="text-[10px] xs:text-xs text-blue-200 mt-0.5">Your submitted queries</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+          <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-yellow-100">Pending</CardTitle>
               <Clock className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-yellow-200" />
@@ -157,8 +454,7 @@ export default function VoterDashboard() {
               <p className="text-[10px] xs:text-xs text-yellow-200 mt-0.5">Awaiting response</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-green-100">Resolved</CardTitle>
               <CheckCircle className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-green-200" />
@@ -168,8 +464,7 @@ export default function VoterDashboard() {
               <p className="text-[10px] xs:text-xs text-green-200 mt-0.5">Successfully resolved</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+          <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1 h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
               <CardTitle className="text-[10px] xs:text-xs sm:text-sm font-medium text-purple-100">Complaints</CardTitle>
               <MessageSquare className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-purple-200" />
@@ -183,19 +478,18 @@ export default function VoterDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Recent Queries - Takes 2/3 width on large screens */}
           <div className="lg:col-span-2">
             <Card className="h-full">
               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div>
                     <CardTitle className="text-lg sm:text-xl">Recent Queries</CardTitle>
                     <CardDescription className="text-sm sm:text-base">Your most recent queries and their status</CardDescription>
                   </div>
-                  <Button size="sm" className="w-full xs:w-auto mt-2 xs:mt-0" asChild>
-                    <Link href="/dashboard/voter/queries/new" className="flex items-center justify-center">
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-shadow" asChild>
+                    <Link href="/dashboard/voter/queries/new" className="!text-white flex items-center justify-center">
                       <Plus className="mr-2 h-4 w-4" /> New Query
                     </Link>
                   </Button>
@@ -203,49 +497,34 @@ export default function VoterDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 {isLoading ? (
-                  <div className="flex justify-center py-8 sm:py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
+                  <div className="flex justify-center py-8 sm:py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
                 ) : recentQueries.length > 0 ? (
                   <div className="divide-y">
                     {recentQueries.map((query) => (
-                      <Link
-                        key={query.id}
-                        href={`/dashboard/voter/queries/${query.id}`}
-                        className="block hover:bg-muted/50 transition-colors"
-                      >
+                      <Link key={query.id} href={`/dashboard/voter/queries/${query.id}`} className="block hover:bg-muted/50 transition-colors">
                         <div className="flex items-start sm:items-center justify-between p-3 sm:p-4">
                           <div className="flex items-start space-x-2 sm:space-x-3">
                             <div className="p-1.5 sm:p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 mt-0.5">
                               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-medium text-sm sm:text-base leading-tight sm:leading-normal line-clamp-2 sm:line-clamp-1">
-                                {query.title}
-                              </h3>
+                              <h3 className="font-medium text-sm sm:text-base leading-tight sm:leading-normal line-clamp-2 sm:line-clamp-1">{query.title}</h3>
                               <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(query.createdAt).toLocaleDateString()}
-                                </p>
-                                {query.department && (
-                                  <span className="hidden xs:inline text-xs text-muted-foreground">• {query.department.name}</span>
-                                )}
+                                <p className="text-xs text-muted-foreground">{new Date(query.createdAt).toLocaleDateString()}</p>
+                                {query.department && (<span className="hidden xs:inline text-xs text-muted-foreground">• {query.department.name}</span>)}
                               </div>
                             </div>
                           </div>
                           <div className="flex-shrink-0 ml-2 mt-0.5">
-                            <Badge className={`text-[10px] sm:text-xs ${getStatusColor(query.status)}`}>
-                              {query.status.replace(/_/g, " ")}
-                            </Badge>
+                            <Badge className={`text-[10px] sm:text-xs ${getStatusColor(query.status)}`}>{query.status.replace(/_/g, " ")}</Badge>
                           </div>
                         </div>
                       </Link>
                     ))}
                     <div className="p-3 sm:p-4 border-t">
-                      <Button variant="ghost" size="sm" className="w-full" asChild>
-                        <Link href="/dashboard/voter/queries" className="text-sm sm:text-base">
-                          View All Queries
-                        </Link>
+                      {/* === THIS BUTTON WAS CHANGED === */}
+                      <Button variant="secondary" size="sm" className="w-full" asChild>
+                        <Link href="/dashboard/voter/queries" className="text-sm sm:text-base">View All Queries</Link>
                       </Button>
                     </div>
                   </div>
@@ -253,11 +532,9 @@ export default function VoterDashboard() {
                   <div className="text-center p-6 sm:p-8">
                     <FileText className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
                     <h3 className="mt-3 text-sm sm:text-base font-medium">No queries yet</h3>
-                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-xs mx-auto">
-                      Submit your first query to get started with the platform.
-                    </p>
-                    <Button className="mt-4" size="sm" asChild>
-                      <Link href="/dashboard/voter/queries/new" className="text-sm">
+                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-xs mx-auto">Submit your first query to get started with the platform.</p>
+                    <Button className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-shadow" size="sm" asChild>
+                      <Link href="/dashboard/voter/queries/new" className="!text-white text-sm">
                         <Plus className="mr-2 h-4 w-4" /> New Query
                       </Link>
                     </Button>
@@ -267,9 +544,7 @@ export default function VoterDashboard() {
             </Card>
           </div>
 
-          {/* Right Sidebar - Quick Actions & Recent Complaints */}
           <div className="space-y-4 sm:space-y-6">
-            {/* Quick Actions Card */}
             <Card>
               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
@@ -277,35 +552,24 @@ export default function VoterDashboard() {
               </CardHeader>
               <CardContent className="p-4 sm:p-6 pt-0">
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:gap-3">
-                  <Button className="w-full justify-start h-auto py-2 sm:py-3" asChild>
-                    <Link href="/dashboard/voter/queries/new" className="text-left text-sm sm:text-base">
+                  <Button className="w-full justify-start h-auto py-2 sm:py-3 bg-black hover:bg-zinc-800" asChild>
+                    <Link href="/dashboard/voter/queries/new" className="!text-white text-left text-sm sm:text-base">
                       <Plus className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span>New Query</span>
                     </Link>
                   </Button>
                   <Button variant="outline" className="w-full justify-start h-auto py-2 sm:py-3" asChild>
-                    <Link href="/dashboard/voter/queries" className="text-left text-sm sm:text-base">
-                      <FileText className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span>All Queries</span>
-                    </Link>
+                    <Link href="/dashboard/voter/queries" className="text-left text-sm sm:text-base"><FileText className="mr-2 h-4 w-4 flex-shrink-0" /><span>All Queries</span></Link>
                   </Button>
                   <Button variant="outline" className="w-full justify-start h-auto py-2 sm:py-3" asChild>
-                    <Link href="/dashboard/voter/complaints/new" className="text-left text-sm sm:text-base">
-                      <AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span>File Complaint</span>
-                    </Link>
+                    <Link href="/dashboard/voter/complaints/new" className="text-left text-sm sm:text-base"><AlertCircle className="mr-2 h-4 w-4 flex-shrink-0" /><span>File Complaint</span></Link>
                   </Button>
                   <Button variant="outline" className="w-full justify-start h-auto py-2 sm:py-3" asChild>
-                    <Link href="/dashboard/voter/profile" className="text-left text-sm sm:text-base">
-                      <User className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span>My Profile</span>
-                    </Link>
+                    <Link href="/dashboard/voter/profile" className="text-left text-sm sm:text-base"><User className="mr-2 h-4 w-4 flex-shrink-0" /><span>My Profile</span></Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Recent Complaints Card */}
             <Card>
               <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
                 <CardTitle className="text-lg">Recent Complaints</CardTitle>
@@ -313,35 +577,24 @@ export default function VoterDashboard() {
               </CardHeader>
               <CardContent className="p-0">
                 {isLoading ? (
-                  <div className="flex justify-center py-6">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                  </div>
+                  <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div></div>
                 ) : recentComplaints.length > 0 ? (
                   <div className="divide-y">
                     {recentComplaints.map((complaint) => (
-                      <Link
-                        key={complaint.id}
-                        href={`/dashboard/voter/complaints/${complaint.id}`}
-                        className="block hover:bg-muted/50 transition-colors"
-                      >
+                      <Link key={complaint.id} href={`/dashboard/voter/complaints/${complaint.id}`} className="block hover:bg-muted/50 transition-colors">
                         <div className="flex items-start sm:items-center justify-between p-3 sm:p-4">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-medium truncate">{complaint.subject}</h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {new Date(complaint.createdAt).toLocaleDateString()}
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{new Date(complaint.createdAt).toLocaleDateString()}</p>
                           </div>
-                          <Badge variant="outline" className="ml-2 flex-shrink-0 text-[10px] sm:text-xs">
-                            {complaint.status.replace(/_/g, " ")}
-                          </Badge>
+                          <Badge variant="outline" className="ml-2 flex-shrink-0 text-[10px] sm:text-xs">{complaint.status.replace(/_/g, " ")}</Badge>
                         </div>
                       </Link>
                     ))}
                     <div className="p-3 sm:p-4 border-t">
-                      <Button variant="ghost" size="sm" className="w-full text-sm sm:text-base" asChild>
-                        <Link href="/dashboard/voter/complaints">
-                          View All Complaints
-                        </Link>
+                       {/* === THIS BUTTON WAS CHANGED === */}
+                      <Button variant="secondary" size="sm" className="w-full" asChild>
+                        <Link href="/dashboard/voter/complaints" className="text-sm sm:text-base">View All Complaints</Link>
                       </Button>
                     </div>
                   </div>
@@ -349,9 +602,7 @@ export default function VoterDashboard() {
                   <div className="text-center p-6">
                     <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
                     <h3 className="mt-3 text-sm font-medium">No complaints yet</h3>
-                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                      File a complaint if you have any issues.
-                    </p>
+                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground">File a complaint if you have any issues.</p>
                   </div>
                 )}
               </CardContent>
@@ -362,3 +613,280 @@ export default function VoterDashboard() {
     </div>
   )
 }
+
+// "use client"
+
+// import { useEffect, useState } from "react"
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { Badge } from "@/components/ui/badge"
+// import { FileText, Plus, Clock, CheckCircle, AlertCircle, Award, User, XCircle, MessageSquare } from "lucide-react"
+// import Link from "next/link"
+
+// // --- Interfaces (No changes) ---
+// interface Query {
+//   id: string
+//   title: string
+//   status: "PENDING_REVIEW" | "ACCEPTED" | "IN_PROGRESS" | "RESOLVED" | "CLOSED" | "DECLINED"
+//   createdAt: string
+//   department?: {
+//     name: string
+//   }
+// }
+
+// interface Complaint {
+//   id:string
+//   subject: string
+//   status: string
+//   createdAt: string
+// }
+
+// // --- Status Badge Component (No changes) ---
+// const StatusBadge = ({ status }: { status: Query["status"] }) => {
+//   const statusConfig = {
+//     PENDING_REVIEW: { label: "Pending Review", color: "bg-yellow-500", textColor: "text-yellow-800", bgColor: "bg-yellow-100" },
+//     ACCEPTED: { label: "Accepted", color: "bg-blue-500", textColor: "text-blue-800", bgColor: "bg-blue-100" },
+//     IN_PROGRESS: { label: "In Progress", color: "bg-indigo-500", textColor: "text-indigo-800", bgColor: "bg-indigo-100" },
+//     RESOLVED: { label: "Resolved", color: "bg-green-500", textColor: "text-green-800", bgColor: "bg-green-100" },
+//     CLOSED: { label: "Closed", color: "bg-green-500", textColor: "text-green-800", bgColor: "bg-green-100" },
+//     DECLINED: { label: "Declined", color: "bg-red-500", textColor: "text-red-800", bgColor: "bg-red-100" },
+//   }
+
+//   const config = statusConfig[status] || { label: status, color: "bg-gray-500", textColor: "text-gray-800", bgColor: "bg-gray-100" };
+
+//   return (
+//     <Badge variant="secondary" className={`whitespace-nowrap border-transparent text-xs sm:text-sm font-medium ${config.bgColor} ${config.textColor}`}>
+//       <span className={`mr-1.5 h-2 w-2 rounded-full ${config.color}`}></span>
+//       {config.label}
+//     </Badge>
+//   )
+// }
+
+// export default function VoterDashboard() {
+//   const [recentQueries, setRecentQueries] = useState<Query[]>([])
+//   const [recentComplaints, setRecentComplaints] = useState<Complaint[]>([])
+//   const [stats, setStats] = useState({
+//     totalQueries: 0,
+//     pendingQueries: 0,
+//     resolvedQueries: 0,
+//     totalComplaints: 0,
+//   })
+//   const [isLoading, setIsLoading] = useState(true)
+
+//   // --- Data Fetching Logic (No changes) ---
+//   useEffect(() => {
+//     const fetchDashboardData = async () => {
+//       try {
+//         const [queriesRes, complaintsRes] = await Promise.all([
+//           fetch("/api/queries?scope=user&limit=5"),
+//           fetch("/api/complaints?scope=user&limit=3"),
+//         ])
+
+//         if (queriesRes.ok) {
+//           const queriesData = await queriesRes.json()
+//           const queries = queriesData.queries || []
+//           setRecentQueries(queries)
+
+//           const allQueriesRes = await fetch("/api/queries?scope=user")
+//           if (allQueriesRes.ok) {
+//               const allQueriesData = await allQueriesRes.json()
+//               const allQueries = allQueriesData.queries || []
+//               setStats((prev) => ({
+//                 ...prev,
+//                 totalQueries: allQueries.length,
+//                 pendingQueries: allQueries.filter((q: Query) =>
+//                   ["PENDING_REVIEW", "ACCEPTED", "IN_PROGRESS"].includes(q.status)
+//                 ).length,
+//                 resolvedQueries: allQueries.filter((q: Query) => ["RESOLVED", "CLOSED"].includes(q.status)).length,
+//               }))
+//           }
+//         }
+
+//         if (complaintsRes.ok) {
+//           const complaintsData = await complaintsRes.json()
+//           const complaints = complaintsData.complaints || []
+//           setRecentComplaints(complaints)
+//            const allComplaintsRes = await fetch("/api/complaints?scope=user");
+//            if (allComplaintsRes.ok) {
+//              const allComplaintsData = await allComplaintsRes.json();
+//              setStats((prev) => ({
+//                ...prev,
+//                totalComplaints: allComplaintsData.complaints?.length || 0,
+//              }));
+//            }
+//         }
+//       } catch (error) {
+//         console.error("Failed to fetch dashboard data:", error)
+//       } finally {
+//         setIsLoading(false)
+//       }
+//     }
+
+//     fetchDashboardData()
+//   }, [])
+
+//   return (
+//     <div className="min-h-screen bg-muted/40 p-4 sm:p-6 lg:p-8">
+//       {/* Welcome Header */}
+//       <div className="mb-6 md:mb-8">
+//         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+//            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full opacity-50"></div>
+//            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-32 h-32 bg-white/10 rounded-full opacity-50"></div>
+//           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between relative z-10">
+//             <div>
+//               <h1 className="text-2xl sm:text-3xl font-bold">Welcome Back! 👋</h1>
+//               <p className="text-blue-100 text-sm sm:text-base mt-1 max-w-xl">
+//                 Here's a summary of your activity. Track your queries and manage your engagement.
+//               </p>
+//             </div>
+//             <Badge variant="secondary" className="bg-white/20 text-white border-none mt-4 sm:mt-0 text-sm">
+//               <Award className="w-4 h-4 mr-2" />
+//               Active Voter
+//             </Badge>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Stats Cards */}
+//       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 md:mb-8">
+//         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1">
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium text-blue-100">Total Queries</CardTitle>
+//             <FileText className="h-5 w-5 text-blue-200" />
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">{isLoading ? "..." : stats.totalQueries}</div>
+//           </CardContent>
+//         </Card>
+//         <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1">
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium text-yellow-100">Pending</CardTitle>
+//             <Clock className="h-5 w-5 text-yellow-200" />
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">{isLoading ? "..." : stats.pendingQueries}</div>
+//           </CardContent>
+//         </Card>
+//         <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1">
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium text-green-100">Resolved</CardTitle>
+//             <CheckCircle className="h-5 w-5 text-green-200" />
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">{isLoading ? "..." : stats.resolvedQueries}</div>
+//           </CardContent>
+//         </Card>
+//         <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0 shadow-lg hover:shadow-xl transform transition-transform duration-300 hover:-translate-y-1">
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium text-purple-100">Complaints</CardTitle>
+//             <MessageSquare className="h-5 w-5 text-purple-200" />
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">{isLoading ? "..." : stats.totalComplaints}</div>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* Main Content */}
+//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+//         <div className="lg:col-span-2">
+//           <Card className="h-full">
+//             <CardHeader>
+//               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+//                 <div>
+//                   <CardTitle className="text-xl">Recent Queries</CardTitle>
+//                   <CardDescription>Your 5 most recent queries and their status.</CardDescription>
+//                 </div>
+//                 {/* FINAL FIX: Using !important to force white text */}
+//                 <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-shadow">
+//                   <Link href="/dashboard/voter/queries/new" className="!text-white">
+//                     <Plus className="mr-2 h-4 w-4" /> New Query
+//                   </Link>
+//                 </Button>
+//               </div>
+//             </CardHeader>
+//             <CardContent className="p-0">
+//               {isLoading ? (
+//                 <div className="flex justify-center items-center h-48"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+//               ) : recentQueries.length > 0 ? (
+//                 <div className="divide-y">
+//                   {recentQueries.map((query) => (
+//                     <Link key={query.id} href={`/dashboard/voter/queries/${query.id}`} className="block hover:bg-muted/50 transition-colors">
+//                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-3">
+//                         <div className="flex-1 min-w-0">
+//                           <p className="font-medium truncate">{query.title}</p>
+//                           <div className="flex items-center gap-x-2 text-xs text-muted-foreground mt-1">
+//                             <span>{new Date(query.createdAt).toLocaleDateString()}</span>
+//                             {query.department && (<><span className="h-1 w-1 rounded-full bg-muted-foreground"></span><span>{query.department.name}</span></>)}
+//                           </div>
+//                         </div>
+//                         <div className="flex-shrink-0"><StatusBadge status={query.status} /></div>
+//                       </div>
+//                     </Link>
+//                   ))}
+//                    <div className="p-4"><Button variant="ghost" className="w-full" asChild><Link href="/dashboard/voter/queries">View All Queries</Link></Button></div>
+//                 </div>
+//               ) : (
+//                 <div className="text-center p-8">
+//                   <FileText className="mx-auto h-12 w-12 text-muted-foreground/50" />
+//                   <h3 className="mt-4 text-lg font-medium">No Queries Found</h3>
+//                   <p className="mt-1 text-sm text-muted-foreground">Get started by submitting your first query.</p>
+//                   {/* FINAL FIX: Using !important to force white text */}
+//                   <Button className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-shadow" asChild>
+//                     <Link href="/dashboard/voter/queries/new" className="!text-white">
+//                       <Plus className="mr-2 h-4 w-4" /> Submit Query
+//                     </Link>
+//                   </Button>
+//                 </div>
+//               )}
+//             </CardContent>
+//           </Card>
+//         </div>
+
+//         {/* Right Sidebar */}
+//         <div className="space-y-6">
+//           <Card>
+//             <CardHeader><CardTitle className="text-xl">Quick Actions</CardTitle></CardHeader>
+//             <CardContent className="grid grid-cols-2 sm:grid-cols-1 gap-3">
+//                 <Button variant="outline" className="justify-start text-base" asChild><Link href="/dashboard/voter/queries"><FileText className="mr-3 h-5 w-5" /> All My Queries</Link></Button>
+//                  <Button variant="outline" className="justify-start text-base" asChild><Link href="/dashboard/voter/complaints/new"><AlertCircle className="mr-3 h-5 w-5" /> File a Complaint</Link></Button>
+//                  <Button variant="outline" className="justify-start text-base" asChild><Link href="/dashboard/voter/profile"><User className="mr-3 h-5 w-5" /> My Profile</Link></Button>
+//             </CardContent>
+//           </Card>
+//           <Card>
+//             <CardHeader>
+//               <CardTitle className="text-xl">Recent Complaints</CardTitle>
+//               <CardDescription>Your 3 most recent complaints.</CardDescription>
+//             </CardHeader>
+//             <CardContent className="p-0">
+//                {isLoading ? (
+//                 <div className="flex justify-center items-center h-32"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div></div>
+//               ) : recentComplaints.length > 0 ? (
+//                 <div className="divide-y">
+//                    {recentComplaints.map((complaint) => (
+//                     <Link key={complaint.id} href={`/dashboard/voter/complaints/${complaint.id}`} className="block hover:bg-muted/50 transition-colors p-4">
+//                         <div className="flex items-center justify-between">
+//                             <div className="flex-1 min-w-0">
+//                                 <p className="font-medium truncate">{complaint.subject}</p>
+//                                 <p className="text-xs text-muted-foreground mt-1">{new Date(complaint.createdAt).toLocaleDateString()}</p>
+//                             </div>
+//                             <Badge variant="outline" className="ml-2">{complaint.status.replace(/_/g, " ")}</Badge>
+//                         </div>
+//                     </Link>
+//                    ))}
+//                     <div className="p-4"><Button variant="ghost" className="w-full" asChild><Link href="/dashboard/voter/complaints">View All Complaints</Link></Button></div>
+//                 </div>
+//               ) : (
+//                  <div className="text-center p-8">
+//                   <XCircle className="mx-auto h-12 w-12 text-muted-foreground/50" />
+//                   <h3 className="mt-4 text-lg font-medium">No Complaints</h3>
+//                   <p className="mt-1 text-sm text-muted-foreground">You haven't filed any complaints yet.</p>
+//                 </div>
+//               )}
+//             </CardContent>
+//           </Card>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
