@@ -2,13 +2,17 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Building2, Menu, X, Languages } from "lucide-react"
+import { Building2, Menu, X } from "lucide-react"
 import { useState } from "react"
-import { GoogleTranslate } from "../i18n/GoogleTranslate"
+// Consistent import path using '@' alias
+import { GoogleTranslate } from "@/components/GoogleTranslate"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // Function to close the menu, useful for links and buttons
+  const closeMenu = () => setIsMenuOpen(false)
 
   return (
     <header className="bg-card border-b border-border sticky top-0 z-50">
@@ -22,24 +26,20 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
             </Link>
-            <Link href="/offices" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/offices" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Offices
             </Link>
-            <Link href="/auth/login" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/auth/login" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Services
             </Link>
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-2">
-            <div className="flex items-center">
-              <div className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <GoogleTranslate />
-              </div>
-            </div>
+          {/* Desktop CTA & Toggles */}
+          <div className="hidden md:flex items-center space-x-4">
+            <GoogleTranslate />
             <ThemeToggle />
             <Link href="/auth/login">
               <Button variant="ghost">Sign In</Button>
@@ -50,43 +50,43 @@ export function Header() {
           </div>
 
           {/* Mobile menu button */}
-          <button className="md:hidden p-2" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="md:hidden">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
-            <nav className="flex flex-col space-y-4">
-              <Link
-                href="/"
-                className="text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
+            {/* Mobile Toggles Added Here */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-muted-foreground">Settings</span>
+              <div className="flex items-center gap-4">
+                <GoogleTranslate />
+                <ThemeToggle />
+              </div>
+            </div>
+
+            <nav className="flex flex-col space-y-2">
+              <Link href="/" className="py-2 text-foreground hover:text-primary transition-colors" onClick={closeMenu}>
                 Home
               </Link>
-              <Link
-                href="/offices"
-                className="text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
+              <Link href="/offices" className="py-2 text-foreground hover:text-primary transition-colors" onClick={closeMenu}>
                 Offices
               </Link>
-              <Link
-                href="/auth/login"
-                className="text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
+              <Link href="/services" className="py-2 text-foreground hover:text-primary transition-colors" onClick={closeMenu}>
                 Services
               </Link>
-              <div className="flex flex-col space-y-2 pt-4">
-                <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+              
+              <div className="border-t border-border pt-4 mt-2 flex flex-col space-y-2">
+                <Link href="/auth/login" onClick={closeMenu}>
                   <Button variant="ghost" className="w-full justify-start">
                     Sign In
                   </Button>
                 </Link>
-                <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/auth/register" onClick={closeMenu}>
                   <Button className="w-full justify-start">Get Started</Button>
                 </Link>
               </div>
