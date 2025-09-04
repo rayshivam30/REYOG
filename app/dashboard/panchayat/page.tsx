@@ -209,36 +209,46 @@ export default function PanchayatDashboard() {
               </div>
             ) : recentQueries.length > 0 ? (
               <div className="space-y-4">
-                {recentQueries.map((query) => (
-                  <div key={query.id} className="flex items-start justify-between p-4 border border-border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {getStatusIcon(query.status)}
-                        <h4 className="font-medium">{query.title}</h4>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className={getStatusColor(query.status)}>
-                          {query.status.replace("_", " ")}
-                        </Badge>
-                        {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {query.user.name}
-                        </div>
-                        <span>{new Date(query.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    {/* View Button */}
-                    <Link href={`/dashboard/panchayat/queries/${query.id}`}>
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
+              {recentQueries.map((query) => (
+  <div 
+    key={query.id} 
+    // MODIFIED: Added flex-col, sm:flex-row, and gap-3 for responsiveness
+    className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-4 border border-border rounded-lg"
+  >
+    <div className="flex-1">
+      <div className="flex items-center gap-2 mb-2">
+        {getStatusIcon(query.status)}
+        <h4 className="font-medium">{query.title}</h4>
+      </div>
+      <div className="flex items-center gap-2 mb-2">
+        <Badge variant="outline" className={getStatusColor(query.status)}>
+          {query.status.replace("_", " ")}
+        </Badge>
+        {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
+      </div>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <Users className="h-3 w-3" />
+          {query.user.name}
+        </div>
+        <span>{new Date(query.createdAt).toLocaleDateString()}</span>
+      </div>
+    </div>
+    
+    {/* View Button */}
+    <Link href={`/dashboard/panchayat/queries/${query.id}`}>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        // MODIFIED: Added w-full and sm:w-auto for responsive width
+        className="flex w-full items-center gap-2 sm:w-auto"
+      >
+        <Eye className="h-4 w-4" />
+        View
+      </Button>
+    </Link>
+  </div>
+))}
               </div>
             ) : (
               <div className="text-center py-8">
