@@ -202,7 +202,7 @@ export default function PastQueriesPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1"><ArrowUpCircle className="h-4 w-4"/>{query.upvoteCount}</div>
-                        <div className="flex items-center gap-1"><ThumbsUp className="h-4 w-4"/>{query.likeCount}</div>
+                       
                         <div className="flex items-center gap-1"><MessageCircle className="h-4 w-4"/>{query.commentCount}</div>
                       </div>
                     </div>

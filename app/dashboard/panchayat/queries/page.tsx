@@ -344,7 +344,7 @@ const handleSaveAssignment = async () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      <span>{query.user.name}</span>
+                     
                     </div>
                     <span>{new Date(query.createdAt).toLocaleDateString()}</span>
                     {query.budgetIssued && <span>Budget: ₹{query.budgetIssued.toLocaleString()}</span>}

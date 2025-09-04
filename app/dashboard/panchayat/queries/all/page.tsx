@@ -232,10 +232,7 @@ export default function AllQueriesPage() {
                           <ArrowUp className="h-4 w-4" />
                           <span>{query.upvoteCount ?? 0}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <ThumbsUp className="h-4 w-4" />
-                          <span>{query.likeCount ?? 0}</span>
-                        </div>
+                        
                         <Button
                           variant="ghost"
                           size="sm"
