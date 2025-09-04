@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 import '@/app/leaflet.css';
 
@@ -37,15 +38,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#f8fafc" />
+        <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
         <style>{`
-          html {
-            font-family: ${GeistSans.style.fontFamily};
+          :root {
             --font-sans: ${GeistSans.variable};
             --font-mono: ${GeistMono.variable};
+          }
+          html {
+            font-family: ${GeistSans.style.fontFamily};
             -webkit-text-size-adjust: 100%;
             -webkit-tap-highlight-color: transparent;
           }
@@ -60,7 +64,14 @@ export default function RootLayout({
       </head>
       <body className="antialiased text-foreground bg-background">
         <div className="min-h-screen flex flex-col">
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
         </div>
       </body>
     </html>

@@ -38,6 +38,103 @@
   --sidebar-accent-foreground: oklch(1 0 0); /* White sidebar accent text */
   --sidebar-border: oklch(0.85 0.005 240); /* Light sidebar borders */
   --sidebar-ring: oklch(0.55 0.2 264 / 0.5); /* Blue sidebar focus rings */
+  
+  /* Google Translate Widget Styles */
+  --goog-te-ftab-bg: var(--background) !important;
+  --goog-te-banner-pos: 0 !important;
+  --goog-te-banner-height: 0 !important;
+  --goog-te-menu-width: 200px !important;
+  --goog-te-menu-max-height: 500px !important;
+}
+
+/* Google Translate Widget Styles */
+#google_translate_element {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.goog-te-gadget {
+  font-family: inherit !important;
+}
+
+.goog-te-gadget-simple {
+  background-color: transparent !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 0.25rem 0.5rem !important;
+  cursor: pointer !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.goog-te-menu2 {
+  max-width: 300px !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  background: var(--popover) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+.goog-te-menu2-item {
+  padding: 0.5rem 1rem !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+.goog-te-menu2-item:hover {
+  background-color: var(--muted) !important;
+}
+
+.goog-te-menu2-item-selected {
+  background-color: var(--muted) !important;
+  color: var(--primary) !important;
+}
+
+.goog-te-menu2-item div,
+.goog-te-menu2-item:link,
+.goog-te-menu2-item:visited,
+.goog-te-menu2-item:active {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Hide Google's default branding */
+.goog-te-gadget .goog-te-combobox {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.goog-te-gadget .goog-te-combobox > div {
+  padding: 0 !important;
+  border: none !important;
+}
+
+.goog-te-gadget .goog-te-combobox > div > span {
+  display: none !important;
+}
+
+/* Fix for the dropdown arrow */
+.goog-te-gadget-simple > span:last-child {
+  display: none !important;
+}
+
+/* Ensure the widget is visible above other elements */
+.goog-te-menu-frame {
+  z-index: 999999 !important;
+  max-width: 100% !important;
+}
+
+/* Hide the Google Translate attribution */
+.goog-logo-link,
+.goog-te-ftab-link,
+.goog-te-gadget span[style*="border-bottom"] {
+  display: none !important;
 }
 
 .dark {
