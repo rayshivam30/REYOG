@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -14,10 +14,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FileUpload } from "@/components/ui/file-upload"
 import { LocationPicker } from "@/components/maps/location-picker"
 import { createQuerySchema } from "@/lib/validations"
-import { MapPin } from "lucide-react"
+import { MapPin, Mic, MicOff } from "lucide-react"
 import type { z } from "zod"
 import { useAuth } from "@/lib/auth-context"
 import { FileText, Image as ImageIcon, X } from "lucide-react"
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 
 type QueryFormData = z.infer<typeof createQuerySchema>
 
@@ -61,10 +62,28 @@ interface QueryFormProps {
 }
 
 export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedDepartment, setSelectedDepartment] = useState("default")
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [activeField, setActiveField] = useState<'title' | 'description' | null>(null)
+  const titleRef = useRef<HTMLInputElement | null>(null)
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
+  const { 
+    register, 
+    handleSubmit, 
+    setValue, 
+    watch, 
+    reset, 
+    formState: { errors } 
+  } = useForm<QueryFormData>({
+    resolver: zodResolver(createQuerySchema),
+    defaultValues: initialData || {
+      panchayatId: user?.panchayat?.id || "",
+      wardNumber: user?.wardNumber || 1,
+    },
+  })
   const [attachments, setAttachments] = useState<Array<{
     id: string
     url: string
@@ -77,23 +96,51 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   const [departments, setDepartments] = useState<Department[]>([])
   const [offices, setOffices] = useState<Office[]>([])
   const [panchayats, setPanchayats] = useState<Panchayat[]>([])
-  const { user } = useAuth()
   const router = useRouter()
 
+
+  // Speech recognition hook
   const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm<QueryFormData>({
-    resolver: zodResolver(createQuerySchema),
-    defaultValues: initialData || {
-      panchayatId: user?.panchayat?.id || "",
-      wardNumber: user?.wardNumber || 1,
-    },
-  })
+    isListening,
+    transcript,
+    error: speechError,
+    startListening,
+    stopListening,
+    resetTranscript,
+    hasRecognitionSupport
+  } = useSpeechRecognition()
+
+  // Handle speech recognition results
+  useEffect(() => {
+    if (!activeField) return;
+    
+    if (transcript) {
+      if (activeField === 'title' && titleRef.current) {
+        setValue('title', transcript, { shouldValidate: true });
+      } else if (activeField === 'description' && descriptionRef.current) {
+        setValue('description', transcript, { shouldValidate: true });
+      }
+    }
+  }, [transcript, activeField, setValue])
+
+  // Handle speech recognition errors
+  useEffect(() => {
+    if (speechError) {
+      setError(speechError);
+    }
+  }, [speechError])
+
+  const toggleListening = (field: 'title' | 'description') => {
+    if (isListening) {
+      stopListening();
+      setActiveField(null);
+    } else {
+      resetTranscript();
+      setActiveField(field);
+      startListening();
+    }
+  }
+
 
   useEffect(() => {
     if (initialData) {
@@ -282,19 +329,81 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="title">Query Title *</Label>
-            <Input id="title" placeholder="Brief description of your query" {...register("title")} />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="title">Query Title *</Label>
+              {hasRecognitionSupport && (
+                <Button
+                  type="button"
+                  variant={isListening && activeField === 'title' ? 'destructive' : 'ghost'}
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={() => toggleListening('title')}
+                >
+                  {isListening && activeField === 'title' ? (
+                    <MicOff className="h-4 w-4 mr-1" />
+                  ) : (
+                    <Mic className="h-4 w-4 mr-1" />
+                  )}
+                  {isListening && activeField === 'title' ? 'Stop' : 'Speak'}
+                </Button>
+              )}
+            </div>
+            <div className="relative">
+              <div className="relative">
+                <Input 
+                  id="title" 
+                  placeholder="Brief description of your query"
+                  {...register("title")}
+                  ref={(e) => {
+                    titleRef.current = e;
+                    return register("title").ref(e);
+                  }}
+                />
+              </div>
+            </div>
+            {isListening && activeField === 'title' && (
+              <p className="text-xs text-muted-foreground">Listening... Speak now</p>
+            )}
             {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Detailed Description *</Label>
-            <Textarea
-              id="description"
-              placeholder="Provide detailed information about your query, including any relevant context"
-              rows={4}
-              {...register("description")}
-            />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description">Detailed Description *</Label>
+              {hasRecognitionSupport && (
+                <Button
+                  type="button"
+                  variant={isListening && activeField === 'description' ? 'destructive' : 'ghost'}
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={() => toggleListening('description')}
+                >
+                  {isListening && activeField === 'description' ? (
+                    <MicOff className="h-4 w-4 mr-1" />
+                  ) : (
+                    <Mic className="h-4 w-4 mr-1" />
+                  )}
+                  {isListening && activeField === 'description' ? 'Stop' : 'Dictate'}
+                </Button>
+              )}
+            </div>
+            <div className="relative">
+              <div className="relative">
+                <Textarea
+                  id="description"
+                  placeholder="Provide detailed information about your query, including any relevant context"
+                  rows={4}
+                  {...register("description")}
+                  ref={(e) => {
+                    descriptionRef.current = e;
+                    return register("description").ref(e);
+                  }}
+                />
+              </div>
+            </div>
+            {isListening && activeField === 'description' && (
+              <p className="text-xs text-muted-foreground">Listening... Speak now</p>
+            )}
             {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
           </div>
 
