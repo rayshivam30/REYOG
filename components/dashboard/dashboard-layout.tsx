@@ -7,6 +7,7 @@ import type { UserRole } from "@prisma/client"
 import { Menu, Home, FileText, AlertCircle, User, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 interface User {
   id: string
@@ -27,6 +28,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -161,13 +163,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="text-xs mt-1 text-center">NGOs</span>
                 </Link>
               </>
-            ) : (
+            ) : user?.role === 'PANCHAYAT' ? (
               <>
                 <Link 
                   href="/dashboard/panchayat" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    "text-blue-600"
                   )}
                 >
                   <Home className="h-5 w-5" />
@@ -177,7 +179,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/panchayat/queries/all" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    "text-gray-600 hover:text-blue-600"
                   )}
                 >
                   <FileText className="h-5 w-5" />
@@ -187,7 +189,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/panchayat/queries" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    "text-gray-600 hover:text-blue-600"
                   )}
                 >
                   <AlertCircle className="h-5 w-5" />
@@ -197,11 +199,58 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/panchayat/stats" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    "text-gray-600 hover:text-blue-600"
                   )}
                 >
                   <User className="h-5 w-5" />
                   <span className="text-xs mt-1 text-center">Stats</span>
+                </Link>
+              </>
+            ) : (
+              // Voter Navigation
+              <>
+                <Link 
+                  href="/dashboard/voter" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    pathname === "/dashboard/voter" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <Home className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Home</span>
+                </Link>
+                <Link 
+                  href="/dashboard/voter/queries" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    pathname === "/dashboard/voter/queries" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <FileText className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Inbox</span>
+                </Link>
+                <Link 
+                  href="/dashboard/voter/queries/new" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    pathname === "/dashboard/voter/queries/new" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span className="text-xs mt-1 text-center">Raise Query</span>
+                </Link>
+                <Link 
+                  href="/dashboard/voter/profile" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    pathname === "/dashboard/voter/profile" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <User className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Profile</span>
                 </Link>
               </>
             )}
