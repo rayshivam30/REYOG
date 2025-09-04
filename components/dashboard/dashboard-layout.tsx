@@ -118,46 +118,93 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Mobile navigation */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 safe-area-pb">
           <div className="grid grid-cols-4 px-2 py-1">
-            <Link 
-              href="/dashboard/panchayat" 
-              className={cn(
-                "flex flex-col items-center p-2 min-h-16",
-                user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
-              )}
-            >
-              <Home className="h-5 w-5" />
-              <span className="text-xs mt-1 text-center">Home</span>
-            </Link>
-            <Link 
-              href="/dashboard/panchayat/queries/all" 
-              className={cn(
-                "flex flex-col items-center p-2 min-h-16",
-                user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
-              )}
-            >
-              <FileText className="h-5 w-5" />
-              <span className="text-xs mt-1 text-center">Inbox</span>
-            </Link>
-            <Link 
-              href="/dashboard/panchayat/queries" 
-              className={cn(
-                "flex flex-col items-center p-2 min-h-16",
-                user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
-              )}
-            >
-              <AlertCircle className="h-5 w-5" />
-              <span className="text-xs mt-1 text-center">Active</span>
-            </Link>
-            <Link 
-              href="/dashboard/panchayat/stats" 
-              className={cn(
-                "flex flex-col items-center p-2 min-h-16",
-                user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
-              )}
-            >
-              <User className="h-5 w-5" />
-              <span className="text-xs mt-1 text-center">Stats</span>
-            </Link>
+            {user?.role === 'ADMIN' ? (
+              <>
+                <Link 
+                  href="/dashboard/admin" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <Home className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Home</span>
+                </Link>
+                <Link 
+                  href="/dashboard/admin/queries" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <FileText className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">All Queries</span>
+                </Link>
+                <Link 
+                  href="/dashboard/admin/complaints" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Complaints</span>
+                </Link>
+                <Link 
+                  href="/dashboard/admin/ngos" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <User className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">NGOs</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/dashboard/panchayat" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <Home className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Home</span>
+                </Link>
+                <Link 
+                  href="/dashboard/panchayat/queries/all" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <FileText className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Inbox</span>
+                </Link>
+                <Link 
+                  href="/dashboard/panchayat/queries" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Active</span>
+                </Link>
+                <Link 
+                  href="/dashboard/panchayat/stats" 
+                  className={cn(
+                    "flex flex-col items-center p-2 min-h-16",
+                    user?.role === 'PANCHAYAT' ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                  )}
+                >
+                  <User className="h-5 w-5" />
+                  <span className="text-xs mt-1 text-center">Stats</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
