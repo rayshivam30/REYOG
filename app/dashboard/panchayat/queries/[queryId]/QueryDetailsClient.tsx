@@ -114,7 +114,6 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
     }).format(amount);
   };
 
-  // **MODIFICATION 1: Create variables for safer calculations and rendering**
   const allocatedBudget = query.budget || 0;
   const spentBudget = query.budgetSpent || 0;
   const hasBudgetData = allocatedBudget > 0 || spentBudget > 0;
@@ -171,7 +170,6 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                     </div>
                   </div>
                   
-                  {/* **MODIFICATION 2: Use the new `hasBudgetData` variable for rendering** */}
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Budget</h3>
                     {hasBudgetData ? (
@@ -181,7 +179,6 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                           <span className="font-medium">{formatCurrency(spentBudget)}</span>
                         </div>
                          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                          {/* **MODIFICATION 3: Use the safe `percentageSpent` variable** */}
                           <div
                             className="bg-primary h-2.5 rounded-full"
                             style={{ width: `${Math.min(percentageSpent, 100)}%` }}
@@ -313,15 +310,17 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                         <div className="w-px h-full bg-border my-1" />
                       </div>
                       <div className="flex-1 pb-6">
-                        <div className="flex items-center justify-between">
+                        {/* MODIFICATION START: Added flex-wrap and gap utilities for responsiveness */}
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                        {/* MODIFICATION END */}
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{update.user.name}</span>
                             <Badge variant="outline" className="text-xs">{update.user.role}</Badge>
                             {update.status && <Badge variant={update.status === 'RESOLVED' ? 'default' : 'secondary'} className="text-xs">{update.status.replace(/_/g, ' ')}</Badge>}
                           </div>
-                          <span className="text-xs text-muted-foreground">{new Date(update.createdAt).toLocaleString()}</span>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">{new Date(update.createdAt).toLocaleString()}</span>
                         </div>
-                        <p className="mt-1 text-sm text-foreground">{update.note}</p>
+                        <p className="mt-2 text-sm text-foreground">{update.note}</p>
                       </div>
                     </div>
                   ))}
