@@ -1,5 +1,4 @@
 // app/admin/notifications/page.tsx (or your component's path)
-// app/admin/notifications/page.tsx (or your component's path)
 "use client"
 
 import { useState, useEffect } from "react"
@@ -27,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-// AlertCircle is added back for the maintenance card
 import { Bell, Users, FileText, AlertCircle } from "lucide-react"
 import { QueryStatus } from "@prisma/client"
 
@@ -55,6 +53,25 @@ type Query = {
   panchayat: { name: string } | null
 }
 
+// --- HOOK FOR MEDIA QUERIES ---
+// A simple hook to check for screen size, making our component adaptive.
+const useMediaQuery = (query: string) => {
+    const [matches, setMatches] = useState(false);
+
+    useEffect(() => {
+        const media = window.matchMedia(query);
+        if (media.matches !== matches) {
+            setMatches(media.matches);
+        }
+        const listener = () => setMatches(media.matches);
+        window.addEventListener("resize", listener);
+        return () => window.removeEventListener("resize", listener);
+    }, [matches, query]);
+
+    return matches;
+};
+
+
 export default function NotificationsPage() {
   // --- STATE MANAGEMENT ---
   const [users, setUsers] = useState<User[]>([])
@@ -66,6 +83,10 @@ export default function NotificationsPage() {
   // Filters
   const [selectedPanchayatForUsers, setSelectedPanchayatForUsers] = useState("all")
   const [selectedPanchayatForQueries, setSelectedPanchayatForQueries] = useState("all")
+
+  // Use the hook to check for mobile screen size (Tailwind's md breakpoint is 768px)
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
 
   // --- DATA FETCHING ---
   // Fetch all panchayats for the filter dropdowns on component mount
@@ -108,7 +129,6 @@ export default function NotificationsPage() {
       try {
         const response = await fetch(`/api/queries?panchayatId=${selectedPanchayatForQueries}`)
         const data = await response.json()
-        // Adjusting based on your API's response shape
         setQueries(data.queries || [])
       } catch (error) {
         console.error("Error fetching queries:", error)
@@ -145,7 +165,7 @@ export default function NotificationsPage() {
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
             <Bell className="h-6 sm:h-8 w-6 sm:w-8" />
-           Notification & Activities Dashboard
+            Notification & Activities Dashboard
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base">
             Review recent system activities and notifications.
@@ -168,13 +188,13 @@ export default function NotificationsPage() {
               </CardContent>
             </Card>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Registered Users</DialogTitle>
             </DialogHeader>
-            <div className="flex items-center py-4">
+            <div className="flex items-center pt-4">
               <Select value={selectedPanchayatForUsers} onValueChange={setSelectedPanchayatForUsers}>
-                <SelectTrigger className="w-[280px]">
+                <SelectTrigger className="w-full sm:w-[280px]">
                   <SelectValue placeholder="Filter by Panchayat" />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,33 +203,54 @@ export default function NotificationsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Panchayat</TableHead>
-                    <TableHead>Registered On</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loadingUsers ? (
-                    <TableRow><TableCell colSpan={4} className="h-24 text-center">Loading...</TableCell></TableRow>
-                  ) : users.length > 0 ? (
-                    users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.panchayat?.name || "N/A"}</TableCell>
-                        <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow><TableCell colSpan={4} className="h-24 text-center">No users found.</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="flex-grow overflow-y-auto mt-4 pr-2">
+              {loadingUsers ? (
+                <div className="h-24 text-center flex items-center justify-center">Loading...</div>
+              ) : users.length > 0 ? (
+                isMobile ? (
+                  // --- MOBILE CARD VIEW FOR USERS ---
+                  <div className="space-y-3">
+                    {users.map((user) => (
+                      <div key={user.id} className="p-4 border rounded-lg text-sm">
+                        <div className="font-semibold">{user.name}</div>
+                        <div className="text-muted-foreground">{user.email}</div>
+                        <div className="text-xs mt-2">
+                          <strong>Panchayat:</strong> {user.panchayat?.name || "N/A"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          <strong>Registered:</strong> {new Date(user.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  // --- DESKTOP TABLE VIEW FOR USERS ---
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Panchayat</TableHead>
+                          <TableHead>Registered On</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell className="font-medium">{user.name}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.panchayat?.name || "N/A"}</TableCell>
+                            <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )
+              ) : (
+                <div className="h-24 text-center flex items-center justify-center">No users found.</div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -228,13 +269,13 @@ export default function NotificationsPage() {
               </CardContent>
             </Card>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
             <DialogHeader>
               <DialogTitle>Recent Queries</DialogTitle>
             </DialogHeader>
-            <div className="flex items-center py-4">
+            <div className="flex items-center pt-4">
               <Select value={selectedPanchayatForQueries} onValueChange={setSelectedPanchayatForQueries}>
-                <SelectTrigger className="w-[280px]">
+                <SelectTrigger className="w-full sm:w-[280px]">
                   <SelectValue placeholder="Filter by Panchayat" />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,38 +284,62 @@ export default function NotificationsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Title</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Panchayat & Ward</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loadingQueries ? (
-                    <TableRow><TableCell colSpan={4} className="h-24 text-center">Loading...</TableCell></TableRow>
-                  ) : queries.length > 0 ? (
-                    queries.map((query) => (
-                      <TableRow key={query.id}>
-                        <TableCell className="font-medium">{query.title}</TableCell>
-                        <TableCell>
-                           <Badge variant={getStatusVariant(query.status)}>{query.status.replace(/_/g, ' ')}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {query.panchayat?.name || "N/A"}
-                          {query.wardNumber && ` (Ward ${query.wardNumber})`}
-                        </TableCell>
-                        <TableCell>{new Date(query.createdAt).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow><TableCell colSpan={4} className="h-24 text-center">No queries found.</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="flex-grow overflow-y-auto mt-4 pr-2">
+              {loadingQueries ? (
+                <div className="h-24 text-center flex items-center justify-center">Loading...</div>
+              ) : queries.length > 0 ? (
+                isMobile ? (
+                  // --- MOBILE CARD VIEW FOR QUERIES ---
+                  <div className="space-y-3">
+                    {queries.map((query) => (
+                      <div key={query.id} className="p-4 border rounded-lg text-sm">
+                          <div className="flex justify-between items-start">
+                              <p className="font-semibold pr-2">{query.title}</p>
+                              <Badge variant={getStatusVariant(query.status)} className="whitespace-nowrap">{query.status.replace(/_/g, ' ')}</Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-2">
+                              {query.panchayat?.name || "N/A"}
+                              {query.wardNumber && ` (Ward ${query.wardNumber})`}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {new Date(query.createdAt).toLocaleDateString()}
+                          </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                 // --- DESKTOP TABLE VIEW FOR QUERIES ---
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[40%]">Title</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Panchayat & Ward</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {queries.map((query) => (
+                          <TableRow key={query.id}>
+                            <TableCell className="font-medium">{query.title}</TableCell>
+                            <TableCell>
+                                <Badge variant={getStatusVariant(query.status)}>{query.status.replace(/_/g, ' ')}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              {query.panchayat?.name || "N/A"}
+                              {query.wardNumber && ` (Ward ${query.wardNumber})`}
+                            </TableCell>
+                            <TableCell>{new Date(query.createdAt).toLocaleDateString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )
+              ) : (
+                <div className="h-24 text-center flex items-center justify-center">No queries found.</div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -282,15 +347,15 @@ export default function NotificationsPage() {
         {/* --- STATIC MAINTENANCE CARD ADDED BACK --- */}
         <Card className="h-56 flex flex-col">
            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Scheduled Maintenance</CardTitle>
-                <AlertCircle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-center">
-                <div className="text-2xl font-bold">Tomorrow 2 AM</div>
-                <p className="text-xs text-muted-foreground">
-                  System will be offline for updates
-                </p>
-              </CardContent>
+              <CardTitle className="text-sm font-medium">Scheduled Maintenance</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="flex-grow flex flex-col justify-center">
+              <div className="text-2xl font-bold">Tomorrow 2 AM</div>
+              <p className="text-xs text-muted-foreground">
+                System will be offline for updates
+              </p>
+            </CardContent>
         </Card>
       </div>
     </div>
