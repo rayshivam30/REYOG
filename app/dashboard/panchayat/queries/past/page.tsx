@@ -119,15 +119,15 @@ export default function PastQueriesPage() {
 
   return (
     <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedQuery(null)}>
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Past Queries</h1>
-          <p className="text-muted-foreground">Review resolved and declined queries from your panchayat</p>
+      <div className="p-4 sm:p-6 md:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Past Queries</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Review resolved and declined queries from your panchayat</p>
         </div>
 
         {/* MODIFICATION: Top card now only contains the search bar */}
-        <Card className="mb-6">
-          <CardContent className="">
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -142,7 +142,7 @@ export default function PastQueriesPage() {
 
         <Card>
           {/* MODIFICATION: CardHeader now contains the title and the filter */}
-          <CardHeader className="flex flex-row justify-between items-center">
+          <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <CardTitle>Queries ({filteredQueries.length})</CardTitle>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
@@ -169,31 +169,31 @@ export default function PastQueriesPage() {
               <div className="space-y-4">
                 {filteredQueries.map((query) => (
                   <div key={query.id} className="p-4 border border-border rounded-lg">
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           {getStatusIcon(query.status)}
-                          <h4 className="font-medium">{query.title}</h4>
+                          <h4 className="font-medium text-base sm:text-lg">{query.title}</h4>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{query.description}</p>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                           <Badge variant="outline" className={getStatusColor(query.status)}>
                             {query.status.replace("_", " ")}
                           </Badge>
                           {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
                         </div>
                       </div>
-                      <div className="flex gap-2 ml-4">
+                      <div className="flex gap-2 ml-0 sm:ml-4 w-full sm:w-auto">
                         <DialogTrigger asChild>
-                          <Button size="sm" variant="outline" onClick={() => setSelectedQuery(query)}>
+                          <Button size="sm" variant="outline" onClick={() => setSelectedQuery(query)} className="w-full sm:w-auto">
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Button>
                         </DialogTrigger>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           A Local Resident
@@ -227,7 +227,7 @@ export default function PastQueriesPage() {
               <DialogDescription>
                 Submitted by a local resident on {new Date(selectedQuery.createdAt).toLocaleDateString()}
               </DialogDescription>
-              <div className="flex items-center gap-4 pt-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 pt-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5"><ArrowUpCircle className="h-4 w-4"/>{selectedQuery.upvoteCount} Upvotes</div>
                 <div className="flex items-center gap-1.5"><ThumbsUp className="h-4 w-4"/>{selectedQuery.likeCount} Likes</div>
                 <div className="flex items-center gap-1.5"><MessageCircle className="h-4 w-4"/>{selectedQuery.comments?.length || 0} Comments</div>

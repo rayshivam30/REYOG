@@ -188,9 +188,9 @@ export default function LocationTrackerPage() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Location Tracker</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Location Tracker</h2>
           <p className="text-muted-foreground">Find nearby government offices and emergency services</p>
         </div>
       </div>

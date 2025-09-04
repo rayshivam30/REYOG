@@ -184,7 +184,7 @@ function NGOsTable({ ngos, onDelete }: { ngos: any[]; onDelete: (id: string) => 
           </div>
 
           {/* NGOs Grid */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredNGOs.map((ngo) => (
               <Card key={ngo.id}>
                 <CardHeader className="pb-3">
@@ -379,8 +379,8 @@ useEffect(() => {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">NGO Management</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">NGO Management</h2>
         <AddNGODialog onAdd={handleAddNGO} />
       </div>
 

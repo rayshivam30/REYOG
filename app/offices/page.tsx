@@ -105,21 +105,25 @@ export default function OfficesPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Find Government Offices</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Find Government Offices</h1>
           
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <OfficeSearch onSearch={handleSearch} isLoading={isLoading} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="h-[600px] overflow-hidden">
+          {/* Mobile: Stack layout, Desktop: Grid layout */}
+          <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-6">
+            {/* Map - Full width on mobile, 2/3 on desktop */}
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <Card className="h-[400px] sm:h-[500px] lg:h-[600px] overflow-hidden">
                 <MapWrapper 
                   center={mapCenter} 
                   zoom={zoom}
                   className="h-full w-full"
+                  scrollWheelZoom={false}
+                  touchZoom={true}
                 >
                   {/* User location marker */}
                   {userLocation && (
@@ -143,8 +147,8 @@ export default function OfficesPage() {
                     >
                       <Popup>
                         <div className="text-center">
-                          <h3 className="font-bold">{office.name}</h3>
-                          <p className="text-sm">{office.department.name}</p>
+                          <h3 className="font-bold text-sm">{office.name}</h3>
+                          <p className="text-xs">{office.department.name}</p>
                           {office.distance && (
                             <p className="text-xs text-muted-foreground">
                               {office.distance.toFixed(1)} km away
@@ -158,13 +162,16 @@ export default function OfficesPage() {
               </Card>
             </div>
 
-            <div className="lg:col-span-1">
-              <OfficeList 
-                offices={offices} 
-                selectedOfficeId={selectedOffice?.id}
-                onSelectOffice={handleOfficeSelect}
-                isLoading={isLoading}
-              />
+            {/* Office List - Full width on mobile, 1/3 on desktop */}
+            <div className="lg:col-span-1 order-1 lg:order-2">
+              <div className="max-h-[400px] lg:max-h-[600px] overflow-y-auto">
+                <OfficeList 
+                  offices={offices} 
+                  selectedOfficeId={selectedOffice?.id}
+                  onSelectOffice={handleOfficeSelect}
+                  isLoading={isLoading}
+                />
+              </div>
             </div>
           </div>
         </div>

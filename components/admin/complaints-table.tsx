@@ -461,7 +461,8 @@ export function ComplaintsTable({ initialComplaints }: { initialComplaints: Comp
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-md border">
+            {/* Desktop Table */}
+            <div className="hidden lg:block rounded-md border">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -553,6 +554,78 @@ export function ComplaintsTable({ initialComplaints }: { initialComplaints: Comp
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {filteredComplaints.map((complaint) => (
+                <Card key={complaint.id} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-base truncate">{complaint.subject}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{complaint.description}</p>
+                      </div>
+                      <Badge className={`ml-2 ${getStatusColor(complaint.status)}`}>
+                        {complaint.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+
+                    {complaint.query && (
+                      <div className="p-2 bg-red-50 rounded border-l-2 border-red-400">
+                        <p className="text-xs text-red-700 font-medium">Related Query: {complaint.query.title}</p>
+                        <p className="text-xs text-red-600">Status: {complaint.query.status.replace('_', ' ')}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center text-muted-foreground">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {new Date(complaint.createdAt).toLocaleDateString("en-IN")}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {complaint.query ? (
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                            Query-related
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-50 text-gray-700 text-xs">
+                            Direct
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {complaint.user.panchayat && (
+                      <div className="flex items-center text-sm text-blue-600">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {complaint.user.panchayat.name}, {complaint.user.panchayat.district}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setComplaintToUpdate(complaint)}
+                        className="flex-1 min-h-9"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Update
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setComplaintToView(complaint)}
+                        className="flex-1 min-h-9"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         </CardContent>

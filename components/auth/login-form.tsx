@@ -77,14 +77,14 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl sm:text-2xl">Login</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
           Enter your credentials to access your account
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <CardContent className="p-4 sm:p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />

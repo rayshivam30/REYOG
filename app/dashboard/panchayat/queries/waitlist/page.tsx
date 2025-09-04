@@ -152,18 +152,18 @@ export default function WaitlistPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+    <div className="p-4 sm:p-6 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Waitlist Queries</h1>
-          <p className="text-muted-foreground">Manage queries that are currently on the waitlist</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Waitlist Queries</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Manage queries that are currently on the waitlist</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative w-full md:w-96">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="relative w-full sm:w-96">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search queries..."
@@ -175,7 +175,8 @@ export default function WaitlistPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          {/* Desktop Table */}
+          <div className="hidden lg:block rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -188,7 +189,6 @@ export default function WaitlistPage() {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </div>
                   </TableHead>
-                  {/* <TableHead>Submitted By</TableHead> */}
                   <TableHead>Ward</TableHead>
                   <TableHead 
                     className="cursor-pointer hover:bg-muted/50"
@@ -215,12 +215,6 @@ export default function WaitlistPage() {
                           {query.description}
                         </div>
                       </TableCell>
-                      {/* <TableCell>
-                        <div className="font-medium">{query.user?.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {query.user?.phone || 'No contact'}
-                        </div>
-                      </TableCell> */}
                       <TableCell>Ward {query.wardNumber || 'N/A'}</TableCell>
                       <TableCell>
                         {format(new Date(query.createdAt), 'MMM d, yyyy')}
@@ -242,13 +236,59 @@ export default function WaitlistPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       {searchTerm ? 'No matching queries found' : 'No queries in waitlist'}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+          </div>
+          
+          {/* Mobile Cards */}
+          <div className="lg:hidden space-y-4">
+            {filteredQueries.length > 0 ? (
+              filteredQueries.map((query) => (
+                <Card key={query.id} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-base truncate">{query.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{query.description}</p>
+                      </div>
+                      {getStatusBadge(query.status)}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Ward</p>
+                        <p className="font-medium">Ward {query.wardNumber || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Submitted</p>
+                        <p className="font-medium">{format(new Date(query.createdAt), 'MMM d, yyyy')}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(query.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Button variant="outline" size="sm" asChild className="w-full min-h-9">
+                      <Link href={`/dashboard/panchayat/queries/${query.id}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <ClockIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  {searchTerm ? 'No matching queries found' : 'No queries in waitlist'}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

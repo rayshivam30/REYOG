@@ -166,15 +166,15 @@ export default function AllQueriesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 md:p-8">
       {/* --- Page Header and Search --- */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">To-Do</h1>
-        <p className="text-muted-foreground">Review and take action on newly submitted queries.</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">To-Do</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Review and take action on newly submitted queries.</p>
       </div>
 
-      <Card className="mb-6">
-        <CardContent className="">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -213,8 +213,8 @@ export default function AllQueriesPage() {
                       setUpdateNote("")
                     }}
                   >
-                    <h4 className="font-medium mb-2">{query.title}</h4>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <h4 className="font-medium mb-2 text-base sm:text-lg">{query.title}</h4>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                       {/* <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" /> Anonymous
                       </div> */}
@@ -225,39 +225,42 @@ export default function AllQueriesPage() {
                       {query.department && <Badge variant="secondary">{query.department.name}</Badge>}
                     </div>
                   </div>
-                  <div className="bg-muted/30 px-4 py-2 border-t border-border flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <ArrowUp className="h-4 w-4" />
-                        <span>{query.upvoteCount ?? 0}</span>
+                  <div className="bg-muted/30 px-4 py-3 border-t border-border">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex items-center gap-4 sm:gap-6">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <ArrowUp className="h-4 w-4" />
+                          <span>{query.upvoteCount ?? 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <ThumbsUp className="h-4 w-4" />
+                          <span>{query.likeCount ?? 0}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-1.5 h-auto py-1 px-2 text-muted-foreground hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setViewingCommentsFor(query)
+                          }}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>{query.commentCount ?? 0}</span>
+                        </Button>
                       </div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <ThumbsUp className="h-4 w-4" />
-                        <span>{query.likeCount ?? 0}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1.5 h-auto py-1 px-2 text-muted-foreground hover:text-foreground"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setViewingCommentsFor(query)
-                        }}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        asChild
+                        className="w-full sm:w-auto"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{query.commentCount ?? 0}</span>
+                        <Link href={`/dashboard/panchayat/queries/${query.id}`}>
+                          View Details
+                        </Link>
                       </Button>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      asChild
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Link href={`/dashboard/panchayat/queries/${query.id}`}>
-                        View Details
-                      </Link>
-                    </Button>
                   </div>
                 </div>
               ))}
@@ -297,7 +300,7 @@ export default function AllQueriesPage() {
             {/* Details Grid */}
             <div>
               <h3 className="font-semibold mb-3 text-foreground">Query Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-start gap-3">
                   <Home className="h-4 w-4 mt-1 text-muted-foreground" />
                   <div>
@@ -383,16 +386,16 @@ export default function AllQueriesPage() {
               />
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-              <Button variant="outline" onClick={() => setSelectedQuery(null)} disabled={isUpdating}>
+              <Button variant="outline" onClick={() => setSelectedQuery(null)} disabled={isUpdating} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={() => handleStatusUpdate("DECLINED")} disabled={isUpdating}>
+              <Button variant="destructive" onClick={() => handleStatusUpdate("DECLINED")} disabled={isUpdating} className="w-full sm:w-auto">
                 {actionStatus === "DECLINED" ? "Declining..." : <><X className="h-4 w-4 mr-2" /> Decline</>}
               </Button>
-              <Button variant="secondary" onClick={() => handleStatusUpdate("WAITLISTED")} disabled={isUpdating}>
+              <Button variant="secondary" onClick={() => handleStatusUpdate("WAITLISTED")} disabled={isUpdating} className="w-full sm:w-auto">
                 {actionStatus === "WAITLISTED" ? "Waitlisting..." : <><Hourglass className="h-4 w-4 mr-2" /> Waitlist</>}
               </Button>
-              <Button onClick={() => handleStatusUpdate("ACCEPTED")} disabled={isUpdating}>
+              <Button onClick={() => handleStatusUpdate("ACCEPTED")} disabled={isUpdating} className="w-full sm:w-auto">
                 {actionStatus === "ACCEPTED" ? "Accepting..." : <><Check className="h-4 w-4 mr-2" /> Accept</>}
               </Button>
             </div>

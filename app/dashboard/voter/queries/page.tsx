@@ -223,7 +223,7 @@ export default function VoterQueriesPage() {
                   ))}
                 </div>
               )}
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <SocialActions 
                   queryId={query.id} 
                   likeCount={query.likeCount || 0}
@@ -232,7 +232,7 @@ export default function VoterQueriesPage() {
                   retweetCount={query.retweetCount || 0}
                 />
                 <Link href={`/dashboard/voter/queries/details/${query.id}`}>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     View Details
                   </Button>
                 </Link>

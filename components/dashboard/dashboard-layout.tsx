@@ -111,28 +111,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main content */}
       <div className="md:pl-64 flex flex-col min-h-screen pt-16 md:pt-0">
-        <main className="flex-1 p-4 md:p-8">
+        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">
           {children}
         </main>
         
         {/* Mobile navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 z-30">
-          <div className="flex justify-around items-center">
-            <Link href="/dashboard/voter" className="flex flex-col items-center p-2 text-blue-600">
-              <Home className="h-6 w-6" />
-              <span className="text-xs mt-1">Home</span>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 safe-area-pb">
+          <div className="grid grid-cols-4 px-2 py-1">
+            <Link href="/dashboard/voter" className="flex flex-col items-center p-2 text-blue-600 min-h-16">
+              <Home className="h-5 w-5" />
+              <span className="text-xs mt-1 text-center">Home</span>
             </Link>
-            <Link href="/dashboard/voter/queries" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600">
-              <FileText className="h-6 w-6" />
-              <span className="text-xs mt-1">Queries</span>
+            <Link href="/dashboard/voter/queries" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600 min-h-16">
+              <FileText className="h-5 w-5" />
+              <span className="text-xs mt-1 text-center">Queries</span>
             </Link>
-            <Link href="/dashboard/voter/complaints" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600">
-              <AlertCircle className="h-6 w-6" />
-              <span className="text-xs mt-1">Complaints</span>
+            <Link href="/dashboard/voter/complaints" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600 min-h-16">
+              <AlertCircle className="h-5 w-5" />
+              <span className="text-xs mt-1 text-center">Complaints</span>
             </Link>
-            <Link href="/dashboard/voter/profile" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600">
-              <User className="h-6 w-6" />
-              <span className="text-xs mt-1">Profile</span>
+            <Link href="/dashboard/voter/profile" className="flex flex-col items-center p-2 text-gray-600 hover:text-blue-600 min-h-16">
+              <User className="h-5 w-5" />
+              <span className="text-xs mt-1 text-center">Profile</span>
             </Link>
           </div>
         </div>

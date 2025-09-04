@@ -17,23 +17,23 @@ export default function HomePage() {
           <div className="absolute -right-1/2 -top-1/2 h-[200%] w-[200%] rounded-full bg-gradient-to-tr from-accent/5 via-primary/5 to-transparent blur-3xl" />
         </div>
         
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-32">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-24 lg:py-32">
+          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2">
               Empowering Rural{' '}
               <span className="bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
                 Governance
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4">
               Connect with your local government, raise queries, track services, and ensure transparent governance in
               your community through ReYog.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 px-4">
               <Link href="/auth/register" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto transition-all hover:shadow-lg hover:shadow-accent/20">
+                <Button size="lg" className="w-full sm:w-auto min-h-12 text-base transition-all hover:shadow-lg hover:shadow-accent/20">
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -42,7 +42,7 @@ export default function HomePage() {
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full sm:w-auto bg-background/50 backdrop-blur-sm border-border/50 hover:bg-accent/5 hover:border-accent/30 transition-colors"
+                  className="w-full sm:w-auto min-h-12 text-base bg-background/50 backdrop-blur-sm border-border/50 hover:bg-accent/5 hover:border-accent/30 transition-colors"
                 >
                   <MapPin className="mr-2 h-5 w-5" />
                   Explore Offices
@@ -187,11 +187,11 @@ export default function HomePage() {
               Join thousands of citizens who are already using ReYog to improve their communities and engage with local governance.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md sm:max-w-none mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto px-4">
               <Link href="/auth/register" className="w-full sm:w-auto group">
                 <Button
                   size="lg" 
-                  className="w-full sm:w-auto bg-accent-foreground text-accent hover:bg-accent-foreground/90 hover:shadow-lg hover:shadow-accent-foreground/20 transition-all duration-300"
+                  className="w-full sm:w-auto min-h-12 text-base bg-accent-foreground text-accent hover:bg-accent-foreground/90 hover:shadow-lg hover:shadow-accent-foreground/20 transition-all duration-300"
                 >
                   <span className="relative z-10">Create Free Account</span>
                   <Users className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -202,7 +202,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto bg-transparent border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/10 hover:border-accent-foreground/40 hover:shadow-sm transition-all duration-300"
+                  className="w-full sm:w-auto min-h-12 text-base bg-transparent border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/10 hover:border-accent-foreground/40 hover:shadow-sm transition-all duration-300"
                 >
                   <MapPin className="mr-2 h-5 w-5 group-hover:animate-pulse" />
                   Find Offices

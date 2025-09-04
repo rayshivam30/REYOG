@@ -24,9 +24,9 @@ function NewQueryContent() {
   }, [resubmitQueryId]);
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+    <div className="p-4 md:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
           {resubmitQueryId ? 'Resubmit Query' : 'Raise a New Query'}
         </h1>
         <p className="text-muted-foreground">

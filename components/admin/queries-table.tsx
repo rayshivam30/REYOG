@@ -162,7 +162,7 @@ export function QueriesTable({
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -177,7 +177,7 @@ export function QueriesTable({
                 </SelectContent>
               </Select>
               <Select value={panchayatFilter} onValueChange={setPanchayatFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Panchayat" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,12 +189,13 @@ export function QueriesTable({
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={exportToPDF}>
+              <Button variant="outline" size="sm" onClick={exportToPDF} className="w-full sm:w-auto">
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
             </div>
-            <div className="rounded-md border">
+            {/* Desktop Table */}
+            <div className="hidden lg:block rounded-md border">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -239,6 +240,61 @@ export function QueriesTable({
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {filteredQueries.map((query) => (
+                <Card key={query.id} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-base truncate">{query.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {query.department?.name || "No department assigned"}
+                        </p>
+                      </div>
+                      <Badge className={`ml-2 ${getStatusColor(query.status)}`}>
+                        {query.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Panchayat</p>
+                        <p className="font-medium">{query.panchayat?.name || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Budget Issued</p>
+                        <p className="font-medium">{formatCurrency(query.budgetIssued)}</p>
+                      </div>
+                    </div>
+
+                    {query.budgetSpent > 0 && (
+                      <div className="text-sm">
+                        <p className="text-muted-foreground">Budget Spent</p>
+                        <p className="font-medium text-red-600">{formatCurrency(query.budgetSpent)}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1" />
+                        {formatDate(query.createdAt)}
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setSelectedQuery(query)}
+                      className="w-full min-h-9"
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         </CardContent>

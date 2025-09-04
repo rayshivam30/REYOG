@@ -107,16 +107,17 @@ export default function ServiceStatsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 md:p-8">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Service Statistics</h1>
-            <p className="text-muted-foreground">Manage and update service metrics for your panchayat</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Service Statistics</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage and update service metrics for your panchayat</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button
+                className="w-full sm:w-auto"
                 onClick={() => {
                   setEditingStat(null)
                   setFormData({ category: "", metric: "", value: "", unit: "" })
@@ -171,9 +172,9 @@ export default function ServiceStatsPage() {
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button type="submit">{editingStat ? "Update" : "Add"} Statistic</Button>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button type="submit" className="w-full sm:w-auto">{editingStat ? "Update" : "Add"} Statistic</Button>
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
                 </div>
@@ -184,7 +185,7 @@ export default function ServiceStatsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -205,21 +206,21 @@ export default function ServiceStatsPage() {
                 <h2 className="text-xl font-semibold">{category}</h2>
                 <Badge variant="outline">{stats.length} metrics</Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {stats.map((stat) => (
                   <Card key={stat.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium capitalize">{stat.metric}</CardTitle>
+                        <CardTitle className="text-xs sm:text-sm font-medium capitalize">{stat.metric}</CardTitle>
                         <Button size="sm" variant="ghost" onClick={() => handleEdit(stat)}>
                           <Edit className="h-3 w-3" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {stat.value.toLocaleString()}
-                        {stat.unit && <span className="text-sm font-normal text-muted-foreground"> {stat.unit}</span>}
+                        {stat.unit && <span className="text-xs sm:text-sm font-normal text-muted-foreground"> {stat.unit}</span>}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Updated {new Date(stat.lastUpdated).toLocaleDateString()}

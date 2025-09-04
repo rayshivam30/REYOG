@@ -247,10 +247,10 @@ const handleSaveAssignment = async () => {
  const eligibleForAssignment = (status: string) => ["PENDING_REVIEW", "ACCEPTED", "WAITLISTED", "IN_PROGRESS"].includes(status)
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Active Queries</h1>
-        <p className="text-muted-foreground">Manage and update queries submitted to your panchayat</p>
+    <div className="p-4 md:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Active Queries</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Manage and update queries submitted to your panchayat</p>
       </div>
 
       <Card className="mb-6">
@@ -268,7 +268,7 @@ const handleSaveAssignment = async () => {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
+        <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <CardTitle>Queries ({filteredQueries.length})</CardTitle>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-48">
@@ -296,7 +296,7 @@ const handleSaveAssignment = async () => {
             <div className="space-y-4">
               {filteredQueries.map((query) => (
                 <div key={query.id} className="p-4 border border-border rounded-lg flex flex-col gap-3">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusIcon(query.status)}
@@ -304,11 +304,11 @@ const handleSaveAssignment = async () => {
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{query.description}</p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2 ml-4">
-                      <Link href={`/dashboard/panchayat/queries/${query.id}`}>
+                    <div className="flex flex-col sm:flex-row gap-2 ml-0 sm:ml-4 w-full sm:w-auto">
+                      <Link href={`/dashboard/panchayat/queries/${query.id}`} className="w-full sm:w-auto">
                         <Button size="sm" variant="outline" className="w-full"><Eye className="h-4 w-4 mr-1" /> View</Button>
                       </Link>
-                      <Button size="sm" variant="outline" onClick={() => {
+                      <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => {
                         setSelectedQuery(query);
                         setUpdateStatus(query.status);
                         setUpdateNote("");
@@ -317,7 +317,7 @@ const handleSaveAssignment = async () => {
                         <Edit className="h-4 w-4 mr-1" /> Update
                       </Button>
                       {eligibleForAssignment(query.status) && (
-                        <Button size="sm" onClick={() => handleOpenAssignDialog(query)}>
+                        <Button size="sm" className="w-full sm:w-auto" onClick={() => handleOpenAssignDialog(query)}>
                           <Briefcase className="h-4 w-4 mr-1" /> Assign
                         </Button>
                       )}

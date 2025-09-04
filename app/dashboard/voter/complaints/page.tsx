@@ -54,13 +54,13 @@ export default async function VoterComplaintsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">My Complaints</h1>
           <p className="text-muted-foreground">View and manage your complaints</p>
         </div>
-        <Link href="/dashboard/voter/complaints/new">
-          <Button>
+        <Link href="/dashboard/voter/complaints/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             New Complaint
           </Button>

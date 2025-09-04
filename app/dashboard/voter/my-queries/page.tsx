@@ -206,24 +206,24 @@ export default function VoterMyQueriesPage() {
                   ))}
                 </div>
               )}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   {query.status === 'DECLINED' ? (
                     <>
                       <Link href={`/dashboard/voter/complaints/new?queryId=${query.id}`}>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="w-full sm:w-auto">
                           Complain
                         </Button>
                       </Link>
                       <Link href={`/dashboard/voter/queries/new?resubmit=${query.id}`}>
-                        <Button variant="secondary" size="sm">
+                        <Button variant="secondary" size="sm" className="w-full sm:w-auto">
                           Resubmit
                         </Button>
                       </Link>
                     </>
                   ) : (
                     <Link href={`/dashboard/voter/queries/details/${query.id}`}>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         View Details
                       </Button>
                     </Link>

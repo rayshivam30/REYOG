@@ -265,16 +265,16 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
 
   return (
     <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{initialData ? 'Resubmit Query' : 'Raise a New Query'}</CardTitle>
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="text-lg md:text-xl">{initialData ? 'Resubmit Query' : 'Raise a New Query'}</CardTitle>
         <CardDescription>
           {initialData 
             ? 'Review and edit the details of your declined query before submitting again.'
             : 'Submit your concerns, requests, or complaints about government services in your area'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <CardContent className="p-4 md:p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -407,12 +407,12 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
 
           <div className="space-y-2">
             <Label>Location (Optional)</Label>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={getCurrentLocation} className="flex-shrink-0 bg-transparent">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="button" variant="outline" onClick={getCurrentLocation} className="w-full sm:w-auto bg-transparent">
                 <MapPin className="h-4 w-4 mr-2" />
                 Use Current Location
               </Button>
-              <Button type="button" variant="outline" onClick={() => setShowLocationPicker(!showLocationPicker)} className="flex-shrink-0">
+              <Button type="button" variant="outline" onClick={() => setShowLocationPicker(!showLocationPicker)} className="w-full sm:w-auto">
                 Pick on Map
               </Button>
               {location && (
@@ -425,8 +425,8 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
             
             {/* Location Picker Dialog */}
             {showLocationPicker && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white rounded-lg p-4 w-full max-w-3xl h-[80vh] flex flex-col">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="bg-white rounded-lg p-4 w-full max-w-3xl max-h-[90vh] flex flex-col">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Select a location on the map</h3>
                     <Button 
@@ -444,11 +444,12 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
                       className="h-full w-full"
                     />
                   </div>
-                  <div className="mt-4 flex justify-end gap-2">
+                  <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                     <Button 
                       type="button" 
                       variant="outline"
                       onClick={() => setShowLocationPicker(false)}
+                      className="w-full sm:w-auto order-2 sm:order-1"
                     >
                       Cancel
                     </Button>
@@ -461,6 +462,7 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
                           alert('Please select a location on the map');
                         }
                       }}
+                      className="w-full sm:w-auto order-1 sm:order-2"
                     >
                       Confirm Location
                     </Button>
@@ -527,11 +529,11 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
             )}
           </div>
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={isLoading} className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button type="submit" disabled={isLoading} className="flex-1 order-1">
               {isLoading ? "Submitting..." : "Submit Query"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1">
+            <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1 order-2">
               Cancel
             </Button>
           </div>

@@ -141,19 +141,19 @@ export default function NotificationsPage() {
   // --- JSX RENDER ---
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Bell className="h-8 w-8" />
-           Nortification & Activities Dashboard
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Bell className="h-6 sm:h-8 w-6 sm:w-8" />
+           Notification & Activities Dashboard
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Review recent system activities and notifications.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Card for Registered Users */}
         <Dialog>
           <DialogTrigger asChild>

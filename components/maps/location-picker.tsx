@@ -68,32 +68,41 @@ export function LocationPicker({ onLocationSelect, initialLocation, className }:
         <CardDescription>Choose your location to help us route your query to the nearest office</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={getCurrentLocation} className="flex-shrink-0 bg-transparent">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={getCurrentLocation} 
+            className="flex-shrink-0 bg-transparent w-full sm:w-auto min-h-10"
+          >
             <Target className="h-4 w-4 mr-2" />
             Use Current Location
           </Button>
           {selectedLocation && (
-            <div className="flex-1 p-2 bg-muted rounded-md text-sm">
-              Location: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+            <div className="flex-1 p-3 bg-muted rounded-md text-sm">
+              <strong>Location:</strong> {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
             </div>
           )}
         </div>
 
-        <div className="relative h-64">
+        <div className="relative h-64 sm:h-80 touch-manipulation">
           {mapReady && (
             <MapWrapper 
               center={[defaultCenter.lat, defaultCenter.lng]} 
               zoom={13}
-              className="h-full w-full"
+              className="h-full w-full rounded-lg"
               onClick={handleMapClick}
+              scrollWheelZoom={false}
+              touchZoom={true}
+              doubleClickZoom={true}
+              zoomControl={true}
             >
               {selectedLocation && (
                 <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
                   <Popup>
                     <div className="text-center">
                       <h3 className="font-bold">Selected Location</h3>
-                      <p>{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                      <p className="text-xs">{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
                     </div>
                   </Popup>
                 </Marker>
@@ -102,8 +111,8 @@ export function LocationPicker({ onLocationSelect, initialLocation, className }:
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Click on the map to select a location, or use your current location
+        <p className="text-xs text-muted-foreground text-center">
+          Tap on the map to select a location, or use your current location button above
         </p>
       </CardContent>
     </Card>

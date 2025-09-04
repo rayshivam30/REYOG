@@ -333,7 +333,7 @@ export function QueryAssignment({ queryId, queryTitle, queryStatus, onAssignment
         </div>
 
         {/* Assignment Actions */}
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t">
           <div className="text-sm text-muted-foreground">
             {selectedOffices.size + selectedNgos.size > 0 ? (
               `${selectedOffices.size} offices and ${selectedNgos.size} NGOs selected`
@@ -344,7 +344,7 @@ export function QueryAssignment({ queryId, queryTitle, queryStatus, onAssignment
           <Button
             onClick={handleAssign}
             disabled={isAssigning || (selectedOffices.size === 0 && selectedNgos.size === 0)}
-            className="min-w-[120px]"
+            className="min-w-[120px] w-full sm:w-auto min-h-10"
           >
             {isAssigning ? (
               <>

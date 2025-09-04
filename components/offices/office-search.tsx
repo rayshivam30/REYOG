@@ -86,29 +86,30 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
   }
 
   return (
-    <div className="bg-card p-6 rounded-lg border border-border space-y-4">
+    <div className="bg-card p-4 sm:p-6 rounded-lg border border-border space-y-4">
       {/* Search input + button */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1">
           <Input
             placeholder="Search offices by name or address..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="min-h-10"
           />
         </div>
-        <Button onClick={handleSearch} disabled={isLoading}>
+        <Button onClick={handleSearch} disabled={isLoading} className="min-h-10 w-full sm:w-auto">
           <Search className="h-4 w-4 mr-2" />
           {isLoading ? "Searching..." : "Search"}
         </Button>
       </div>
 
       {/* Filters row */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
         {/* Department filter */}
         <div className="flex-1">
           <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-            <SelectTrigger>
+            <SelectTrigger className="min-h-10">
               <SelectValue placeholder="All departments" />
             </SelectTrigger>
             <SelectContent>
@@ -123,15 +124,15 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
         </div>
 
         {/* Location filter */}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 md:flex-col lg:flex-row">
           <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 min-h-10 w-full sm:w-auto">
                 <MapPin className="h-4 w-4" />
                 {location ? "Change Location" : "Set Location"}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Select Location</DialogTitle>
               </DialogHeader>
@@ -146,8 +147,8 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
           </Dialog>
 
           {location && (
-            <Button variant="outline" onClick={clearLocation}>
-              Clear
+            <Button variant="outline" onClick={clearLocation} className="min-h-10 w-full sm:w-auto">
+              Clear Location
             </Button>
           )}
         </div>
@@ -158,7 +159,7 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
             value={radius.toString()}
             onValueChange={(value) => setRadius(Number(value))}
           >
-            <SelectTrigger>
+            <SelectTrigger className="min-h-10">
               <SelectValue placeholder="Search radius" />
             </SelectTrigger>
             <SelectContent>
@@ -174,9 +175,9 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
 
       {/* Active search info */}
       {location && (
-        <div className="text-sm text-muted-foreground flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          <span>
+        <div className="text-sm text-muted-foreground flex items-center gap-2 bg-muted/50 p-2 rounded">
+          <MapPin className="h-4 w-4 flex-shrink-0" />
+          <span className="break-all">
             Searching near: {location.lat.toFixed(4)}, {location.lng.toFixed(4)} (within {radius} km)
           </span>
         </div>

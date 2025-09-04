@@ -49,21 +49,24 @@ export function SOSModal() {
             Call these numbers in case of emergency
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {emergencyNumbers.map((contact) => (
             <a
               key={contact.number}
               href={`tel:${contact.number}`}
-              className={`flex items-center justify-between p-3 rounded-lg ${contact.color} hover:opacity-90 transition-opacity`}
+              className={`flex items-center justify-between p-4 rounded-lg ${contact.color} hover:opacity-90 transition-opacity min-h-12 touch-manipulation`}
               onClick={() => handleSOSLog(contact.name)}
             >
-              <span className="font-medium">{contact.name}</span>
+              <span className="font-medium text-base">{contact.name}</span>
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold">{contact.number}</span>
-                <Phone className="h-4 w-4" />
+                <span className="font-mono font-bold text-base">{contact.number}</span>
+                <Phone className="h-5 w-5" />
               </div>
             </a>
           ))}
+          <p className="text-xs text-muted-foreground text-center mt-4 px-2">
+            Tap any number to call directly. These calls are logged for emergency response.
+          </p>
         </div>
       </DialogContent>
     </Dialog>

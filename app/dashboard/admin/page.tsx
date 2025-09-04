@@ -143,11 +143,11 @@ export default async function AdminDashboard() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+        <div className="w-full sm:w-auto">
           <Link href="/dashboard/admin/users">
-            <Button>Manage Users</Button>
+            <Button className="w-full sm:w-auto">Manage Users</Button>
           </Link>
         </div>
       </div>
@@ -156,35 +156,35 @@ export default async function AdminDashboard() {
         <AdminStatsCards stats={stats} />
       </Suspense>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-7">
+        <div className="lg:col-span-4 order-2 lg:order-1">
           <RecentNotifications notifications={stats.recentNotifications} />
         </div>
-        <Card className="col-span-3">
+        <Card className="lg:col-span-3 order-1 lg:order-2">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+          <CardContent className="space-y-3">
+            <Button className="w-full justify-start bg-transparent min-h-10" variant="outline" asChild>
               <Link href="/dashboard/admin/users">
                 <Users className="mr-2 h-4 w-4" />
                 Manage Users
               </Link>
             </Button>
-            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+            <Button className="w-full justify-start bg-transparent min-h-10" variant="outline" asChild>
               <Link href="/dashboard/admin/queries">
                 <FileText className="mr-2 h-4 w-4" />
                 View All Queries
               </Link>
             </Button>
-            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+            <Button className="w-full justify-start bg-transparent min-h-10" variant="outline" asChild>
               <Link href="/dashboard/admin/complaints">
                 <AlertTriangle className="mr-2 h-4 w-4" />
                 Handle Complaints
               </Link>
             </Button>
-            <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+            <Button className="w-full justify-start bg-transparent min-h-10" variant="outline" asChild>
               <Link href="/dashboard/admin/ngos">
                 <Building2 className="mr-2 h-4 w-4" />
                 Manage NGOs

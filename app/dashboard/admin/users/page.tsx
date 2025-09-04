@@ -563,19 +563,19 @@ export default function UsersPage() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Users className="h-8 w-8" />
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-6 sm:h-8 w-6 sm:w-8" />
             User Management
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage system users and their permissions
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Create User
             </Button>
@@ -625,15 +625,15 @@ export default function UsersPage() {
       
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <CardTitle>Registered Voters</CardTitle>
-            <div className="flex gap-4">
-              <div className="relative w-64">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input type="search" placeholder="Search voters..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
               </div>
               <Select value={panchayatFilter} onValueChange={setPanchayatFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Panchayat" />
                 </SelectTrigger>
                 <SelectContent>

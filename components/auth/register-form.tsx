@@ -102,12 +102,12 @@ export function RegisterForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Join ReYog</CardTitle>
-        <CardDescription>Create your voter account to get started</CardDescription>
+        <CardTitle className="text-xl sm:text-2xl font-bold">Join ReYog</CardTitle>
+        <CardDescription className="text-sm sm:text-base">Create your voter account to get started</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>

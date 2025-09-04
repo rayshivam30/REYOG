@@ -163,19 +163,19 @@ export default function TopRatedOfficesPage() {
     <div className="container mx-auto p-6">
       {/* Header with Stats */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Top Rated Offices</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Top Rated Offices</h1>
             <p className="text-muted-foreground">
               Discover the highest-rated government offices based on community feedback
             </p>
           </div>
-          <Award className="h-12 w-12 text-yellow-500" />
+          <Award className="h-12 w-12 text-yellow-500 self-start sm:self-auto" />
         </div>
 
         {/* Statistics Cards */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -286,7 +286,7 @@ export default function TopRatedOfficesPage() {
 
       {/* Office Cards */}
       {isLoading ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -304,7 +304,7 @@ export default function TopRatedOfficesPage() {
           ))}
         </div>
       ) : offices.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {offices.map((office, index) => (
             <Card key={office.id} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200">
               <CardHeader>

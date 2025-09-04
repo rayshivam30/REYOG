@@ -121,16 +121,16 @@ export default function PanchayatDashboard() {
   }
 
   return (
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Panchayat Dashboard</h1>
-          <p className="text-muted-foreground">
+      <div className="p-4 sm:p-6 md:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Panchayat Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage queries, track progress, and maintain service statistics for your panchayat
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Queries</CardTitle>
@@ -185,17 +185,17 @@ export default function PanchayatDashboard() {
         {/* Recent Queries */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Queries</CardTitle>
-                <CardDescription>Latest queries submitted to your panchayat</CardDescription>
-              </div>
-              <Link href="/dashboard/panchayat/queries">
-                <Button variant="outline" size="sm">
-                  View All
-                </Button>
-              </Link>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <CardTitle>Recent Queries</CardTitle>
+            <CardDescription>Latest queries submitted to your panchayat</CardDescription>
+          </div>
+          <Link href="/dashboard/panchayat/queries">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
+              View All
+            </Button>
+          </Link>
+        </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (

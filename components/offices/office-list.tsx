@@ -121,7 +121,7 @@ export function OfficeList({ offices, isLoading, onOfficeSelect }: OfficeListPro
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -132,9 +132,10 @@ export function OfficeList({ offices, isLoading, onOfficeSelect }: OfficeListPro
                       "_blank",
                     )
                   }}
+                  className="min-h-9 w-full sm:w-auto"
                 >
-                  <Navigation className="h-4 w-4 mr-1" />
-                  Directions
+                  <Navigation className="h-4 w-4 mr-2" />
+                  Get Directions
                 </Button>
                 {office.contactPhone && (
                   <Button
@@ -144,9 +145,10 @@ export function OfficeList({ offices, isLoading, onOfficeSelect }: OfficeListPro
                       e.stopPropagation()
                       window.open(`tel:${office.contactPhone}`)
                     }}
+                    className="min-h-9 w-full sm:w-auto"
                   >
-                    <Phone className="h-4 w-4 mr-1" />
-                    Call
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Now
                   </Button>
                 )}
               </div>

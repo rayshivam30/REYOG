@@ -139,3 +139,148 @@ html, body {
   scroll-behavior: smooth;
   overflow-x: hidden;
 }
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button, a[role="button"], [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better form inputs on mobile */
+  input, textarea, select {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+  
+  /* Improve card spacing on mobile */
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Better modal sizing on mobile */
+  [data-radix-dialog-content] {
+    max-height: 90vh;
+    margin: 1rem;
+    width: calc(100vw - 2rem);
+  }
+  
+  /* Improve table responsiveness */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better mobile padding for pages */
+  .mobile-responsive-padding {
+    padding: 1rem;
+  }
+  
+  /* Improve select dropdown sizing on mobile */
+  [data-radix-select-trigger] {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile forms */
+  .form-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Mobile-friendly text sizes */
+  .mobile-text-adjust h1 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+  }
+  
+  .mobile-text-adjust h2 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+  
+  .mobile-text-adjust p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase interactive element sizes on touch devices */
+  button, [role="button"] {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Remove hover states on touch devices */
+  .hover\:shadow-md:hover {
+    box-shadow: initial;
+  }
+  
+  /* Better spacing for touch */
+  .space-y-2 > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Safe area adjustments for mobile devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Additional mobile-friendly styles */
+@media (max-width: 640px) {
+  /* Better card spacing and padding */
+  .card {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  /* Ensure dialogs fit mobile screens */
+  [data-radix-dialog-overlay] {
+    padding: 1rem;
+  }
+  
+  [data-radix-dialog-content] {
+    max-height: 95vh;
+    width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
+  }
+  
+  /* Better form field spacing */
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  /* Improve button groups */
+  .flex.gap-2 {
+    gap: 0.75rem;
+  }
+  
+  .flex.gap-3 {
+    gap: 1rem;
+  }
+  
+  /* Better table handling */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+  
+  /* Fix text overflow in narrow containers */
+  .text-sm, .text-xs {
+    line-height: 1.5;
+  }
+}
