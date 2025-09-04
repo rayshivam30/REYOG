@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SOSModal } from "@/components/sos-modal"
+import { GoogleTranslate } from "@/components/i18n/GoogleTranslate"
 import {
   Building2,
   FileText,
@@ -97,28 +98,37 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
         </p>
       </div>
 
+      {/* Language Selector */}
+      <div className="px-6 py-4 border-b border-sidebar-border">
+        <GoogleTranslate />
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-          return (
-            <Link key={item.href} href={item.href} onClick={() => setIsSidebarOpen(false)}>
-              <Button
-                variant={isActive ? "default" : "ghost"}
-                className={cn(
-                  "w-full justify-start",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4 mr-3" />
-                {item.label}
-              </Button>
-            </Link>
-          )
-        })}
+      <nav className="flex-1 overflow-y-auto">
+        <ul className="space-y-1 px-2">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+            return (
+              <li key={item.href}>
+                <Link href={item.href} onClick={() => setIsSidebarOpen(false)}>
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start",
+                      isActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    )}
+                  >
+                    <Icon className="h-4 w-4 mr-3" />
+                    {item.label}
+                  </Button>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
       </nav>
 
       {/* Emergency SOS */}

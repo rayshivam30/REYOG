@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Building2, Menu, X } from "lucide-react"
+import { Building2, Menu, X, Languages } from "lucide-react"
 import { useState } from "react"
+import { GoogleTranslate } from "../i18n/GoogleTranslate"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -32,7 +34,13 @@ export function Header() {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2">
+            <div className="flex items-center">
+              <div className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <GoogleTranslate />
+              </div>
+            </div>
+            <ThemeToggle />
             <Link href="/auth/login">
               <Button variant="ghost">Sign In</Button>
             </Link>
