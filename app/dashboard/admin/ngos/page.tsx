@@ -1,7 +1,7 @@
-
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
+// Assuming these are ShadCN UI components. Path might differ.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Building2, Search, Plus, Phone, Mail, MapPin, Users, Trash2 } from "lucide-react"
 
-// ✅ Add NGO Dialog
+// ✅ Add NGO Dialog (Now Responsive)
 function AddNGODialog({ onAdd }: { onAdd: (ngo: any) => void }) {
   const [formData, setFormData] = useState({
     name: "",
@@ -34,6 +34,12 @@ function AddNGODialog({ onAdd }: { onAdd: (ngo: any) => void }) {
   }
 
   const handleSubmit = async () => {
+    // Basic validation
+    if (!formData.name || !formData.contactName || !formData.contactEmail) {
+        // Here you can add a more user-friendly notification
+        console.error("Please fill all required fields");
+        return;
+    }
     const res = await fetch("/api/ngos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -42,6 +48,7 @@ function AddNGODialog({ onAdd }: { onAdd: (ngo: any) => void }) {
     if (res.ok) {
       const newNGO = await res.json()
       onAdd(newNGO)
+      // Ideally, close the dialog here. You would need to manage dialog open state.
     }
   }
 
@@ -59,7 +66,8 @@ function AddNGODialog({ onAdd }: { onAdd: (ngo: any) => void }) {
           <DialogDescription>Add a new NGO to the directory for potential collaboration.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          {/* Responsive Grid: Stacks on mobile, two columns on larger screens */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">NGO Name</label>
               <Input name="name" placeholder="Enter NGO name" value={formData.name} onChange={handleChange} />
@@ -69,7 +77,8 @@ function AddNGODialog({ onAdd }: { onAdd: (ngo: any) => void }) {
               <Input name="contactName" placeholder="Contact person name" value={formData.contactName} onChange={handleChange} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+           {/* Responsive Grid: Stacks on mobile, two columns on larger screens */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Phone</label>
               <Input name="contactPhone" placeholder="+91-XXXXXXXXXX" value={formData.contactPhone} onChange={handleChange} />
@@ -142,7 +151,7 @@ function IntroduceToPanchayatDialog({ ngo }: { ngo: any }) {
   )
 }
 
-// ✅ NGOs Table with Search & Filter
+// ✅ NGOs Table with Responsive Filters & Grid
 function NGOsTable({ ngos, onDelete }: { ngos: any[]; onDelete: (id: string) => void }) {
   const [search, setSearch] = useState("")
   const [focusFilter, setFocusFilter] = useState("all")
@@ -163,15 +172,16 @@ function NGOsTable({ ngos, onDelete }: { ngos: any[]; onDelete: (id: string) => 
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Search and Filter */}
+          {/* Search and Filter: Stacks on mobile */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search NGOs..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
+            {/* Full width on mobile, fixed on larger screens */}
             <Select onValueChange={(val) => setFocusFilter(val)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Focus Area" />
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Filter by Focus Area" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Areas</SelectItem>
@@ -183,7 +193,7 @@ function NGOsTable({ ngos, onDelete }: { ngos: any[]; onDelete: (id: string) => 
             </Select>
           </div>
 
-          {/* NGOs Grid */}
+          {/* NGOs Grid: Responsive by default */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredNGOs.map((ngo) => (
               <Card key={ngo.id}>
@@ -196,11 +206,11 @@ function NGOsTable({ ngos, onDelete }: { ngos: any[]; onDelete: (id: string) => 
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="h-4 w-4 text-muted-foreground" /> {ngo.contactPhone}
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" /> {ngo.contactEmail}
+                    <div className="flex items-center gap-2 text-sm break-all">
+                      <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" /> {ngo.contactEmail}
                     </div>
                     <div className="flex items-start gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" /> {ngo.address}
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" /> {ngo.address}
                     </div>
                   </div>
                   <div>
@@ -209,26 +219,25 @@ function NGOsTable({ ngos, onDelete }: { ngos: any[]; onDelete: (id: string) => 
                   <div>
                     <span className="font-medium">Coverage: </span>{ngo.coverage}
                   </div>
-                  {/* <div className="flex gap-2 pt-2">
+                  {/* Action Buttons: Wrap on small screens */}
+                  <div className="flex flex-wrap gap-2 pt-2">
                     <IntroduceToPanchayatDialog ngo={ngo} />
                     <Button variant="outline" size="sm">Edit</Button>
                     <Button variant="destructive" size="sm" onClick={() => onDelete(ngo.id)}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </Button>
-                  </div> */}
-                  <div className="flex gap-2 pt-2">
-  <IntroduceToPanchayatDialog ngo={ngo} />
-  <Button variant="outline" size="sm">Edit</Button>
-  <Button variant="outline" size="sm" onClick={() => onDelete(ngo.id)}>
-    <Trash2 className="mr-2 h-4 w-4" />
-    Delete
-  </Button>
-</div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+           {filteredNGOs.length === 0 && (
+            <div className="text-center py-10 text-gray-500">
+                <p>No NGOs found.</p>
+                <p className="text-sm">Try adjusting your search or filter.</p>
+            </div>
+           )}
         </div>
       </CardContent>
     </Card>
@@ -240,151 +249,93 @@ export default function AdminNGOsPage() {
   const [ngos, setNgos] = useState<any[]>([])
 
   useEffect(() => {
-    fetch("/api/ngos")
-      .then((res) => res.json())
-      .then((data) => setNgos(data))
-  }, [])
+    const fetchNGOs = async () => {
+      try {
+        const res = await fetch("/api/ngos");
+        const data = await res.json();
+
+        if (data.length === 0) {
+          // Only inject mock NGOs if API returned nothing
+          const mockNGOs = [
+            {
+              id: "mock-1",
+              name: "Rural Development Foundation",
+              contactName: "Dr. Anjali Verma",
+              contactPhone: "+91-9876543220",
+              contactEmail: "contact@rdf.org.in",
+              focusArea: "Education and Healthcare",
+              coverage: "Madhya Pradesh",
+              address: "Plot 15, Civil Lines, Bhopal, MP 462001",
+            },
+            {
+              id: "mock-2",
+              name: "Clean Water Initiative",
+              contactName: "Ravi Agarwal",
+              contactPhone: "+91-9876543221",
+              contactEmail: "info@cleanwater.org",
+              focusArea: "Water and Sanitation",
+              coverage: "Central India",
+              address: "23, Green Park, Bhopal, MP 462003",
+            },
+            {
+              id: "mock-3",
+              name: "Women Empowerment Society",
+              contactName: "Meera Joshi",
+              contactPhone: "+91-9876543222",
+              contactEmail: "contact@wes.org.in",
+              focusArea: "Women Rights and Development",
+              coverage: "Bhopal District",
+              address: "45, Mahila Bhawan, Bhopal, MP 462001",
+            },
+          ];
+          setNgos(mockNGOs);
+        } else {
+          setNgos(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch NGOs:", error);
+      }
+    };
+
+    fetchNGOs();
+  }, []);
 
   const handleAddNGO = (newNGO: any) => {
     setNgos((prev) => [newNGO, ...prev])
   }
 
-  // const handleDeleteNGO = async (ngoId: string) => {
-  //   try {
-  //     const res = await fetch(`/api/ngos/${ngoId}`, {
-  //       method: "DELETE",
-  //     });
-  //     if (res.ok) {
-  //       setNgos((prevNgos) => prevNgos.filter((ngo) => ngo.id !== ngoId));
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to delete NGO:", error);
-  //   }
-  // }
-
   const handleDeleteNGO = async (ngoId: string) => {
-  if (ngoId.startsWith("mock-")) {
-    // Delete only from UI (mock data)
-    setNgos((prevNgos) => prevNgos.filter((ngo) => ngo.id !== ngoId));
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/ngos/${ngoId}`, {
-      method: "DELETE",
-    });
-
-    if (res.ok) {
-      // Remove from UI after successful deletion from DB
+    if (ngoId.startsWith("mock-")) {
+      // Delete only from UI (mock data)
       setNgos((prevNgos) => prevNgos.filter((ngo) => ngo.id !== ngoId));
-    } else {
-      console.error("Failed to delete NGO from DB");
+      return;
     }
-  } catch (error) {
-    console.error("Error deleting NGO:", error);
-  }
-};
 
-//  useEffect(() => {
-//     fetch("/api/ngos")
-//       .then((res) => res.json())
-//       .then((data) => {
-//         const mockNGOs = [
-//           {
-//             id: "mock-1",
-//             name: "Rural Development Foundation",
-//             contactName: "Dr. Anjali Verma",
-//             contactPhone: "+91-9876543220",
-//             contactEmail: "contact@rdf.org.in",
-//             focusArea: "Education and Healthcare",
-//             coverage: "Madhya Pradesh",
-//             address: "Plot 15, Civil Lines, Bhopal, MP 462001",
-//           },
-//           {
-//             id: "mock-2",
-//             name: "Clean Water Initiative",
-//             contactName: "Ravi Agarwal",
-//             contactPhone: "+91-9876543221",
-//             contactEmail: "info@cleanwater.org",
-//             focusArea: "Water and Sanitation",
-//             coverage: "Central India",
-//             address: "23, Green Park, Bhopal, MP 462003",
-//           },
-//           {
-//             id: "mock-3",
-//             name: "Women Empowerment Society",
-//             contactName: "Meera Joshi",
-//             contactPhone: "+91-9876543222",
-//             contactEmail: "contact@wes.org.in",
-//             focusArea: "Women Rights and Development",
-//             coverage: "Bhopal District",
-//             address: "45, Mahila Bhawan, Bhopal, MP 462001",
-//           }
-//         ]
-
-//         setNgos([...mockNGOs, ...data])
-//       })
-//   }, [])
-useEffect(() => {
-  const fetchNGOs = async () => {
     try {
-      const res = await fetch("/api/ngos");
-      const data = await res.json();
+      const res = await fetch(`/api/ngos/${ngoId}`, {
+        method: "DELETE",
+      });
 
-      if (data.length === 0) {
-        // Only inject mock NGOs if API returned nothing
-        const mockNGOs = [
-          {
-            id: "mock-1",
-            name: "Rural Development Foundation",
-            contactName: "Dr. Anjali Verma",
-            contactPhone: "+91-9876543220",
-            contactEmail: "contact@rdf.org.in",
-            focusArea: "Education and Healthcare",
-            coverage: "Madhya Pradesh",
-            address: "Plot 15, Civil Lines, Bhopal, MP 462001",
-          },
-          {
-            id: "mock-2",
-            name: "Clean Water Initiative",
-            contactName: "Ravi Agarwal",
-            contactPhone: "+91-9876543221",
-            contactEmail: "info@cleanwater.org",
-            focusArea: "Water and Sanitation",
-            coverage: "Central India",
-            address: "23, Green Park, Bhopal, MP 462003",
-          },
-          {
-            id: "mock-3",
-            name: "Women Empowerment Society",
-            contactName: "Meera Joshi",
-            contactPhone: "+91-9876543222",
-            contactEmail: "contact@wes.org.in",
-            focusArea: "Women Rights and Development",
-            coverage: "Bhopal District",
-            address: "45, Mahila Bhawan, Bhopal, MP 462001",
-          },
-        ];
-        setNgos(mockNGOs);
+      if (res.ok) {
+        // Remove from UI after successful deletion from DB
+        setNgos((prevNgos) => prevNgos.filter((ngo) => ngo.id !== ngoId));
       } else {
-        setNgos(data);
+        console.error("Failed to delete NGO from DB");
       }
     } catch (error) {
-      console.error("Failed to fetch NGOs:", error);
+      console.error("Error deleting NGO:", error);
     }
   };
 
-  fetchNGOs();
-}, []);
-
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* Responsive Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">NGO Management</h2>
         <AddNGODialog onAdd={handleAddNGO} />
       </div>
 
-      <Suspense fallback={<div>Loading NGOs...</div>}>
+      <Suspense fallback={<div className="text-center p-8">Loading NGOs...</div>}>
         <NGOsTable ngos={ngos} onDelete={handleDeleteNGO} />
       </Suspense>
     </div>
