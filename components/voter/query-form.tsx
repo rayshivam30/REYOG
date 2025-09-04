@@ -67,7 +67,6 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [selectedDepartment, setSelectedDepartment] = useState("default")
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [activeField, setActiveField] = useState<'title' | 'description' | null>(null)
   const titleRef = useRef<HTMLInputElement | null>(null)
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
   const { 
@@ -99,45 +98,70 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   const router = useRouter()
 
 
-  // Speech recognition hook
+  // Speech recognition hooks for title and description
   const {
-    isListening,
-    transcript,
-    error: speechError,
-    startListening,
-    stopListening,
-    resetTranscript,
+    isListening: isTitleListening,
+    transcript: titleTranscript,
+    error: titleError,
+    startListening: startTitleListening,
+    stopListening: stopTitleListening,
+    resetTranscript: resetTitleTranscript,
     hasRecognitionSupport
+  } = useSpeechRecognition()
+
+  const {
+    isListening: isDescriptionListening,
+    transcript: descriptionTranscript,
+    error: descriptionError,
+    startListening: startDescriptionListening,
+    stopListening: stopDescriptionListening,
+    resetTranscript: resetDescriptionTranscript
   } = useSpeechRecognition()
 
   // Handle speech recognition results
   useEffect(() => {
-    if (!activeField) return;
-    
-    if (transcript) {
-      if (activeField === 'title' && titleRef.current) {
-        setValue('title', transcript, { shouldValidate: true });
-      } else if (activeField === 'description' && descriptionRef.current) {
-        setValue('description', transcript, { shouldValidate: true });
-      }
+    if (titleTranscript && isTitleListening) {
+      setValue('title', titleTranscript, { shouldValidate: true });
     }
-  }, [transcript, activeField, setValue])
+  }, [titleTranscript, isTitleListening, setValue])
+
+  useEffect(() => {
+    if (descriptionTranscript && isDescriptionListening) {
+      setValue('description', descriptionTranscript, { shouldValidate: true });
+    }
+  }, [descriptionTranscript, isDescriptionListening, setValue])
 
   // Handle speech recognition errors
   useEffect(() => {
-    if (speechError) {
-      setError(speechError);
-    }
-  }, [speechError])
+    if (titleError) setError(`Title: ${titleError}`);
+    if (descriptionError) setError(`Description: ${descriptionError}`);
+  }, [titleError, descriptionError])
 
-  const toggleListening = (field: 'title' | 'description') => {
-    if (isListening) {
-      stopListening();
-      setActiveField(null);
+  const toggleTitleListening = () => {
+    if (isTitleListening) {
+      stopTitleListening();
     } else {
-      resetTranscript();
-      setActiveField(field);
-      startListening();
+      // Stop description if it's listening
+      if (isDescriptionListening) {
+        stopDescriptionListening();
+        resetDescriptionTranscript();
+      }
+      resetTitleTranscript();
+      startTitleListening();
+    }
+  }
+
+  const toggleDescriptionListening = () => {
+    if (isDescriptionListening) {
+      stopDescriptionListening();
+    } else {
+      // Stop title if it's listening
+      if (isTitleListening) {
+        stopTitleListening();
+        resetTitleTranscript();
+      }
+      resetDescriptionTranscript();
+      startDescriptionListening();
     }
   }
 
@@ -329,81 +353,101 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
           )}
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="title">Query Title *</Label>
-              {hasRecognitionSupport && (
-                <Button
-                  type="button"
-                  variant={isListening && activeField === 'title' ? 'destructive' : 'ghost'}
-                  size="sm"
-                  className="h-8 px-2 text-xs"
-                  onClick={() => toggleListening('title')}
-                >
-                  {isListening && activeField === 'title' ? (
-                    <MicOff className="h-4 w-4 mr-1" />
-                  ) : (
-                    <Mic className="h-4 w-4 mr-1" />
-                  )}
-                  {isListening && activeField === 'title' ? 'Stop' : 'Speak'}
-                </Button>
-              )}
-            </div>
-            <div className="relative">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="title">Query Title *</Label>
+                {hasRecognitionSupport && (
+                  <Button
+                    type="button"
+                    variant={isTitleListening ? 'destructive' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-2 text-xs gap-1"
+                    onClick={toggleTitleListening}
+                  >
+                    {isTitleListening ? (
+                      <MicOff className="h-4 w-4" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                    {isTitleListening ? 'Stop' : 'Speak'}
+                  </Button>
+                )}
+              </div>
               <div className="relative">
                 <Input 
                   id="title" 
                   placeholder="Brief description of your query"
                   {...register("title")}
+                  className={isTitleListening ? 'ring-2 ring-blue-500' : ''}
                   ref={(e) => {
                     titleRef.current = e;
                     return register("title").ref(e);
                   }}
                 />
+                {isTitleListening && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <div className="h-3 w-3 rounded-full bg-red-500 animate-ping"></div>
+                  </div>
+                )}
               </div>
+              {isTitleListening && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                  Listening... Speak now
+                </p>
+              )}
+              {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
             </div>
-            {isListening && activeField === 'title' && (
-              <p className="text-xs text-muted-foreground">Listening... Speak now</p>
-            )}
             {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="description">Detailed Description *</Label>
-              {hasRecognitionSupport && (
-                <Button
-                  type="button"
-                  variant={isListening && activeField === 'description' ? 'destructive' : 'ghost'}
-                  size="sm"
-                  className="h-8 px-2 text-xs"
-                  onClick={() => toggleListening('description')}
-                >
-                  {isListening && activeField === 'description' ? (
-                    <MicOff className="h-4 w-4 mr-1" />
-                  ) : (
-                    <Mic className="h-4 w-4 mr-1" />
-                  )}
-                  {isListening && activeField === 'description' ? 'Stop' : 'Dictate'}
-                </Button>
-              )}
-            </div>
-            <div className="relative">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Detailed Description *</Label>
+                {hasRecognitionSupport && (
+                  <Button
+                    type="button"
+                    variant={isDescriptionListening ? 'destructive' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-2 text-xs gap-1"
+                    onClick={toggleDescriptionListening}
+                  >
+                    {isDescriptionListening ? (
+                      <MicOff className="h-4 w-4" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                    {isDescriptionListening ? 'Stop' : 'Dictate'}
+                  </Button>
+                )}
+              </div>
               <div className="relative">
                 <Textarea
                   id="description"
                   placeholder="Provide detailed information about your query, including any relevant context"
                   rows={4}
+                  className={isDescriptionListening ? 'ring-2 ring-blue-500' : ''}
                   {...register("description")}
                   ref={(e) => {
                     descriptionRef.current = e;
                     return register("description").ref(e);
                   }}
                 />
+                {isDescriptionListening && (
+                  <div className="absolute top-3 right-3">
+                    <div className="h-3 w-3 rounded-full bg-red-500 animate-ping"></div>
+                  </div>
+                )}
               </div>
+              {isDescriptionListening && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                  Listening... Speak now
+                </p>
+              )}
+              {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
             </div>
-            {isListening && activeField === 'description' && (
-              <p className="text-xs text-muted-foreground">Listening... Speak now</p>
-            )}
             {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
           </div>
 
