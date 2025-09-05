@@ -523,8 +523,8 @@ export default function VoterDashboard() {
                     ))}
                     <div className="p-3 sm:p-4 border-t">
                       {/* === THIS BUTTON WAS CHANGED === */}
-                      <Button variant="secondary" size="sm" className="w-full" asChild>
-                        <Link href="/dashboard/voter/queries" className="text-sm sm:text-base">View All Queries</Link>
+                      <Button variant="default" size="sm" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg" asChild>
+                        <Link href="/dashboard/voter/queries" className="!text-white text-sm sm:text-base">View All Queries</Link>
                       </Button>
                     </div>
                   </div>
@@ -593,8 +593,8 @@ export default function VoterDashboard() {
                     ))}
                     <div className="p-3 sm:p-4 border-t">
                        {/* === THIS BUTTON WAS CHANGED === */}
-                      <Button variant="secondary" size="sm" className="w-full" asChild>
-                        <Link href="/dashboard/voter/complaints" className="text-sm sm:text-base">View All Complaints</Link>
+                      <Button variant="default" size="sm" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg" asChild>
+                        <Link href="/dashboard/voter/complaints" className="!text-white text-sm sm:text-base">View All Complaints</Link>
                       </Button>
                     </div>
                   </div>
