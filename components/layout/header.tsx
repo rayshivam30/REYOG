@@ -60,11 +60,16 @@ export function Header() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
-            {/* Mobile Toggles Added Here */}
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-muted-foreground">Settings</span>
-              <div className="flex items-center gap-4">
+            {/* Mobile Toggles */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-foreground">Language</span>
+              </div>
+              <div className="w-full mb-4">
                 <GoogleTranslate />
+              </div>
+              <div className="flex items-center justify-between border-t border-border pt-3">
+                <span className="text-sm font-medium text-foreground">Theme</span>
                 <ThemeToggle />
               </div>
             </div>
