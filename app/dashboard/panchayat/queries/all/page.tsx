@@ -99,9 +99,47 @@ export default function AllQueriesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null) // For the action dialog
   const [viewingCommentsFor, setViewingCommentsFor] = useState<Query | null>(null) // For the comments dialog
+  const [isLoadingComments, setIsLoadingComments] = useState(false)
   const [updateNote, setUpdateNote] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
   const [actionStatus, setActionStatus] = useState<string | null>(null)
+
+  // Function to fetch comments for a specific query
+  const fetchComments = async (queryId: string) => {
+    try {
+      setIsLoadingComments(true);
+      const response = await fetch(`/api/queries/${queryId}/comments`);
+      if (response.ok) {
+        const data = await response.json();
+        // Update the query with the fetched comments
+        setQueries(prevQueries => 
+          prevQueries.map(q => 
+            q.id === queryId 
+              ? { ...q, comments: data.comments, commentCount: data.commentCount } 
+              : q
+          )
+        );
+        setFilteredQueries(prevQueries => 
+          prevQueries.map(q => 
+            q.id === queryId 
+              ? { ...q, comments: data.comments, commentCount: data.commentCount } 
+              : q
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  // Handle opening the comments dialog
+  const handleOpenComments = async (query: Query) => {
+    setViewingCommentsFor(query);
+    // Always fetch fresh comments when opening the dialog
+    await fetchComments(query.id);
+  };
 
   useEffect(() => {
     fetchQueries()
@@ -118,11 +156,19 @@ export default function AllQueriesPage() {
   const fetchQueries = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/queries") // Assuming API returns all new fields
+      const response = await fetch("/api/queries?include=comments") // Include comments in the response
       if (response.ok) {
         const data = await response.json()
+        console.log('API Response:', data) // Debug log
         const allQueries = data.queries || []
         const pendingQueries = allQueries.filter((q: Query) => q.status === "PENDING_REVIEW")
+        console.log('Pending Queries with Comments:', pendingQueries.map((q: Query) => ({
+          id: q.id,
+          title: q.title,
+          commentCount: q.commentCount,
+          hasComments: !!q.comments?.length,
+          comments: q.comments
+        }))) // Debug log
         setQueries(pendingQueries)
         setFilteredQueries(pendingQueries)
       }
@@ -239,7 +285,7 @@ export default function AllQueriesPage() {
                           className="flex items-center gap-1.5 h-auto py-1 px-2 text-muted-foreground hover:text-foreground"
                           onClick={(e) => {
                             e.stopPropagation()
-                            setViewingCommentsFor(query)
+                            handleOpenComments(query)
                           }}
                         >
                           <MessageSquare className="h-4 w-4" />
@@ -400,8 +446,10 @@ export default function AllQueriesPage() {
         </DialogContent>
       </Dialog>
       
-      {/* --- Dialog for Viewing Comments (Unchanged) --- */}
-      <Dialog open={!!viewingCommentsFor} onOpenChange={() => setViewingCommentsFor(null)}>
+      {/* --- Dialog for Viewing Comments --- */}
+      <Dialog open={!!viewingCommentsFor} onOpenChange={(open) => {
+        if (!open) setViewingCommentsFor(null);
+      }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Comments</DialogTitle>
@@ -413,7 +461,7 @@ export default function AllQueriesPage() {
                 <div key={comment.id} className="p-3 bg-muted/50 rounded-lg text-sm">
                   <p className="text-foreground">{comment.content}</p>
                   <div className="text-xs text-muted-foreground mt-2 flex justify-between items-center">
-                    <span>- {comment.user.name ?? "Anonymous"}</span>
+                    <span>- {comment.user?.name ?? "Anonymous"}</span>
                     <span>{new Date(comment.createdAt).toLocaleString()}</span>
                   </div>
                 </div>

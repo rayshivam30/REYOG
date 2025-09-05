@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0")
     const panchayatFilterId = searchParams.get("panchayatId")
     const scope = searchParams.get("scope")
+    const include = searchParams.get("include")
 
     const whereClause: any = {}
 
@@ -86,7 +87,19 @@ export async function GET(request: NextRequest) {
           },
         },
         attachments: true,
-        // MODIFICATION START: Include assignments
+        comments: include === 'comments' ? {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        } : false,
         assignedOffices: {
           select: {
             office: {
