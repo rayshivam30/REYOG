@@ -247,11 +247,7 @@ export default function VoterQueriesPage() {
             <p className="mt-1 text-sm text-gray-500">
               Get started by raising a new query.
             </p>
-            <div className="mt-6">
-              <Link href="/dashboard/voter/queries/new">
-                <Button>Create Query</Button>
-              </Link>
-            </div>
+            
           </div>
         )}
       </div>
