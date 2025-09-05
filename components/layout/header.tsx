@@ -1,10 +1,10 @@
+// File: components/Header.tsx
 "use client"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Building2, Menu, X } from "lucide-react"
 import { useState } from "react"
-// Consistent import path using '@' alias
 import { GoogleTranslate } from "@/components/GoogleTranslate"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -18,50 +18,59 @@ export function Header() {
     <header className="bg-card border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* LEFT: Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Building2 className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold text-foreground">ReYog</span>
           </Link>
 
-          <GoogleTranslate />
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* CENTER: Desktop Navigation */}
+          {/* I've added ml-24 here to shift the navigation block to the right */}
+          <nav className="hidden md:flex items-center space-x-8 ml-24">
             <Link href="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
             </Link>
             <Link href="/offices" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Offices
             </Link>
-            <Link href="/auth/login" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            <Link href="/services" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Services
             </Link>
           </nav>
 
-          {/* Desktop CTA & Toggles */}
-          <div className="hidden md:flex items-center space-x-4">
-            <ThemeToggle />
-            <Link href="/auth/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button>Get Started</Button>
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+          {/* RIGHT: Actions and Toggles */}
+          <div className="flex items-center space-x-4">
+            {/* Desktop-only CTAs & Toggles */}
+            <div className="hidden md:flex items-center space-x-4">
+              <ThemeToggle />
+              <Link href="/auth/login">
+                <Button variant="ghost">Sign In</Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button>Get Started</Button>
+              </Link>
+            </div>
+            
+            {/* Items visible on all screen sizes + mobile-only menu button */}
+            <div className="flex items-center space-x-4">
+                <GoogleTranslate />
+                <div className="md:hidden">
+                    <button 
+                        onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                        aria-label="Toggle menu"
+                        className="p-1 rounded-md hover:bg-accent"
+                    >
+                        {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                    </button>
+                </div>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Menu */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
-            {/* Mobile Toggles Added Here */}
+            {/* Mobile Toggles */}
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-muted-foreground">Settings</span>
               <div className="flex items-center gap-4">
@@ -69,6 +78,7 @@ export function Header() {
               </div>
             </div>
 
+            {/* Mobile Links and Buttons */}
             <nav className="flex flex-col space-y-2">
               <Link href="/" className="py-2 text-foreground hover:text-primary transition-colors" onClick={closeMenu}>
                 Home
