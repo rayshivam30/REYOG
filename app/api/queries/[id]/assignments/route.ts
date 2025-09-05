@@ -161,7 +161,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const queryId = params.id
+    const queryId = (await params).id
 
     const assignments = await prisma.query.findUnique({
       where: { id: queryId },
