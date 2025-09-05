@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MessageCircle, Share2, ThumbsUp, ArrowUpCircle, User, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,9 @@ export function SocialActions({
   const [isUpvoted, setIsUpvoted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCommentLoading, setIsCommentLoading] = useState(false);
+  const [commentInputRef, setCommentInputRef] = useState<HTMLTextAreaElement | null>(null);
+  const commentsSectionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Fetch initial like/upvote state
@@ -90,6 +93,7 @@ export function SocialActions({
   // Fetch comments
   const fetchComments = useCallback(async () => {
     try {
+      setIsCommentLoading(true);
       const response = await fetch(`/api/queries/${queryId}/comments`);
       if (response.ok) {
         const data = await response.json();
@@ -103,6 +107,8 @@ export function SocialActions({
         description: 'Failed to load comments',
         variant: 'destructive',
       });
+    } finally {
+      setIsCommentLoading(false);
     }
   }, [queryId, toast]);
 
@@ -241,6 +247,7 @@ export function SocialActions({
     setCommentsList(prev => [newComment, ...prev]);
     setCommentText('');
     setIsSubmitting(true);
+    setIsCommentLoading(true);
     
     try {
       const response = await fetch(`/api/queries/${queryId}/comments`, {
@@ -257,6 +264,11 @@ export function SocialActions({
 
       // Refresh comments to get the actual data from the server
       await fetchComments();
+      
+      // Scroll to the comment input after a short delay
+      setTimeout(() => {
+        commentInputRef?.focus();
+      }, 100);
       
       toast({
         title: 'Success',
@@ -387,9 +399,17 @@ export function SocialActions({
 
       {/* Comments Section */}
       {isCommentOpen && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200">
+        <div 
+          ref={commentsSectionRef}
+          className="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200 animate-in fade-in-50"
+        >
           {/* Comments List */}
           <div className="max-h-60 overflow-y-auto p-3 space-y-3 bg-white">
+            {isCommentLoading && commentsList.length === 0 && (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+              </div>
+            )}
             {commentsList.length === 0 ? (
               <div className="py-4 text-center">
                 <MessageCircle className="h-6 w-6 mx-auto text-gray-300 mb-2" />
@@ -425,20 +445,32 @@ export function SocialActions({
           <div className="border-t border-gray-200 p-3 bg-gray-50">
             <form onSubmit={handleComment} className="flex gap-2">
               <Textarea 
-                placeholder="Write a comment..." 
+                ref={setCommentInputRef}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 rows={1}
-                className="text-sm flex-1 min-h-[40px] max-h-24 resize-none"
+                className="text-sm flex-1 min-h-[40px] max-h-24 resize-none transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 style={{ scrollbarWidth: 'thin' }}
+                autoFocus={isCommentOpen}
+                disabled={isSubmitting}
               />
               <Button 
                 type="submit" 
                 size="sm"
                 disabled={!commentText.trim() || isSubmitting}
-                className="self-end h-[40px] px-4 bg-green-600 hover:bg-green-700"
+                className={`self-end h-[40px] px-4 bg-green-600 hover:bg-green-700 transition-colors ${
+                  isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
               >
-                {isSubmitting ? '...' : 'Post'}
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Posting...
+                  </>
+                ) : 'Post'}
               </Button>
             </form>
           </div>

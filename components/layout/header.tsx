@@ -24,6 +24,8 @@ export function Header() {
             <span className="text-xl font-bold text-foreground">ReYog</span>
           </Link>
 
+          <GoogleTranslate />
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
@@ -39,7 +41,6 @@ export function Header() {
 
           {/* Desktop CTA & Toggles */}
           <div className="hidden md:flex items-center space-x-4">
-            <GoogleTranslate />
             <ThemeToggle />
             <Link href="/auth/login">
               <Button variant="ghost">Sign In</Button>
@@ -64,7 +65,6 @@ export function Header() {
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-muted-foreground">Settings</span>
               <div className="flex items-center gap-4">
-                <GoogleTranslate />
                 <ThemeToggle />
               </div>
             </div>
