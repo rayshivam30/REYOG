@@ -24,7 +24,7 @@ export function FileUpload({
   onFilesChange,
   maxFiles = 5,
   maxSize = 10,
-  acceptedTypes = ["image/*", "application/pdf"],
+  acceptedTypes = ["image/*", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
   disabled = false,
 }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false)

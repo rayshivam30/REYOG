@@ -128,11 +128,26 @@ export function useSpeechRecognition({
 
     // Set up event handlers
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const result = event.results[event.resultIndex];
-      const transcript = result[0]?.transcript || '';
-      
-      if (result.isFinal) {
-        setTranscript(prev => prev + (prev ? ' ' : '') + transcript);
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      // Build the transcript from the current results
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const text = result[0]?.transcript || '';
+        
+        if (result.isFinal) {
+          finalTranscript += text;
+        } else {
+          interimTranscript += text;
+        }
+      }
+
+      // Update the transcript with the final result if available, otherwise use interim
+      if (finalTranscript) {
+        setTranscript(prev => prev + (prev ? ' ' : '') + finalTranscript);
+      } else if (interimTranscript) {
+        setTranscript(prev => prev + (prev ? ' ' : '') + interimTranscript);
       }
     };
 

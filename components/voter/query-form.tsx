@@ -98,7 +98,7 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   const router = useRouter()
 
 
-  // Speech recognition hooks for title and description
+  // Speech recognition hooks for title and description with explicit language support
   const {
     isListening: isTitleListening,
     transcript: titleTranscript,
@@ -107,7 +107,11 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     stopListening: stopTitleListening,
     resetTranscript: resetTitleTranscript,
     hasRecognitionSupport
-  } = useSpeechRecognition()
+  } = useSpeechRecognition({
+    continuous: true,
+    interimResults: true,
+    lang: 'en-IN' // Using Indian English for better recognition
+  })
 
   const {
     isListening: isDescriptionListening,
@@ -116,39 +120,47 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     startListening: startDescriptionListening,
     stopListening: stopDescriptionListening,
     resetTranscript: resetDescriptionTranscript
-  } = useSpeechRecognition()
+  } = useSpeechRecognition({
+    continuous: true,
+    interimResults: true,
+    lang: 'hi-IN' // Using Hindi for description as it might include local terms
+  })
 
+  // Track if this is the first run to prevent initial empty state updates
+  const isInitialMount = useRef(true);
+  
   // Handle speech recognition results for title
-  const [lastTitleTranscript, setLastTitleTranscript] = useState('');
   useEffect(() => {
-    if (titleTranscript && isTitleListening) {
-      setValue('title', titleTranscript, { shouldValidate: true });
-      setLastTitleTranscript(titleTranscript);
-    } else if (!isTitleListening && titleTranscript) {
-      // When stopping, make sure to set the final value
+    if (!isInitialMount.current && titleTranscript) {
       setValue('title', titleTranscript, { shouldValidate: true });
     }
-  }, [titleTranscript, isTitleListening, setValue]);
+  }, [titleTranscript, setValue]);
 
   // Handle speech recognition results for description
-  const [lastDescriptionTranscript, setLastDescriptionTranscript] = useState('');
   useEffect(() => {
-    if (descriptionTranscript && isDescriptionListening) {
-      setValue('description', descriptionTranscript, { shouldValidate: true });
-      setLastDescriptionTranscript(descriptionTranscript);
-    } else if (!isDescriptionListening && descriptionTranscript) {
-      // When stopping, make sure to set the final value
+    if (!isInitialMount.current && descriptionTranscript) {
       setValue('description', descriptionTranscript, { shouldValidate: true });
     }
-  }, [descriptionTranscript, isDescriptionListening, setValue]);
+  }, [descriptionTranscript, setValue]);
+
+  // Set initial mount to false after first render
+  useEffect(() => {
+    isInitialMount.current = false;
+  }, []);
 
   // Handle speech recognition errors
   useEffect(() => {
-    if (titleError) setError(`Title: ${titleError}`);
-    if (descriptionError) setError(`Description: ${descriptionError}`);
-  }, [titleError, descriptionError])
+    if (titleError) {
+      console.error('Title recognition error:', titleError);
+      setError(`Title recognition error: ${titleError}`);
+    }
+    if (descriptionError) {
+      console.error('Description recognition error:', descriptionError);
+      setError(`Description recognition error: ${descriptionError}`);
+    }
+  }, [titleError, descriptionError]);
 
-  const toggleTitleListening = () => {
+  const toggleTitleListening = async () => {
     try {
       if (isTitleListening) {
         stopTitleListening();
@@ -159,15 +171,15 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
           resetDescriptionTranscript();
         }
         resetTitleTranscript();
-        startTitleListening();
+        await startTitleListening();
       }
     } catch (error) {
       console.error('Error in title speech recognition:', error);
-      setError('Error accessing microphone. Please ensure you have granted microphone permissions.');
+      setError('Error accessing microphone. Please ensure you have granted microphone permissions and try again.');
     }
-  }
+  };
 
-  const toggleDescriptionListening = () => {
+  const toggleDescriptionListening = async () => {
     try {
       if (isDescriptionListening) {
         stopDescriptionListening();
@@ -178,26 +190,13 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
           resetTitleTranscript();
         }
         resetDescriptionTranscript();
-        startDescriptionListening();
+        await startDescriptionListening();
       }
     } catch (error) {
       console.error('Error in description speech recognition:', error);
-      setError('Error accessing microphone. Please ensure you have granted microphone permissions.');
+      setError('Error accessing microphone. Please ensure you have granted microphone permissions and try again.');
     }
-  }
-
-  // Handle when speech recognition ends naturally
-  useEffect(() => {
-    if (!isTitleListening && titleTranscript) {
-      setValue('title', titleTranscript, { shouldValidate: true });
-    }
-  }, [isTitleListening, titleTranscript, setValue]);
-
-  useEffect(() => {
-    if (!isDescriptionListening && descriptionTranscript) {
-      setValue('description', descriptionTranscript, { shouldValidate: true });
-    }
-  }, [isDescriptionListening, descriptionTranscript, setValue]);
+  };
 
 
   useEffect(() => {
