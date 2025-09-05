@@ -123,7 +123,7 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   } = useSpeechRecognition({
     continuous: true,
     interimResults: true,
-    lang: 'hi-IN' // Using Hindi for description as it might include local terms
+    lang: 'en-US' // Using English for description
   })
 
   // Track if this is the first run to prevent initial empty state updates
@@ -672,6 +672,7 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
               />
             </div>
 
+            {/* ====== MODIFIED SECTION START ====== */}
             {/* Attachments Preview */}
             {attachments.length > 0 && (
               <div className="space-y-2">
@@ -680,28 +681,31 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
                   {attachments.map((file) => (
                     <div 
                       key={file.id}
-                      className="flex items-center justify-between p-3 border rounded-lg bg-gray-50"
+                      className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-md bg-white border">
-                          {file.type.startsWith('image/') ? (
-                            <ImageIcon className="h-5 w-5 text-blue-500" />
-                          ) : (
-                            <FileText className="h-5 w-5 text-blue-500" />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{file.filename}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </p>
-                        </div>
+                      {/* --- ICON --- */}
+                      <div className="flex-shrink-0 p-2 rounded-md bg-white border">
+                        {file.type.startsWith('image/') ? (
+                          <ImageIcon className="h-5 w-5 text-blue-500" />
+                        ) : (
+                          <FileText className="h-5 w-5 text-blue-500" />
+                        )}
                       </div>
+                      
+                      {/* --- TEXT INFO --- */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.filename}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      
+                      {/* --- REMOVE BUTTON --- */}
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-destructive"
                         onClick={() => {
                           setAttachments(attachments.filter((f) => f.id !== file.id))
                         }}
@@ -713,6 +717,7 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
                 </div>
               </div>
             )}
+            {/* ====== MODIFIED SECTION END ====== */}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">

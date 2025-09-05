@@ -169,7 +169,8 @@ export function FileUpload({
               </p>
             )}
             <p className="text-xs">
-              {acceptedTypes.join(", ")} (max {maxSize}MB each, up to {maxFiles} files)
+              {/* Simplified accepted types display for brevity */}
+              Images, PDF, DOCX (max {maxSize}MB each, up to {maxFiles} files)
             </p>
           </div>
         </div>
@@ -194,30 +195,34 @@ export function FileUpload({
           <p className="text-sm font-medium">Uploaded Files ({uploadedFiles.length}/{maxFiles})</p>
           <div className="space-y-2">
             {uploadedFiles.map((file) => (
+              // ====== MODIFIED SECTION START ======
               <div
                 key={file.id}
-                className="flex items-center justify-between p-3 border rounded-lg bg-muted/50"
+                className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-md bg-background border">
-                    {file.type.startsWith("image") ? (
-                      <ImageIcon className="h-5 w-5 text-primary" />
-                    ) : (
-                      <FileText className="h-5 w-5 text-primary" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{file.filename}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(file.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
+                {/* --- ICON --- */}
+                <div className="flex-shrink-0 p-2 rounded-md bg-background border">
+                  {file.type.startsWith("image") ? (
+                    <ImageIcon className="h-5 w-5 text-primary" />
+                  ) : (
+                    <FileText className="h-5 w-5 text-primary" />
+                  )}
                 </div>
+
+                {/* --- FILE INFO (Name & Size) --- */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{file.filename}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                
+                {/* --- REMOVE BUTTON --- */}
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation()
                     removeFile(file.id, file.publicId)
@@ -227,6 +232,7 @@ export function FileUpload({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+              // ====== MODIFIED SECTION END ======
             ))}
           </div>
         </div>
