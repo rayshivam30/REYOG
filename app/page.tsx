@@ -4,11 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { FileText, MapPin, Bell, Users, CheckCircle, Clock, Star, ArrowRight, Building2, Phone } from "lucide-react"
+import Script from 'next/script';
 
 export default function HomePage() {
   return (
     <div className="flex-1">
       <Header />
+
+      {/* Tidio Chat Widget */}
+      <Script 
+        src="//code.tidio.co/xqdpdonnhkjfw0zwz6oj30v2ib9eeqiq.js" 
+        strategy="afterInteractive"
+        id="tidio-chat"
+      />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-background via-background/95 to-muted/80 overflow-hidden">
