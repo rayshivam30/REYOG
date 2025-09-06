@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { notificationTriggers } from '@/lib/notification-triggers';
 
 // Temporary type to handle Prisma client extension
 type PrismaClientWithModels = typeof prisma & {
@@ -65,6 +66,14 @@ export async function POST(
     const commentCount = await prismaClient.comment.count({
       where: { queryId },
     });
+
+    // Trigger notification for the new comment
+    try {
+      await notificationTriggers.onNewComment(comment.id, user.userId);
+    } catch (error) {
+      console.error('Error triggering notification:', error);
+      // Don't fail the request if notification fails
+    }
 
     return NextResponse.json({ ...comment, commentCount });
   } catch (error) {

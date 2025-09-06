@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notificationTriggers } from '@/lib/notification-triggers'
 
 export async function POST(
   request: Request,
@@ -99,13 +100,10 @@ export async function POST(
       }
     });
 
-    // Then update the query
+    // Update the query status
     const updatedQuery = await prisma.query.update({
       where: { id },
-      data: { 
-        status,
-        updatedAt: new Date()
-      },
+      data: { status },
       include: {
         user: {
           select: {

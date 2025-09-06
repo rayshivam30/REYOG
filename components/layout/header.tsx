@@ -1,15 +1,23 @@
-// File: components/Header.tsx
 "use client"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Building2, Menu, X } from "lucide-react"
-import { useState } from "react"
+import { NotificationBell } from "@/components/ui/notification-bell"
+import { useState, useEffect } from "react"
 import { GoogleTranslate } from "@/components/GoogleTranslate"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { getAuthToken } from "@/lib/client-auth"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const token = getAuthToken()
+    setIsAuthenticated(!!token)
+  }, [])
 
   // Function to close the menu, useful for links and buttons
   const closeMenu = () => setIsMenuOpen(false)
@@ -43,12 +51,18 @@ export function Header() {
             {/* Desktop-only CTAs & Toggles */}
             <div className="hidden md:flex items-center space-x-4">
               <ThemeToggle />
-              <Link href="/auth/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link href="/auth/register">
-                <Button>Get Started</Button>
-              </Link>
+              {isAuthenticated ? (
+                <NotificationBell />
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link href="/auth/login">
+                    <Button variant="ghost">Sign In</Button>
+                  </Link>
+                  <Link href="/auth/register">
+                    <Button>Get Started</Button>
+                  </Link>
+                </div>
+              )}
             </div>
             
             {/* Items visible on all screen sizes + mobile-only menu button */}

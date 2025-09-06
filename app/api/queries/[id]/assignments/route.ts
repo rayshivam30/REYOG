@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { UserRole } from "@prisma/client"
 import { z } from "zod"
+import { notificationTriggers } from "@/lib/notification-triggers"
 
 const assignmentSchema = z.object({
   officeIds: z.array(z.string()).optional(),
@@ -100,6 +101,22 @@ export async function POST(
           where: { id: queryId },
           data: { status: "IN_PROGRESS" }
         })
+      }
+
+      // Trigger notifications for new assignments
+      try {
+        // Notify for office assignments
+        for (const officeId of officeIds) {
+          await notificationTriggers.onQueryAssigned(queryId, 'office', officeId, userId)
+        }
+        
+        // Notify for NGO assignments
+        for (const ngoId of ngoIds) {
+          await notificationTriggers.onQueryAssigned(queryId, 'ngo', ngoId, userId)
+        }
+      } catch (error) {
+        console.error('Error triggering assignment notifications:', error)
+        // Don't fail the request if notifications fail
       }
 
       return { officeCount: officeIds.length, ngoCount: ngoIds.length }

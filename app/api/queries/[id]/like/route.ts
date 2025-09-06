@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
+import { notificationTriggers } from '@/lib/notification-triggers';
 
 interface LikeRequest {
   like: boolean;
@@ -94,6 +95,14 @@ export async function POST(
         })
       ]);
       isLiked = true;
+      
+      // Trigger notification for the new like
+      try {
+        await notificationTriggers.onQueryLiked(queryId, userId);
+      } catch (error) {
+        console.error('Error triggering like notification:', error);
+        // Don't fail the request if notification fails
+      }
     } else if (!like && existingLike) {
       // Remove like
       await prisma.$transaction([
