@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SOSModal } from "@/components/sos-modal"
 import { GoogleTranslate } from "@/components/GoogleTranslate"
+import { NotificationBell } from "@/components/ui/notification-bell"
 import {
   Building2,
   FileText,
@@ -118,9 +119,14 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
 
         {/* User Info & Language */}
         <div className="p-4 space-y-2 border-b border-sidebar-border">
-          <div>
-            <p className="font-medium text-sidebar-foreground truncate">{userName}</p>
-            <p className="text-sm text-sidebar-foreground/60">{roleDisplayText}</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-medium text-sidebar-foreground truncate">{userName}</p>
+              <p className="text-sm text-sidebar-foreground/60">{roleDisplayText}</p>
+            </div>
+            <div className="mt-1">
+              <NotificationBell />
+            </div>
           </div>
           <GoogleTranslate />
         </div>
@@ -154,8 +160,10 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
         </nav>
 
         {/* Footer with SOS and Logout */}
-        <div className="p-4 mt-auto border-t border-sidebar-border space-y-2">
-          <SOSModal />
+        <div className="flex flex-col space-y-4 px-6 py-4 border-t border-border">
+          <div className="flex justify-between items-center">
+            <SOSModal />
+          </div>
           <LogoutButton />
         </div>
       </div>

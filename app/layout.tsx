@@ -1,10 +1,9 @@
-import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { ThemeProvider } from "@/components/theme-provider"
+import { AppProviders } from "@/components/providers/app-providers"
 import "./globals.css"
-import '@/app/leaflet.css';
+import '@/app/leaflet.css'
 
 export const metadata: Metadata = {
   title: "ReYog - Rural Governance Platform",
@@ -64,14 +63,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased text-foreground bg-background">
         <div className="min-h-screen flex flex-col">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <AppProviders>
             {children}
-          </ThemeProvider>
+          </AppProviders>
         </div>
       </body>
     </html>

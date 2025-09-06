@@ -8,29 +8,31 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  password      String
-  name          String
-  phone         String?
-  role          UserRole       @default(VOTER)
-  status        UserStatus     @default(ACTIVE)
-  wardNumber    Int            @default(1)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  panchayatId   String?
-  auditLogs     AuditLog[]
-  complaints    Complaint[]
-  notifications Notification[]
-  queries       Query[]
-  queryUpdates  QueryUpdate[]
-  upvotes       QueryUpvote[]
-  ratings       Rating[]
-  comments      Comment[]
-  likes         QueryLike[]
-  queryRatings  QueryRating[]  // New relation
-  ngoRatings    NgoRating[]    // New relation
-  panchayat     Panchayat?     @relation(fields: [panchayatId], references: [id])
+  id                 String                @id @default(cuid())
+  email              String                @unique
+  password           String
+  name               String
+  phone              String?
+  role               UserRole              @default(VOTER)
+  status             UserStatus            @default(ACTIVE)
+  wardNumber         Int                   @default(1)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  panchayatId        String?
+  auditLogs          AuditLog[]
+  complaints         Complaint[]
+  notifications      Notification[]
+  relatedNotifications Notification[]      @relation("NotificationRelatedUser")
+  queries            Query[]
+  queryUpdates       QueryUpdate[]
+  upvotes            QueryUpvote[]
+  ratings            Rating[]
+  comments           Comment[]
+  likes              QueryLike[]
+  queryRatings       QueryRating[]
+  ngoRatings         NgoRating[]
+  panchayat          Panchayat?            @relation(fields: [panchayatId], references: [id])
+  notificationPreference NotificationPreference?
 
   @@map("users")
 }
@@ -277,19 +279,43 @@ model ServiceStat {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  type      String
-  metadata  Json?
-  createdAt DateTime @default(now())
-  userId    String
-  queryId   String?
-  query     Query?   @relation(fields: [queryId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  id            String   @id @default(cuid())
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+  type          String   // e.g., 'QUERY_UPDATE', 'COMMENT', 'LIKE', 'SHARE', 'MENTION', 'ASSIGNMENT'
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  userId        String
+  queryId       String?
+  query         Query?   @relation(fields: [queryId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+  relatedUserId String?
+  relatedUser   User?    @relation("NotificationRelatedUser", fields: [relatedUserId], references: [id])
 
   @@map("notifications")
+}
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled      Boolean  @default(true)
+  pushEnabled       Boolean  @default(true)
+  inAppEnabled      Boolean  @default(true)
+  queryUpdates      Boolean  @default(true)
+  comments          Boolean  @default(true)
+  likes             Boolean  @default(true)
+  shares            Boolean  @default(true)
+  mentions          Boolean  @default(true)
+  assignments       Boolean  @default(true)
+  statusChanges     Boolean  @default(true)
+  weeklyDigest      Boolean  @default(true)
+  marketing         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("notification_preferences")
 }
 
 model AuditLog {
