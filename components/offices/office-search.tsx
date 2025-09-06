@@ -123,6 +123,25 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
           </Select>
         </div>
 
+        {/* Radius filter */}
+        <div className="w-full md:w-48">
+          <Select
+            value={radius.toString()}
+            onValueChange={(value) => setRadius(Number(value))}
+          >
+            <SelectTrigger className="min-h-10">
+              <SelectValue placeholder="Search radius" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 km</SelectItem>
+              <SelectItem value="10">10 km</SelectItem>
+              <SelectItem value="25">25 km</SelectItem>
+              <SelectItem value="50">50 km</SelectItem>
+              <SelectItem value="100">100 km</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Location filter */}
         <div className="flex flex-col sm:flex-row gap-2 md:flex-col lg:flex-row">
           <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
@@ -151,25 +170,6 @@ export function OfficeSearch({ onSearch, isLoading }: OfficeSearchProps) {
               Clear Location
             </Button>
           )}
-        </div>
-
-        {/* Radius filter */}
-        <div className="w-full md:w-48">
-          <Select
-            value={radius.toString()}
-            onValueChange={(value) => setRadius(Number(value))}
-          >
-            <SelectTrigger className="min-h-10">
-              <SelectValue placeholder="Search radius" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5 km</SelectItem>
-              <SelectItem value="10">10 km</SelectItem>
-              <SelectItem value="25">25 km</SelectItem>
-              <SelectItem value="50">50 km</SelectItem>
-              <SelectItem value="100">100 km</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

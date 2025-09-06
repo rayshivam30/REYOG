@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 import {
   Search,
   Eye,
@@ -34,6 +35,10 @@ import {
   Users,
   Briefcase,
   HeartHandshake,
+  ArrowUp,
+  MessageSquare,
+  Heart,
+  MessageCircle,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -58,6 +63,8 @@ interface Query {
   officialIncharge?: string
   teamAssigned?: string
   estimatedEnd?: string
+  upvoteCount: number
+  commentCount: number
   user: {
     id: string
     name: string
@@ -77,6 +84,10 @@ export default function ActiveQueriesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  // State for viewing comments dialog
+  const [viewingCommentsFor, setViewingCommentsFor] = useState<string | null>(null)
+  const [comments, setComments] = useState<Array<{id: string, content: string, createdAt: string, user: {name: string}}>>([])
+  const [isLoadingComments, setIsLoadingComments] = useState(false)
 
   // State for status update dialog
   const [selectedQuery, setSelectedQuery] = useState<Query | null>(null)
@@ -244,7 +255,28 @@ const handleSaveAssignment = async () => {
     }
   }
 
- const eligibleForAssignment = (status: string) => ["PENDING_REVIEW", "ACCEPTED", "WAITLISTED", "IN_PROGRESS"].includes(status)
+  const eligibleForAssignment = (status: string) => ["PENDING_REVIEW", "ACCEPTED", "WAITLISTED", "IN_PROGRESS"].includes(status)
+
+  const handleViewComments = async (queryId: string) => {
+    setViewingCommentsFor(queryId);
+    setIsLoadingComments(true);
+    try {
+      const response = await fetch(`/api/queries/${queryId}/comments`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data.comments || []);
+      } else {
+        toast.error('Failed to load comments');
+        setComments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      toast.error('An error occurred while loading comments');
+      setComments([]);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -341,15 +373,34 @@ const handleSaveAssignment = async () => {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                     
+                  <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        <span>{query.user.name}</span>
+                      </div>
+                      <span>•</span>
+                      <span>{new Date(query.createdAt).toLocaleDateString()}</span>
+                      {query.budgetIssued && <><span>•</span><span>Budget: ₹{query.budgetIssued.toLocaleString()}</span></>}
+                      {query.officialIncharge && <><span>•</span><span>Officer: {query.officialIncharge}</span></>}
                     </div>
-                    <span>{new Date(query.createdAt).toLocaleDateString()}</span>
-                    {query.budgetIssued && <span>Budget: ₹{query.budgetIssued.toLocaleString()}</span>}
-                    {query.officialIncharge && <span>Officer: {query.officialIncharge}</span>}
+                    
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <ArrowUp className="h-4 w-4" />
+                        <span>{query.upvoteCount || 0}</span>
+                      </div>
+                      
+                      <button 
+                        onClick={() => handleViewComments(query.id)}
+                        className="flex items-center gap-1 text-muted-foreground hover:text-blue-500 transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{query.commentCount || 0}</span>
+                      </button>
+                    </div>
                   </div>
+                  
                 </div>
               ))}
             </div>
@@ -437,6 +488,48 @@ const handleSaveAssignment = async () => {
               {isAssigning ? "Saving..." : "Save Assignments"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Comments Dialog */}
+      <Dialog open={!!viewingCommentsFor} onOpenChange={(open) => {
+        if (!open) {
+          setViewingCommentsFor(null);
+          setComments([]);
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Comments</DialogTitle>
+            <DialogDescription>
+              Viewing comments for this query
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[400px] overflow-y-auto">
+            {isLoadingComments ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            ) : comments.length > 0 ? (
+              <div className="space-y-4 p-2">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div className="font-medium">{comment.user.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(comment.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <p className="mt-1 text-sm">{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No comments yet
+              </p>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
