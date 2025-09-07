@@ -202,7 +202,16 @@
 
 //       setUsers([...users, { ...createdUser, status: "ACTIVE" }])
       
-//       setNewUser({ name: "", email: "", role: "VOTER", password: "" })
+//       setNewUser({
+//         name: "",
+//         email: "",
+//         role: "VOTER",
+//         password: "",
+//         panchayatId: "",
+//         newPanchayatName: "",
+//         newPanchayatEmail: "",
+//         newPanchayatPassword: ""
+//       })
 //       setIsCreateDialogOpen(false)
 
 //     } catch (error) {
@@ -394,17 +403,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 
 // Updated User type to match our data (real + mock)
 type User = {
@@ -447,6 +449,7 @@ export default function UsersPage() {
   const [panchayats, setPanchayats] = useState<{id: string, name: string}[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [panchayatFilter, setPanchayatFilter] = useState("all")
+  const [roleFilter, setRoleFilter] = useState<"ADMIN" | "PANCHAYAT" | "VOTER">("VOTER")
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [newUser, setNewUser] = useState({
@@ -454,6 +457,10 @@ export default function UsersPage() {
     email: "",
     role: "VOTER" as "ADMIN" | "PANCHAYAT" | "VOTER",
     password: "",
+    panchayatId: "" as string | undefined,
+    newPanchayatName: "",
+    newPanchayatEmail: "",
+    newPanchayatPassword: ""
   })
 
   useEffect(() => {
@@ -501,28 +508,111 @@ export default function UsersPage() {
       (panchayatFilter === "none" && !user.panchayat) ||
       user.panchayat?.id === panchayatFilter
     
-    return matchesSearch && matchesPanchayat
+    const matchesRole = user.role === roleFilter
+    
+    return matchesSearch && matchesPanchayat && matchesRole
   })
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/admin/users");
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+      const data = await response.json();
+      const realUsers = data.users.map((user: any) => ({
+        ...user,
+        status: user.status || "ACTIVE",
+      }));
+      setUsers(realUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to create user")
+      const requestBody: any = {
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role,
+      };
+
+      // Handle panchayat assignment for both VOTER and PANCHAYAT roles
+      if (newUser.role === 'VOTER' || newUser.role === 'PANCHAYAT') {
+        if (newUser.panchayatId === 'new') {
+          // Include new panchayat details
+          requestBody.newPanchayatName = newUser.newPanchayatName;
+          requestBody.newPanchayatEmail = newUser.newPanchayatEmail;
+          requestBody.newPanchayatPassword = newUser.newPanchayatPassword;
+        } else if (newUser.panchayatId && newUser.panchayatId !== 'none') {
+          // Include existing panchayat ID
+          requestBody.panchayatId = newUser.panchayatId;
+        } else if (newUser.role === 'PANCHAYAT') {
+          throw new Error('Panchayat is required for PANCHAYAT role');
+        }
       }
 
-      const { user: createdUser } = await response.json()
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-      setUsers([...users, { ...createdUser, status: "ACTIVE" }])
+      const responseData = await response.json();
       
-      setNewUser({ name: "", email: "", role: "VOTER", password: "" })
+      if (!response.ok) {
+        throw new Error(responseData.error || "Failed to create user");
+      }
+      
+      // Get the created user with panchayat data
+      const createdUser = responseData.user;
+      
+      // Update the users list with the new user
+      setUsers(prevUsers => [
+        {
+          ...createdUser,
+          status: createdUser.status || "ACTIVE",
+          panchayat: createdUser.panchayat
+            ? {
+                id: createdUser.panchayat.id,
+                name: createdUser.panchayat.name,
+                district: createdUser.panchayat.district,
+                state: createdUser.panchayat.state
+              }
+            : null
+        },
+        ...prevUsers
+      ]);
+      
+      // If a new panchayat was created, update the panchayats list
+      if (newUser.panchayatId === 'new' && createdUser.panchayat) {
+        setPanchayats(prevPanchayats => [
+          {
+            id: createdUser.panchayat.id,
+            name: createdUser.panchayat.name
+          },
+          ...prevPanchayats
+        ]);
+      }
+      
+      // Close the dialog and reset the form
+      setIsCreateDialogOpen(false);
+      
+      setNewUser({
+        name: "",
+        email: "",
+        role: "VOTER",
+        password: "",
+        panchayatId: "",
+        newPanchayatName: "",
+        newPanchayatEmail: "",
+        newPanchayatPassword: ""
+      })
       setIsCreateDialogOpen(false)
 
     } catch (error) {
@@ -614,6 +704,78 @@ export default function UsersPage() {
                   <Label htmlFor="password" className="text-right">Password</Label>
                   <Input id="password" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="col-span-3" required/>
                 </div>
+                {(newUser.role === "VOTER" || newUser.role === "PANCHAYAT") && (
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="panchayat" className="text-right mt-2">
+                      {newUser.role === "PANCHAYAT" ? "Assign to Panchayat" : "Panchayat"}
+                    </Label>
+                    <div className="col-span-3 space-y-2">
+                      <Select 
+                        value={newUser.panchayatId === 'new' ? 'new' : (newUser.panchayatId || '')}
+                        onValueChange={(value) => {
+                          if (value === 'new') {
+                            setNewUser(prev => ({ ...prev, panchayatId: 'new', newPanchayatName: '' }));
+                          } else {
+                            setNewUser(prev => ({ ...prev, panchayatId: value || undefined, newPanchayatName: '' }));
+                          }
+                        }}
+                        required={newUser.role === "PANCHAYAT"}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={
+                            newUser.role === "PANCHAYAT" 
+                              ? "Select Panchayat to Assign" 
+                              : "Select Panchayat"
+                          } />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {newUser.role === "VOTER" && (
+                            <SelectItem value="none">No Panchayat</SelectItem>
+                          )}
+                          <SelectItem value="new">+ Add New Panchayat</SelectItem>
+                          {panchayats.map((panchayat) => (
+                            <SelectItem key={panchayat.id} value={panchayat.id}>
+                              {panchayat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {newUser.panchayatId === 'new' && (
+                        <div className="mt-2 space-y-3 p-4 border rounded-md bg-muted/10">
+                          <div className="space-y-1">
+                            <Label className="text-sm font-medium">New Panchayat Details</Label>
+                            <Input
+                              placeholder="Panchayat Name"
+                              value={newUser.newPanchayatName}
+                              onChange={(e) => setNewUser(prev => ({ ...prev, newPanchayatName: e.target.value }))}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Input
+                              type="email"
+                              placeholder="Panchayat Email"
+                              value={newUser.newPanchayatEmail || ''}
+                              onChange={(e) => setNewUser(prev => ({ ...prev, newPanchayatEmail: e.target.value }))}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Input
+                              type="password"
+                              placeholder="Panchayat Password"
+                              value={newUser.newPanchayatPassword}
+                              onChange={(e) => setNewUser(prev => ({ ...prev, newPanchayatPassword: e.target.value }))}
+                              required
+                            />
+                            <p className="text-xs text-muted-foreground">Password must be at least 8 characters</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button type="submit">Create User</Button>
@@ -626,26 +788,48 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <CardTitle>Registered Voters</CardTitle>
+            <CardTitle>User Management</CardTitle>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Search voters..." className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
+                <Input 
+                  type="search" 
+                  placeholder="Search users..." 
+                  className="pl-8" 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <Select value={panchayatFilter} onValueChange={setPanchayatFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Panchayat" />
+              <Select value={roleFilter} onValueChange={(value) => {
+                setRoleFilter(value as any);
+                // Reset panchayat filter when changing roles
+                setPanchayatFilter("all");
+              }}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Panchayats</SelectItem>
-                  <SelectItem value="none">No Panchayat</SelectItem>
-                  {panchayats.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="PANCHAYAT">Panchayat</SelectItem>
+                  <SelectItem value="VOTER">Voter</SelectItem>
                 </SelectContent>
               </Select>
+              {roleFilter === "VOTER" && (
+                <Select value={panchayatFilter} onValueChange={setPanchayatFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="All Panchayats" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Panchayats</SelectItem>
+                    <SelectItem value="none">No Panchayat</SelectItem>
+                    {panchayats.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -660,6 +844,7 @@ export default function UsersPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Panchayat</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last Activity</TableHead>
@@ -673,15 +858,22 @@ export default function UsersPage() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {user.role.toLowerCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         {user.panchayat ? (
-                          <div>
-                            <div className="font-medium text-sm">{user.panchayat.name}</div>
-                            <div className="text-xs text-muted-foreground">
+                          <div className="flex flex-col">
+                            <span className="font-medium">{user.panchayat.name}</span>
+                            <span className="text-xs text-muted-foreground">
                               {user.panchayat.district}, {user.panchayat.state}
-                            </div>
+                            </span>
                           </div>
+                        ) : user.role === 'VOTER' ? (
+                          <span className="text-muted-foreground text-sm">No panchayat assigned</span>
                         ) : (
-                          <span className="text-muted-foreground italic text-sm">No Panchayat</span>
+                          <span className="text-muted-foreground text-sm">-</span>
                         )}
                       </TableCell>
                       <TableCell>

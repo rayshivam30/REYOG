@@ -106,31 +106,81 @@ export function QueriesTable({
   }, [searchTerm, statusFilter, panchayatFilter, initialQueries])
 
   const exportToPDF = () => {
-    const doc = new jsPDF()
-    doc.text("All Queries Report", 14, 15)
+    // Create a new PDF document in landscape mode
+    const doc = new (jsPDF as any)({ orientation: 'landscape' });
+    
+    // Add title and generation date
+    doc.setFontSize(18);
+    doc.text("All Queries Report", 14, 20);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 27);
+    
+    // Define table columns
+    const tableColumn = [
+      'Title',
+      'Panchayat',
+      'Department',
+      'Status',
+      'Budget Issued',
+      'Budget Spent'
+    ];
+    
+    // Prepare table rows with formatted data
+    const tableRows = filteredQueries.map((query: Query) => [
+      query.title,
+      query.panchayat?.name || 'N/A',
+      query.department?.name || 'N/A',
+      query.status.replace('_', ' '),
+      formatCurrency(query.budgetIssued).replace(/[^\d,.-]/g, ''), // Remove currency symbol
+      query.budgetSpent > 0 ? formatCurrency(query.budgetSpent).replace(/[^\d,.-]/g, '') : 'N/A'
+    ]);
 
-    const tableColumn = ["Title", "Panchayat", "Department", "Status", "Budget Issued"]
-    const tableRows: any[] = []
-
-    filteredQueries.forEach((query) => {
-      const queryData = [
-        query.title,
-        query.panchayat?.name || "N/A",
-        query.department?.name || "N/A",
-        query.status.replace("_", " "),
-        formatCurrency(query.budgetIssued),
-      ]
-      tableRows.push(queryData)
-    })
-
-    autoTable(doc, {
+    // Generate the table with proper formatting
+    (autoTable as any)(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 20,
-    })
+      startY: 35,
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        cellWidth: 'wrap',
+        valign: 'middle'
+      },
+      columnStyles: {
+        0: { cellWidth: 60 },  // Title
+        1: { cellWidth: 40 },   // Panchayat
+        2: { cellWidth: 40 },   // Department
+        3: { cellWidth: 25 },   // Status
+        4: { cellWidth: 30, halign: 'right' },   // Budget Issued
+        5: { cellWidth: 30, halign: 'right' }    // Budget Spent
+      },
+      margin: { top: 35 }
+    });
 
-    doc.save("queries-report.pdf")
-  }
+    // Add page numbers
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(150);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        (doc as any).internal.pageSize.width - 25,
+        (doc as any).internal.pageSize.height - 10
+      );
+    }
+
+    // Save the PDF with a timestamp in the filename
+    doc.save(`queries-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const DetailItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) => (
     <div className="flex items-start">
@@ -273,7 +323,7 @@ export function QueriesTable({
                     {query.budgetSpent > 0 && (
                       <div className="text-sm">
                         <p className="text-muted-foreground">Budget Spent</p>
-                        <p className="font-medium text-red-600">{formatCurrency(query.budgetSpent)}</p>
+                        <p className="font-medium">{formatCurrency(query.budgetSpent)}</p>
                       </div>
                     )}
 
