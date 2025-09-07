@@ -1,6 +1,7 @@
-// app/admin/notifications/page.tsx (or your component's path)
+// app/admin/notifications/page.tsx
 "use client"
 
+import { QueryProvider } from "@/components/providers/query-provider"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -72,7 +73,7 @@ const useMediaQuery = (query: string) => {
 };
 
 
-export default function NotificationsPage() {
+function NotificationsPageContent() {
   // --- STATE MANAGEMENT ---
   const [users, setUsers] = useState<User[]>([])
   const [queries, setQueries] = useState<Query[]>([])
@@ -145,14 +146,14 @@ export default function NotificationsPage() {
     switch (status) {
       case "RESOLVED":
       case "CLOSED":
-        return "success"
+        return "secondary" // Changed from "success" to "secondary"
       case "DECLINED":
         return "destructive"
       case "IN_PROGRESS":
         return "default"
       case "PENDING_REVIEW":
       case "WAITLISTED":
-        return "secondary"
+        return "outline"
       default:
         return "outline"
     }
@@ -360,4 +361,12 @@ export default function NotificationsPage() {
       </div>
     </div>
   )
+}
+
+export default function NotificationsPage() {
+  return (
+    <QueryProvider>
+      <NotificationsPageContent />
+    </QueryProvider>
+  );
 }

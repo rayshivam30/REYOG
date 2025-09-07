@@ -77,10 +77,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       )
     }
 
-    // Regular users can only view their own queries
-    if (user.role === 'VOTER' && query.userId !== user.id) {
+    // Voters can view all queries in their panchayat
+    if (user.role === 'VOTER' && query.panchayatId !== user.panchayatId) {
       return NextResponse.json(
-        { error: 'Forbidden - You can only view your own queries' },
+        { error: 'Forbidden - You can only view queries from your panchayat' },
         { status: 403 }
       )
     }
