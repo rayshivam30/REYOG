@@ -63,8 +63,8 @@ export default function RootLayout({
             /* STEP 2: Add CSS to position the translate button */
           .google-translate-container {
             position: fixed;
-            bottom: 1.5rem; /* 24px */
-            left: 1.5rem; /* 24px */
+            top: 0.5rem; /* 24px */
+            left: 9rem; /* 24px */
             z-index: 50; /* Ensures it stays on top of other content */
           }
         `}</style>

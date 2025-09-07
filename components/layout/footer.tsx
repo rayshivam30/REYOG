@@ -19,7 +19,7 @@ export function Footer() {
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
-                <span className="text-sm">1800-123-4567 (Toll Free)</span>
+                <span className="text-sm">+91 83193 11792</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
@@ -31,7 +31,7 @@ export function Footer() {
               </div>
             </div>
           </div>
-
+          
           {/* Quick Links */}
           <div>
             <h3 className="font-semibold mb-4">Quick Links</h3>
@@ -98,7 +98,7 @@ export function Footer() {
 
         <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center">
           <p className="text-primary-foreground/60 text-sm">
-            © 2024 ReYog - Rural Governance Platform. All rights reserved. | Built for the people of India.
+            © 2025 ReYog - Rural Governance Platform. All rights reserved. | Built for the people of India. -- By TEAM SMAR
           </p>
         </div>
       </div>

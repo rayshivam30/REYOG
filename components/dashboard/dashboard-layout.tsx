@@ -79,9 +79,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           <Menu className="h-6 w-6" />
         </button>
-        <div className="text-lg font-semibold text-gray-900">
-          {user?.role === 'VOTER' ? 'Voter Dashboard' : 'Dashboard'}
-        </div>
         <div className="w-8"></div> {/* For balance */}
       </header>
 
