@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { AppProviders } from "@/components/providers/app-providers"
+import { GoogleTranslate } from "@/components/GoogleTranslate" // STEP 1: Import the component
 import "./globals.css"
 import '@/app/leaflet.css'
 
@@ -59,6 +60,13 @@ export default function RootLayout({
               scroll-behavior: smooth;
             }
           }
+            /* STEP 2: Add CSS to position the translate button */
+          .google-translate-container {
+            position: fixed;
+            bottom: 1.5rem; /* 24px */
+            left: 1.5rem; /* 24px */
+            z-index: 50; /* Ensures it stays on top of other content */
+          }
         `}</style>
       </head>
       <body className="antialiased text-foreground bg-background">
@@ -66,6 +74,11 @@ export default function RootLayout({
           <AppProviders>
             {children}
           </AppProviders>
+
+          {/* STEP 3: Add the component here */}
+        <div className="google-translate-container">
+          <GoogleTranslate />
+        </div>
         </div>
       </body>
     </html>

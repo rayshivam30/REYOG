@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Building2, Menu, X } from "lucide-react"
 import { NotificationBell } from "@/components/ui/notification-bell"
 import { useState, useEffect } from "react"
-import { GoogleTranslate } from "@/components/GoogleTranslate"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { getAuthToken } from "@/lib/client-auth"
 
@@ -67,7 +66,6 @@ export function Header() {
             
             {/* Items visible on all screen sizes + mobile-only menu button */}
             <div className="flex items-center space-x-4">
-                <GoogleTranslate />
                 <div className="md:hidden">
                     <button 
                         onClick={() => setIsMenuOpen(!isMenuOpen)} 

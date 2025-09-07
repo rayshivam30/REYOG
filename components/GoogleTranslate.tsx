@@ -4,67 +4,89 @@ import { useEffect } from 'react';
 import Script from 'next/script';
 
 export function GoogleTranslate() {
+  const handleClick = () => {
+    const mainButton = document.querySelector('.goog-te-gadget-simple');
+    if (mainButton) {
+      mainButton.click();
+    } else {
+      console.error('Google Translate button not found.');
+    }
+  };
+
   useEffect(() => {
-    // Add mobile-specific styles
     const style = document.createElement('style');
     style.textContent = `
-      .goog-te-gadget {
-        font-size: 0 !important;
-        line-height: 1 !important;
+      /* === BUTTON STYLES === */
+      .custom-translate-button {
+        /* Layout & Sizing */
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+
+        /* Appearance */
+        background-color: #ffffff;
+        color: #333333;
+        border: 1px solid #dddddd;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        
+        /* Font */
+        font-size: 14px;
+        font-weight: 500;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+        /* Interaction */
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
       }
-      .goog-te-gadget-simple {
-        background: transparent !important;
-        border: 1px solid rgba(0,0,0,0.1) !important;
-        border-radius: 4px !important;
-        padding: 4px 8px !important;
-        height: 32px !important;
-        min-width: 40px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        cursor: pointer !important;
+
+      /* Hover effect for the button */
+      .custom-translate-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-color: #cccccc;
       }
-      .goog-te-menu-value {
-        display: flex !important;
-        align-items: center !important;
+
+      /* Click effect for the button */
+      .custom-translate-button:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       }
-      .goog-te-menu-value span {
-        color: inherit !important;
-        font-size: 14px !important;
-        border: none !important;
-        display: none !important;
+
+      /* === STYLES FOR HIDING THE WIDGET === */
+      .google-translate-wrapper {
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        height: 0 !important;
+        overflow: hidden !important;
       }
-      .goog-te-menu-value img {
-        display: none !important;
-      }
-      .goog-te-gadget .goog-te-menu-value:before {
-        content: '🌐';
-        font-size: 18px;
-      }
-      /* Mobile styles */
-      @media (max-width: 767px) {
-        .goog-te-gadget-simple {
-          border: none !important;
-          padding: 0 !important;
-          min-width: 32px !important;
-          width: 32px !important;
-          height: 32px !important;
-        }
-      }
+      .goog-te-banner-frame.skiptranslate { display: none !important; }
+      body { top: 0px !important; }
     `;
     document.head.appendChild(style);
-    
+
     return () => {
-      document.head.removeChild(style);
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
     };
   }, []);
 
   return (
-    <div className="relative">
-      {/* This is the div where the widget will appear */}
-      <div id="google_translate_element"></div>
+    <div>
+      {/* The text inside this button has been changed */}
+      <button className="custom-translate-button" onClick={handleClick}>
+        <span>A/अ language</span>
+      </button>
 
-      {/* This is the inline script that defines the initialization function */}
+      {/* The hidden wrapper for the real widget */}
+      <div className="google-translate-wrapper">
+        <div id="google_translate_element"></div>
+      </div>
+
+      {/* The Google scripts */}
       <Script
         id="google-translate-init"
         strategy="afterInteractive"
@@ -84,8 +106,6 @@ export function GoogleTranslate() {
           `,
         }}
       />
-
-      {/* This script loads the main Google Translate API */}
       <Script
         id="google-translate-api"
         strategy="afterInteractive"
