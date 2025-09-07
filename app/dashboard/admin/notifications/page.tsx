@@ -1,24 +1,10 @@
-// app/admin/notifications/page.tsx
 "use client"
 
-import { QueryProvider } from "@/components/providers/query-provider"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -27,346 +13,294 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Bell, Users, FileText, AlertCircle } from "lucide-react"
-import { QueryStatus } from "@prisma/client"
+import { 
+  Bell, 
+  BellOff, 
+  Check, 
+  Filter, 
+  Search, 
+  X,
+  AlertCircle,
+  MessageSquare,
+  ThumbsUp,
+  Share2,
+  AtSign
+} from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
+import { useRouter } from "next/navigation"
 
-// --- TYPE DEFINITIONS ---
-type Panchayat = {
-  id: string
-  name: string
-}
-
-type User = {
-  id: string
-  name: string
-  email: string
-  role: string
-  createdAt: string
-  panchayat: { name: string } | null
-}
-
-type Query = {
+type Notification = {
   id: string
   title: string
-  status: QueryStatus
-  wardNumber: number | null
+  message: string
+  isRead: boolean
+  type: string
+  queryId?: string
   createdAt: string
-  panchayat: { name: string } | null
+  metadata?: {
+    details?: string
+  }
 }
 
-// --- HOOK FOR MEDIA QUERIES ---
-// A simple hook to check for screen size, making our component adaptive.
-const useMediaQuery = (query: string) => {
-    const [matches, setMatches] = useState(false);
-
-    useEffect(() => {
-        const media = window.matchMedia(query);
-        if (media.matches !== matches) {
-            setMatches(media.matches);
-        }
-        const listener = () => setMatches(media.matches);
-        window.addEventListener("resize", listener);
-        return () => window.removeEventListener("resize", listener);
-    }, [matches, query]);
-
-    return matches;
-};
-
-
-function NotificationsPageContent() {
-  // --- STATE MANAGEMENT ---
-  const [users, setUsers] = useState<User[]>([])
-  const [queries, setQueries] = useState<Query[]>([])
-  const [panchayats, setPanchayats] = useState<Panchayat[]>([])
-  const [loadingUsers, setLoadingUsers] = useState(false)
-  const [loadingQueries, setLoadingQueries] = useState(false)
-
-  // Filters
-  const [selectedPanchayatForUsers, setSelectedPanchayatForUsers] = useState("all")
-  const [selectedPanchayatForQueries, setSelectedPanchayatForQueries] = useState("all")
-
-  // Use the hook to check for mobile screen size (Tailwind's md breakpoint is 768px)
-  const isMobile = useMediaQuery("(max-width: 767px)");
-
-
-  // --- DATA FETCHING ---
-  // Fetch all panchayats for the filter dropdowns on component mount
-  useEffect(() => {
-    const fetchPanchayats = async () => {
-      try {
-        const response = await fetch("/api/panchayats")
-        const data = await response.json()
-        setPanchayats(data.panchayats || [])
-      } catch (error) {
-        console.error("Error fetching panchayats:", error)
-        setPanchayats([])
-      }
-    }
-    fetchPanchayats()
-  }, [])
-
-  // Fetch users whenever the user filter changes
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoadingUsers(true)
-      try {
-        const response = await fetch(`/api/users?panchayatId=${selectedPanchayatForUsers}`)
-        const data = await response.json()
-        setUsers(data || [])
-      } catch (error) {
-        console.error("Error fetching users:", error)
-        setUsers([])
-      } finally {
-        setLoadingUsers(false)
-      }
-    }
-    fetchUsers()
-  }, [selectedPanchayatForUsers])
-
-  // Fetch queries whenever the query filter changes
-  useEffect(() => {
-    const fetchQueries = async () => {
-      setLoadingQueries(true)
-      try {
-        const response = await fetch(`/api/queries?panchayatId=${selectedPanchayatForQueries}`)
-        const data = await response.json()
-        setQueries(data.queries || [])
-      } catch (error) {
-        console.error("Error fetching queries:", error)
-        setQueries([])
-      } finally {
-        setLoadingQueries(false)
-      }
-    }
-    fetchQueries()
-  }, [selectedPanchayatForQueries])
-
-  // --- HELPER FUNCTIONS ---
-  const getStatusVariant = (status: QueryStatus) => {
-    switch (status) {
-      case "RESOLVED":
-      case "CLOSED":
-        return "secondary" // Changed from "success" to "secondary"
-      case "DECLINED":
-        return "destructive"
-      case "IN_PROGRESS":
-        return "default"
-      case "PENDING_REVIEW":
-      case "WAITLISTED":
-        return "outline"
-      default:
-        return "outline"
-    }
+const getNotificationIcon = (type: string) => {
+  switch (type.toLowerCase()) {
+    case 'success':
+      return <Check className="h-4 w-4 text-green-500" />
+    case 'error':
+      return <AlertCircle className="h-4 w-4 text-red-500" />
+    case 'comment':
+      return <MessageSquare className="h-4 w-4 text-blue-500" />
+    case 'like':
+      return <ThumbsUp className="h-4 w-4 text-pink-500" />
+    case 'share':
+      return <Share2 className="h-4 w-4 text-purple-500" />
+    case 'mention':
+      return <AtSign className="h-4 w-4 text-yellow-500" />
+    default:
+      return <Bell className="h-4 w-4 text-gray-500" />
   }
-
-  // --- JSX RENDER ---
-  return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Bell className="h-6 sm:h-8 w-6 sm:w-8" />
-            Notification & Activities Dashboard
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Review recent system activities and notifications.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Card for Registered Users */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Card className="cursor-pointer hover:bg-muted/50 transition-colors h-56 flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Recent Registrations</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-center">
-                <div className="text-2xl font-bold">{users.length} Users</div>
-                <p className="text-xs text-muted-foreground">Click to view all registered users</p>
-              </CardContent>
-            </Card>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Registered Users</DialogTitle>
-            </DialogHeader>
-            <div className="flex items-center pt-4">
-              <Select value={selectedPanchayatForUsers} onValueChange={setSelectedPanchayatForUsers}>
-                <SelectTrigger className="w-full sm:w-[280px]">
-                  <SelectValue placeholder="Filter by Panchayat" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Panchayats</SelectItem>
-                  {panchayats.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-grow overflow-y-auto mt-4 pr-2">
-              {loadingUsers ? (
-                <div className="h-24 text-center flex items-center justify-center">Loading...</div>
-              ) : users.length > 0 ? (
-                isMobile ? (
-                  // --- MOBILE CARD VIEW FOR USERS ---
-                  <div className="space-y-3">
-                    {users.map((user) => (
-                      <div key={user.id} className="p-4 border rounded-lg text-sm">
-                        <div className="font-semibold">{user.name}</div>
-                        <div className="text-muted-foreground">{user.email}</div>
-                        <div className="text-xs mt-2">
-                          <strong>Panchayat:</strong> {user.panchayat?.name || "N/A"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          <strong>Registered:</strong> {new Date(user.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  // --- DESKTOP TABLE VIEW FOR USERS ---
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Panchayat</TableHead>
-                          <TableHead>Registered On</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.name}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.panchayat?.name || "N/A"}</TableCell>
-                            <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )
-              ) : (
-                <div className="h-24 text-center flex items-center justify-center">No users found.</div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Card for Recent Queries */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Card className="cursor-pointer hover:bg-muted/50 transition-colors h-56 flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Recent Queries</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-center">
-                <div className="text-2xl font-bold">{queries.length} Queries</div>
-                <p className="text-xs text-muted-foreground">Click to view all queries</p>
-              </CardContent>
-            </Card>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Recent Queries</DialogTitle>
-            </DialogHeader>
-            <div className="flex items-center pt-4">
-              <Select value={selectedPanchayatForQueries} onValueChange={setSelectedPanchayatForQueries}>
-                <SelectTrigger className="w-full sm:w-[280px]">
-                  <SelectValue placeholder="Filter by Panchayat" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Panchayats</SelectItem>
-                  {panchayats.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-grow overflow-y-auto mt-4 pr-2">
-              {loadingQueries ? (
-                <div className="h-24 text-center flex items-center justify-center">Loading...</div>
-              ) : queries.length > 0 ? (
-                isMobile ? (
-                  // --- MOBILE CARD VIEW FOR QUERIES ---
-                  <div className="space-y-3">
-                    {queries.map((query) => (
-                      <div key={query.id} className="p-4 border rounded-lg text-sm">
-                          <div className="flex justify-between items-start">
-                              <p className="font-semibold pr-2">{query.title}</p>
-                              <Badge variant={getStatusVariant(query.status)} className="whitespace-nowrap">{query.status.replace(/_/g, ' ')}</Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-2">
-                              {query.panchayat?.name || "N/A"}
-                              {query.wardNumber && ` (Ward ${query.wardNumber})`}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {new Date(query.createdAt).toLocaleDateString()}
-                          </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                 // --- DESKTOP TABLE VIEW FOR QUERIES ---
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[40%]">Title</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Panchayat & Ward</TableHead>
-                          <TableHead>Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {queries.map((query) => (
-                          <TableRow key={query.id}>
-                            <TableCell className="font-medium">{query.title}</TableCell>
-                            <TableCell>
-                                <Badge variant={getStatusVariant(query.status)}>{query.status.replace(/_/g, ' ')}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              {query.panchayat?.name || "N/A"}
-                              {query.wardNumber && ` (Ward ${query.wardNumber})`}
-                            </TableCell>
-                            <TableCell>{new Date(query.createdAt).toLocaleDateString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )
-              ) : (
-                <div className="h-24 text-center flex items-center justify-center">No queries found.</div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-        
-        {/* --- STATIC MAINTENANCE CARD ADDED BACK --- */}
-        <Card className="h-56 flex flex-col">
-           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Scheduled Maintenance</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col justify-center">
-              <div className="text-2xl font-bold">Tomorrow 2 AM</div>
-              <p className="text-xs text-muted-foreground">
-                System will be offline for updates
-              </p>
-            </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
 }
 
 export default function NotificationsPage() {
+  const router = useRouter()
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<"all" | "unread">("all")
+
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch('/api/notifications?limit=50', {
+          credentials: 'include'
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch notifications')
+        }
+        
+        const data = await response.json()
+        setNotifications(data.notifications || [])
+      } catch (error) {
+        console.error("Error fetching notifications:", error)
+        toast.error("Failed to load notifications. Please try again.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchNotifications()
+  }, [])
+
+  const markAsRead = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${id}/read`, { 
+        method: 'PATCH',
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to mark notification as read')
+      }
+      
+      setNotifications(notifications.map(n => 
+        n.id === id ? { ...n, isRead: true } : n
+      ))
+      
+      // Refresh unread count in the notification bell
+      const event = new CustomEvent('refresh-notifications')
+      window.dispatchEvent(event)
+      
+    } catch (error) {
+      console.error("Error marking notification as read:", error)
+      toast.error("Failed to mark notification as read")
+    }
+  }
+
+  const markAllAsRead = async () => {
+    try {
+      const response = await fetch('/api/notifications/read-all', { 
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to mark all notifications as read')
+      }
+      
+      setNotifications(notifications.map(n => ({
+        ...n,
+        isRead: true
+      })))
+      
+      // Refresh unread count in the notification bell
+      const event = new CustomEvent('refresh-notifications')
+      window.dispatchEvent(event)
+      
+      toast.success("All notifications marked as read")
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error)
+      toast.error("Failed to mark all notifications as read")
+    }
+  }
+
+  const filteredNotifications = notifications.filter(notification => {
+    const matchesSearch = 
+      notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      notification.message.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesStatus = statusFilter === "all" || !notification.isRead
+    
+    return matchesSearch && matchesStatus
+  })
+
+  const unreadCount = notifications.filter(n => !n.isRead).length
+
   return (
-    <QueryProvider>
-      <NotificationsPageContent />
-    </QueryProvider>
-  );
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+          <p className="text-sm text-muted-foreground">
+            {unreadCount} unread {unreadCount === 1 ? 'notification' : 'notifications'}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:min-w-[300px]">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search notifications..."
+              className="w-full pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <X 
+                className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground cursor-pointer"
+                onClick={() => setSearchQuery("")}
+              />
+            )}
+          </div>
+          
+          <div className="relative">
+            <Button variant="outline" size="icon">
+              <Filter className="h-4 w-4" />
+            </Button>
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border">
+              <div className="p-2">
+                <div 
+                  className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
+                  onClick={() => setStatusFilter("all")}
+                >
+                  <span className={`mr-2 h-2 w-2 rounded-full ${statusFilter === 'all' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                  All Notifications
+                </div>
+                <div 
+                  className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
+                  onClick={() => setStatusFilter("unread")}
+                >
+                  <span className={`mr-2 h-2 w-2 rounded-full ${statusFilter === 'unread' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                  Unread Only
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={markAllAsRead}
+            disabled={unreadCount === 0}
+          >
+            Mark all as read
+          </Button>
+        </div>
+      </div>
+      
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10"></TableHead>
+              <TableHead>Notification</TableHead>
+              <TableHead className="text-right">Date</TableHead>
+              <TableHead className="w-20">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-8">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+                    <p className="text-sm text-muted-foreground">Loading notifications...</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredNotifications.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-12">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <BellOff className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-medium">No notifications found</p>
+                    <p className="text-xs text-muted-foreground">
+                      {searchQuery || statusFilter !== 'all' 
+                        ? 'Try adjusting your search or filter'
+                        : 'You\'re all caught up!'}
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredNotifications.map((notification) => (
+                <TableRow 
+                  key={notification.id}
+                  className={!notification.isRead ? 'bg-blue-50/50' : ''}
+                >
+                  <TableCell>
+                    <div className="flex items-center justify-center">
+                      <div className={`p-1.5 rounded-full ${!notification.isRead ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p className={`font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-600'}`}>
+                        {notification.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {notification.message}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end">
+                      {!notification.isRead && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          <span>Mark as read</span>
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
+  )
 }
