@@ -412,7 +412,7 @@ const UserDataPage = () => {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Users
+              New Users
               {recentUsers.length > 0 && (
                 <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
                   {recentUsers.length}

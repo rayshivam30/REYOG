@@ -23,10 +23,24 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get("unreadOnly") === "true"
     const type = searchParams.get("type")
 
+    const isAdmin = session.role === 'ADMIN';
+    
     const where = {
-      userId: session.userId,
+      // For admins, don't filter by userId to see all notifications
+      // For regular users, only show their own notifications
+      ...(isAdmin ? {} : { userId: session.userId }),
       ...(unreadOnly && { isRead: false }),
       ...(type && { type }),
+      // For admins, filter by admin-relevant notification types
+      ...(isAdmin && !type ? {
+        OR: [
+          { type: 'ADMIN' },
+          { type: 'SYSTEM' },
+          { type: 'QUERY_UPDATE' },
+          { type: 'COMPLAINT_UPDATE' },
+          { type: 'ASSIGNMENT' }
+        ]
+      } : {})
     }
 
     const [notifications, total] = await Promise.all([
