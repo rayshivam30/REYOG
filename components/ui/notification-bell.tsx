@@ -114,8 +114,17 @@ export function NotificationBell() {
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-full hover:bg-gray-100 relative transition-colors duration-200"
+        onClick={() => {
+          // Close other dropdowns if any
+          document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
+            if (dropdown !== document.activeElement) {
+              dropdown.setAttribute('aria-expanded', 'false')
+            }
+          })
+          setIsOpen(!isOpen)
+        }}
+        data-dropdown="true"
+        className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
         aria-label="Notifications"
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -128,25 +137,37 @@ export function NotificationBell() {
         )}
       </button>
       
-      {isOpen && (
-        <div 
-          className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50 transform transition-all duration-200 ease-in-out"
-          style={{
-            maxHeight: '80vh',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-gray-50">
+      <div 
+        className={`fixed sm:absolute left-0 right-0 sm:right-auto sm:w-96 mt-2 mx-2 sm:mx-0 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 transform transition-all duration-300 ease-in-out ${
+          isOpen 
+            ? 'opacity-100 translate-y-0 scale-100' 
+            : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
+        }`}
+        style={{
+          maxHeight: 'calc(100vh - 6rem)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+        }}
+      >
+          <div className="sticky top-0 z-10 p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-gray-50">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
-                <Bell className="h-5 w-5 text-blue-600 mr-2" />
-                <h3 className="font-semibold text-gray-900">Notifications</h3>
+                <Bell className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0" />
+                <h3 className="font-semibold text-gray-900 text-base sm:text-sm">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap">
                     {unreadCount} new
                   </span>
                 )}
               </div>
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="sm:hidden p-1 -mr-1 text-gray-400 hover:text-gray-500"
+                aria-label="Close notifications"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -176,16 +197,18 @@ export function NotificationBell() {
           ) : notifications.length === 0 ? (
             <div className="p-6 text-center">
               <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-600 font-medium">No notifications yet</p>
-              <p className="text-gray-400 text-sm mt-1">When you get notifications, they'll appear here</p>
+              <p className="text-gray-600 font-medium sm:text-sm">No notifications yet</p>
+              <p className="text-gray-400 text-xs sm:text-xs mt-1 px-4">When you get notifications, they'll appear here</p>
             </div>
           ) : (
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
+            <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: 'calc(100vh - 10rem)' }}>
               <div className="divide-y divide-gray-100">
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150 ${
+                    role="button"
+                    tabIndex={0}
+                    className={`px-4 py-3 sm:py-2.5 active:bg-gray-100 cursor-pointer transition-colors duration-150 ${
                       !notification.isRead ? 'bg-blue-50/50' : 'bg-white hover:bg-gray-50'
                     }`}
                     onClick={(e) => {
@@ -198,10 +221,10 @@ export function NotificationBell() {
                         e.preventDefault()
                         e.stopPropagation()
                         handleNotificationClick(notification)
+                      } else if (e.key === 'Escape') {
+                        setIsOpen(false)
                       }
                     }}
-                    role="button"
-                    tabIndex={0}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`mt-0.5 flex-shrink-0 rounded-full p-1.5 ${
@@ -240,18 +263,22 @@ export function NotificationBell() {
             <Button 
               variant="ghost" 
               size="sm"
-              className="w-full text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+              className="w-full text-sm font-medium text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors py-2"
               onClick={() => {
                 const basePath = getBasePath();
                 setIsOpen(false);
-                router.push(`${basePath}/notifications`);
+                // Always navigate to admin notifications for admin users
+                if (basePath.includes('/admin')) {
+                  router.push('/dashboard/admin/notifications');
+                } else {
+                  router.push(`${basePath}/notifications`);
+                }
               }}
             >
               View all notifications
             </Button>
           </div>
         </div>
-      )}
     </div>
   )
 }

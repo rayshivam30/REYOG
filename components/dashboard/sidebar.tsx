@@ -63,7 +63,7 @@ const panchayatNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { href: "/dashboard/admin", label: "Dashboard", icon: Home, heading: "Home" },
-  { href: "/dashboard/admin/notifications", label: "Notifications", icon: Bell, heading: "Management" },
+  { href: "/dashboard/admin/userdata", label: "User Data", icon: Users, heading: "Management" },
   { href: "/dashboard/admin/queries", label: "All Queries", icon: FileText },
   { href: "/dashboard/admin/complaints", label: "Complaints", icon: MessageSquare },
   { href: "/dashboard/admin/users", label: "Manage Users", icon: Users },
