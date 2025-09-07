@@ -7,6 +7,11 @@ import { useNotifications } from '../providers/notification-provider'
 import { Button } from './button'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { useIsMobile } from '@/hooks/use-mobile'
+
+interface NotificationBellProps {
+  setIsSidebarOpen?: (isOpen: boolean) => void;
+}
 
 interface Notification {
   id: string
@@ -21,8 +26,9 @@ interface Notification {
   }
 }
 
-export function NotificationBell() {
+export function NotificationBell({ setIsSidebarOpen }: NotificationBellProps) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false)
@@ -83,9 +89,21 @@ export function NotificationBell() {
   const fetchNotifications = useCallback(async () => {
     try {
       setIsLoadingNotifications(true)
-      const response = await fetch('/api/notifications', {
-        credentials: 'include'
-      })
+      const basePath = getBasePath();
+      const isAdmin = basePath.includes('/admin');
+      
+      let response;
+      if (isAdmin) {
+        // For admin, fetch all relevant notifications
+        response = await fetch('/api/notifications?limit=50', {
+          credentials: 'include'
+        });
+      } else {
+        // For regular users, fetch their notifications
+        response = await fetch('/api/notifications?limit=10', {
+          credentials: 'include'
+        });
+      }
       
       if (response.status === 401) {
         window.location.href = '/auth/login?callbackUrl=' + encodeURIComponent(window.location.pathname)
@@ -105,25 +123,57 @@ export function NotificationBell() {
     }
   }, [])
   
+  // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
-    if (isOpen) {
-      fetchNotifications()
-    }
-  }, [isOpen, fetchNotifications])
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const dropdown = document.querySelector('[data-notification-dropdown]');
+      const button = document.querySelector('[data-notification-button]');
+      
+      if (dropdown && button) {
+        const isClickInside = dropdown.contains(target) || button.contains(target);
+        if (!isClickInside) {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    fetchNotifications();
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, fetchNotifications]);
   
   return (
     <div className="relative">
       <button
-        onClick={() => {
-          // Close other dropdowns if any
-          document.querySelectorAll('[data-dropdown]').forEach(dropdown => {
-            if (dropdown !== document.activeElement) {
-              dropdown.setAttribute('aria-expanded', 'false')
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isMobile) {
+            const basePath = getBasePath();
+            if (basePath.includes('/admin')) {
+              router.push('/dashboard/admin/notifications');
+            } else {
+              router.push(`${basePath}/notifications`);
             }
-          })
-          setIsOpen(!isOpen)
+            setIsSidebarOpen?.(false);
+            return;
+          }
+          setIsOpen(!isOpen);
         }}
-        data-dropdown="true"
+        data-notification-button
         className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
         aria-label="Notifications"
         aria-haspopup="true"
@@ -137,17 +187,19 @@ export function NotificationBell() {
         )}
       </button>
       
-      <div 
-        className={`fixed sm:absolute left-0 right-0 sm:right-auto sm:w-96 mt-2 mx-2 sm:mx-0 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 transform transition-all duration-300 ease-in-out ${
-          isOpen 
-            ? 'opacity-100 translate-y-0 scale-100' 
-            : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
-        }`}
-        style={{
-          maxHeight: 'calc(100vh - 6rem)',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-        }}
-      >
+      {!isMobile && (
+        <div 
+          data-notification-dropdown
+          className={`fixed sm:absolute left-0 w-[calc(100vw-4rem)] sm:w-96 bg-white rounded-xl border border-gray-200 overflow-hidden z-[10000] transform transition-all duration-300 ease-in-out ${
+            isOpen 
+              ? 'opacity-100 translate-y-0 scale-100' 
+              : 'opacity-0 -translate-y-2 scale-95 pointer-events-none hidden'
+          }`}
+          style={{
+            maxHeight: 'calc(100vh - 6rem)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}
+        >
           <div className="sticky top-0 z-10 p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-gray-50">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
@@ -259,15 +311,14 @@ export function NotificationBell() {
             </div>
           )}
           
-          <div className="sticky bottom-0 bg-white border-t border-gray-100 p-2">
+          <div className="sticky bottom-0 bg-white border-t border-gray-100 p-10 flex flex-col gap-2">
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm"
-              className="w-full text-sm font-medium text-blue-600 hover:bg-blue-50 active:bg-blue-100 transition-colors py-2"
+              className="w-full text-sm font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200 hover:border-blue-300 transition-colors py-2"
               onClick={() => {
                 const basePath = getBasePath();
                 setIsOpen(false);
-                // Always navigate to admin notifications for admin users
                 if (basePath.includes('/admin')) {
                   router.push('/dashboard/admin/notifications');
                 } else {
@@ -279,6 +330,7 @@ export function NotificationBell() {
             </Button>
           </div>
         </div>
+      )}
     </div>
   )
 }

@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type Notification = {
   id: string
@@ -67,22 +68,59 @@ export default function NotificationsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "unread">("all")
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false)
 
-  // Fetch notifications
+  // Fetch admin notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('/api/notifications?limit=50', {
+        // First get admin stats which includes notifications
+        const statsResponse = await fetch('/api/admin/stats', {
           credentials: 'include'
         })
         
-        if (!response.ok) {
+        if (!statsResponse.ok) {
+          throw new Error('Failed to fetch admin stats')
+        }
+        
+        const statsData = await statsResponse.json()
+        
+        // Then get all notifications for the admin
+        const notificationsResponse = await fetch('/api/notifications?limit=100', {
+          credentials: 'include'
+        })
+        
+        if (!notificationsResponse.ok) {
           throw new Error('Failed to fetch notifications')
         }
         
-        const data = await response.json()
-        setNotifications(data.notifications || [])
+        const notificationsData = await notificationsResponse.json()
+        
+        // Process notifications from stats (ensure they have all required fields)
+        const statsNotifications = (statsData.recentNotifications || []).map((notification: any) => ({
+          ...notification,
+          isRead: true, // Assume admin notifications are read by default
+          createdAt: new Date(notification.time || notification.createdAt || Date.now()).toISOString()
+        }))
+
+        // Process notifications from the notifications API
+        const userNotifications = (notificationsData.notifications || []).map((notification: any) => ({
+          ...notification,
+          createdAt: new Date(notification.createdAt).toISOString()
+        }))
+
+        // Combine both notification sources and remove duplicates
+        const allNotifications = [...statsNotifications, ...userNotifications]
+        
+        // Remove duplicates by ID and sort by date (newest first)
+        const uniqueNotifications = Array.from(new Map(
+          allNotifications.map(n => [n.id, n])
+        ).values()).sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        
+        setNotifications(uniqueNotifications)
       } catch (error) {
         console.error("Error fetching notifications:", error)
         toast.error("Failed to load notifications. Please try again.")
@@ -187,27 +225,39 @@ export default function NotificationsPage() {
           </div>
           
           <div className="relative">
-            <Button variant="outline" size="icon">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            >
               <Filter className="h-4 w-4" />
             </Button>
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border">
-              <div className="p-2">
-                <div 
-                  className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                  onClick={() => setStatusFilter("all")}
-                >
-                  <span className={`mr-2 h-2 w-2 rounded-full ${statusFilter === 'all' ? 'bg-blue-500' : 'bg-transparent'}`} />
-                  All Notifications
-                </div>
-                <div 
-                  className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
-                  onClick={() => setStatusFilter("unread")}
-                >
-                  <span className={`mr-2 h-2 w-2 rounded-full ${statusFilter === 'unread' ? 'bg-blue-500' : 'bg-transparent'}`} />
-                  Unread Only
+            {showFilterDropdown && (
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border">
+                <div className="p-2">
+                  <div 
+                    className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      setStatusFilter("all")
+                      setShowFilterDropdown(false)
+                    }}
+                  >
+                    <span className={`mr-2 h-2 w-2 rounded-full ${statusFilter === 'all' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                    All Notifications
+                  </div>
+                  <div 
+                    className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      setStatusFilter("unread")
+                      setShowFilterDropdown(false)
+                    }}
+                  >
+                    <span className={`mr-2 h-2 w-2 rounded-full ${statusFilter === 'unread' ? 'bg-blue-500' : 'bg-transparent'}`} />
+                    Unread Only
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
           
           <Button 
@@ -279,7 +329,7 @@ export default function NotificationsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                    {notification.createdAt ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true }) : 'N/A'}
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end">

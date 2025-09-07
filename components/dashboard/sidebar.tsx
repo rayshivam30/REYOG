@@ -125,7 +125,7 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
               <p className="text-sm text-sidebar-foreground/60">{roleDisplayText}</p>
             </div>
             <div className="mt-1">
-              <NotificationBell />
+              <NotificationBell setIsSidebarOpen={setIsSidebarOpen} />
             </div>
           </div>
           <GoogleTranslate />

@@ -1,6 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { UserRole } from "@prisma/client"
+import { UserRole, NotificationType } from "@prisma/client"
+
+interface NotificationResponse {
+  id: string
+  title: string
+  message: string
+  time: string
+  type: string
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,8 +36,17 @@ export async function GET(request: NextRequest) {
       prisma.panchayat.count()
     ])
 
-    // Get recent notifications
+    // Get recent admin notifications
     const recentNotifications = await prisma.notification.findMany({
+      where: {
+        OR: [
+          { type: 'ADMIN' },
+          { type: 'SYSTEM' },
+          { type: 'QUERY_UPDATE' },
+          { type: 'COMPLAINT_UPDATE' },
+          { type: 'ASSIGNMENT' }
+        ]
+      },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: {
@@ -41,27 +58,27 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Format the response
+    // Format the response with proper typing
     const stats = {
       totalQueries,
       pendingQueries,
       totalComplaints,
       activeUsers,
-      totalPanchayats, // This will be used in the admin dashboard
+      totalPanchayats,
       recentNotifications: recentNotifications.map((n) => ({
         id: n.id,
-        title: n.title || "Notification",
+        title: n.title || "System Notification",
         message: n.message || "",
         time: new Intl.DateTimeFormat("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
           hour: "numeric",
-          minute: "numeric",
+          minute: "2-digit",
           hour12: true,
         }).format(n.createdAt),
         type: n.type || "INFO",
-      })),
+      } as NotificationResponse)),
     }
 
     return NextResponse.json(stats)
