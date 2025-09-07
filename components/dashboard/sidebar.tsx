@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SOSModal } from "@/components/sos-modal"
-import { GoogleTranslate } from "@/components/GoogleTranslate"
 import { NotificationBell } from "@/components/ui/notification-bell"
 import {
   Building2,
@@ -128,7 +127,6 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
               <NotificationBell setIsSidebarOpen={setIsSidebarOpen} />
             </div>
           </div>
-          <GoogleTranslate />
         </div>
 
         {/* Navigation */}
