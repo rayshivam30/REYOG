@@ -27,18 +27,27 @@ export async function GET(request: NextRequest) {
     if (scope === 'user') {
       whereClause.userId = userId;
     } else if (userRole === UserRole.VOTER) {
+      // Voters can see their own queries and all queries from their panchayat
       const currentUser = await prisma.user.findUnique({
         where: { id: userId },
         select: { panchayatId: true }
       });
       
       if (currentUser?.panchayatId) {
-        whereClause.panchayatId = currentUser.panchayatId;
+        whereClause.OR = [
+          { userId: userId }, // User's own queries
+          { panchayatId: currentUser.panchayatId } // All queries from same panchayat
+        ];
       } else {
-        whereClause.userId = userId;
+        whereClause.userId = userId; // Only show user's own queries if no panchayat
       }
     } else if (userRole === UserRole.PANCHAYAT && panchayatId) {
-      whereClause.panchayatId = panchayatId
+      // Panchayat users can only see queries that have reached the threshold
+      whereClause.panchayatId = panchayatId;
+      whereClause.hasReachedThreshold = true;
+    } else if (userRole === UserRole.ADMIN) {
+      // Admins can see all queries that have reached the threshold
+      whereClause.hasReachedThreshold = true;
     }
     if (userRole === UserRole.ADMIN && panchayatFilterId && panchayatFilterId !== "all") {
       whereClause.panchayatId = panchayatFilterId

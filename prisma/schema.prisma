@@ -117,6 +117,7 @@ model Query {
   officeId         String?
   panchayatId      String?
   upvoteCount      Int            @default(0)
+  hasReachedThreshold Boolean      @default(false)
   likeCount        Int            @default(0)
   commentCount     Int            @default(0)
   shareCount       Int            @default(0)

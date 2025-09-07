@@ -80,7 +80,7 @@ export async function POST(
     
     if (upvote && !existingUpvote) {
       // Add upvote
-      await prisma.$transaction([
+      const result = await prisma.$transaction([
         prisma.queryUpvote.create({
           data: {
             userId: userId,
@@ -93,10 +93,26 @@ export async function POST(
             upvoteCount: {
               increment: 1
             }
+          },
+          include: {
+            upvotes: true
           }
         })
       ]);
+      
+      const updatedQuery = result[1];
       isUpvoted = true;
+      upvoteCount = updatedQuery.upvoteCount;
+      
+      // Check if we've reached the threshold of 3 upvotes
+      if (upvoteCount >= 1 && !updatedQuery.hasReachedThreshold) {
+        await prisma.query.update({
+          where: { id: queryId },
+          data: {
+            hasReachedThreshold: true
+          }
+        });
+      }
     } else if (!upvote && existingUpvote) {
       // Remove upvote
       await prisma.$transaction([
