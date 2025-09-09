@@ -128,7 +128,7 @@ export default function VoterMyQueriesPage() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+    <div className={`container mx-auto p-4 md:p-8 max-w-4xl ${queries.length === 0 ? 'pb-0' : ''}`}>
       <div className="mb-6">
         <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
           <h1 className="text-3xl font-bold text-gray-800">My Queries</h1>
@@ -162,8 +162,8 @@ export default function VoterMyQueriesPage() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {queries.map((query) => (
+      <div className={`space-y-4 ${queries.length <= 5 ? 'pb-0' : ''}`}>
+        {queries.slice(0, 5).map((query) => (
           <Card key={query.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
@@ -240,7 +240,17 @@ export default function VoterMyQueriesPage() {
             <p className="mt-1 text-sm text-gray-500">
               Get started by raising a new query.
             </p>
-            
+          </div>
+        )}
+        
+        {queries.length > 5 && (
+          <div className="flex justify-center">
+            <Link 
+              href="/dashboard/voter/my-queries" 
+              className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              View All Queries →
+            </Link>
           </div>
         )}
       </div>
