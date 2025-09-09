@@ -61,12 +61,22 @@ export default function TopRatedOfficesPage() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [panchayats, setPanchayats] = useState<Panchayat[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuth()
   const [filters, setFilters] = useState({
     department: 'all',
-    panchayat: 'all',
+    panchayat: user?.panchayat?.id || 'all',
     search: ''
   })
-  const { user } = useAuth()
+
+  // Set default panchayat filter when user data is available
+  useEffect(() => {
+    if (user?.panchayat?.id && filters.panchayat === 'all') {
+      setFilters(prev => ({
+        ...prev,
+        panchayat: user.panchayat?.id || 'all'
+      }));
+    }
+  }, [user, filters.panchayat]);
 
   // Fetch top-rated offices
   const fetchOffices = async () => {
