@@ -52,10 +52,13 @@ REYOG is a Next.js-based web application designed to facilitate better governanc
 3. **Set up environment variables**
    Copy `.env.example` to `.env` and update the values:
    ```env
-   DATABASE_URL="postgresql://user:password@localhost:5432/reyog"
-   NEXTAUTH_SECRET="your-secret-key"
-   NEXTAUTH_URL="http://localhost:3000"
-   GOOGLE_MAPS_API_KEY="your-google-maps-api-key"
+   DATABASE_URL=postgresql://user:password@host:port/dbname
+   JWT_SECRET=your-secret-key
+   JWT_REFRESH_SECRET=your-refresh-secret
+   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloudinary-name
+   CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+   NEXT_PUBLIC_CLOUDINARY_API_KEY=your-cloudinary-api
+   NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your cloudnary preset name
    ```
 
 4. **Set up the database**
