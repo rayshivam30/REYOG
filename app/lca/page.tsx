@@ -38,12 +38,10 @@ import {
   Shield,
 } from "lucide-react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 import { governmentDB } from "@/lib/government-database"
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts"
 
 export default function LCAPage() {
-  const searchParams = useSearchParams()
   const [selectedMaterial, setSelectedMaterial] = useState("")
   const [analysisStep, setAnalysisStep] = useState(1)
   const [inputMethod, setInputMethod] = useState<"manual" | "document" | null>(null)
@@ -57,13 +55,14 @@ export default function LCAPage() {
   // Government DB hints (mock integration)
   const [govHints, setGovHints] = useState<{ electricityEF?: number; waterStress?: number; mineralDepletion?: number }>({})
 
-  // Preselect material from query if present
-  const materialParam = searchParams?.get("material") || ""
+  // Preselect material from query if present (client-only)
   useEffect(() => {
-    if (materialParam && !selectedMaterial) {
-      setSelectedMaterial(materialParam)
+    if (typeof window !== "undefined" && !selectedMaterial) {
+      const sp = new URLSearchParams(window.location.search)
+      const param = sp.get("material")
+      if (param) setSelectedMaterial(param)
     }
-  }, [materialParam, selectedMaterial])
+  }, [selectedMaterial])
 
   // Fetch mock factors for hints whenever material changes
   useEffect(() => {
@@ -72,13 +71,13 @@ export default function LCAPage() {
       const electricityEF = await governmentDB.getElectricityEmissionFactor("United States")
       const waterStress = await governmentDB.getWaterStressFactor("North America")
       // Map material to mineral for depletion factor lookup
-      const mineralKey = (selectedMaterial || materialParam || "Aluminum").split(" ")[0]
+      const mineralKey = (selectedMaterial || "Aluminum").split(" ")[0]
       const mineralDepletion = await governmentDB.getMineralDepletionFactor(mineralKey)
       if (mounted) setGovHints({ electricityEF, waterStress, mineralDepletion })
     }
     fetchHints()
     return () => { mounted = false }
-  }, [selectedMaterial, materialParam])
+  }, [selectedMaterial])
 
   // Comprehensive LCA Form Data Structure
   const [formData, setFormData] = useState({
