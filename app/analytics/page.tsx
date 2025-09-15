@@ -221,11 +221,10 @@ export default function AnalyticsPage() {
           </div>
 
           <Tabs defaultValue="emissions" className="space-y-8">
-            <div className="overflow-x-auto">
-              <TabsList className="grid w-full grid-cols-5 min-w-[600px] bg-card/80 backdrop-blur-sm border-0 shadow-sm">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 h-13 lg:grid-cols-5 rounded-xl p-1 gap-2 border border-muted/40 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
                 <TabsTrigger
                   value="emissions"
-                  className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg"
+                  className="text-xs sm:text-sm rounded-lg px-3 h-10 sm:h-11 w-full transition-all hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow data-[state=active]:ring-1 data-[state=active]:ring-primary/60"
                 >
                   <div className="flex flex-col items-center">
                     <Zap className="h-4 w-4 mb-1" />
@@ -234,7 +233,7 @@ export default function AnalyticsPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="circularity"
-                  className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg"
+                  className="text-xs sm:text-sm rounded-lg px-3 h-10 sm:h-11 w-full transition-all hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow data-[state=active]:ring-1 data-[state=active]:ring-primary/60"
                 >
                   <div className="flex flex-col items-center">
                     <Recycle className="h-4 w-4 mb-1" />
@@ -243,7 +242,7 @@ export default function AnalyticsPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="regional"
-                  className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg"
+                  className="text-xs sm:text-sm rounded-lg px-3 h-10 sm:h-11 w-full transition-all hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow data-[state=active]:ring-1 data-[state=active]:ring-primary/60"
                 >
                   <div className="flex flex-col items-center">
                     <Globe className="h-4 w-4 mb-1" />
@@ -252,7 +251,7 @@ export default function AnalyticsPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="industry"
-                  className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg"
+                  className="text-xs sm:text-sm rounded-lg px-3 h-10 sm:h-11 w-full transition-all hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow data-[state=active]:ring-1 data-[state=active]:ring-primary/60"
                 >
                   <div className="flex flex-col items-center">
                     <BarChart3 className="h-4 w-4 mb-1" />
@@ -261,7 +260,7 @@ export default function AnalyticsPage() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="sustainability"
-                  className="text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg"
+                  className="text-xs sm:text-sm rounded-lg px-3 h-10 sm:h-11 w-full transition-all hover:bg-muted/60 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow data-[state=active]:ring-1 data-[state=active]:ring-primary/60"
                 >
                   <div className="flex flex-col items-center">
                     <Leaf className="h-4 w-4 mb-1" />
@@ -269,12 +268,11 @@ export default function AnalyticsPage() {
                   </div>
                 </TabsTrigger>
               </TabsList>
-            </div>
 
             <TabsContent value="emissions" className="space-y-6 animate-fade-in-up">
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <Card className="shadow-professional border-0 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="pb-6">
+                  <CardHeader className="pb-4">
                     <div className="flex items-center space-x-3 mb-2">
                       <div className="p-2 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg">
                         <BarChart3 className="h-5 w-5 text-white" />
@@ -291,10 +289,9 @@ export default function AnalyticsPage() {
                         steel: { label: "Steel", color: "hsl(142, 76%, 36%)" },
                         total: { label: "Total", color: "hsl(262, 83%, 58%)" },
                       }}
-                      className="h-[300px] sm:h-[350px]"
+                      className="h-[320px] sm:h-[380px]"
                     >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={globalEmissionsData}>
+                      <AreaChart data={globalEmissionsData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                           <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                           <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -324,8 +321,7 @@ export default function AnalyticsPage() {
                             fill="var(--color-steel)"
                             fillOpacity={0.7}
                           />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                      </AreaChart>
                     </ChartContainer>
                   </CardContent>
                 </Card>
@@ -350,8 +346,7 @@ export default function AnalyticsPage() {
                       }}
                       className="h-[300px] sm:h-[350px]"
                     >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPieChart>
+                      <RechartsPieChart>
                           <Pie
                             data={wasteStreamAnalysis}
                             cx="50%"
@@ -368,8 +363,7 @@ export default function AnalyticsPage() {
                             ))}
                           </Pie>
                           <ChartTooltip content={<ChartTooltipContent />} />
-                        </RechartsPieChart>
-                      </ResponsiveContainer>
+                      </RechartsPieChart>
                     </ChartContainer>
                   </CardContent>
                 </Card>
@@ -395,8 +389,7 @@ export default function AnalyticsPage() {
                     }}
                     className="h-[250px] sm:h-[300px]"
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={marketTrends}>
+                    <LineChart data={marketTrends}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -406,8 +399,7 @@ export default function AnalyticsPage() {
                         <Line type="monotone" dataKey="aluminum" stroke="var(--color-aluminum)" strokeWidth={3} />
                         <Line type="monotone" dataKey="steel" stroke="var(--color-steel)" strokeWidth={3} />
                         <Line type="monotone" dataKey="gold" stroke="var(--color-gold)" strokeWidth={3} />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    </LineChart>
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -433,10 +425,9 @@ export default function AnalyticsPage() {
                     }}
                     className="h-[350px] sm:h-[400px]"
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={circularityMetrics} layout="horizontal">
+                    <BarChart data={circularityMetrics} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <XAxis type="number" domain={[0, 100]} allowDecimals={false} stroke="hsl(var(--muted-foreground))" fontSize={12} />
                         <YAxis
                           dataKey="material"
                           type="category"
@@ -446,11 +437,10 @@ export default function AnalyticsPage() {
                         />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Legend />
-                        <Bar dataKey="recycling" stackId="a" fill="var(--color-recycling)" />
-                        <Bar dataKey="reuse" stackId="a" fill="var(--color-reuse)" />
-                        <Bar dataKey="recovery" stackId="a" fill="var(--color-recovery)" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                        <Bar dataKey="recycling" stackId="a" fill="var(--color-recycling)" radius={[0,4,4,0]} />
+                        <Bar dataKey="reuse" stackId="a" fill="var(--color-reuse)" radius={[0,4,4,0]} />
+                        <Bar dataKey="recovery" stackId="a" fill="var(--color-recovery)" radius={[0,4,4,0]} />
+                    </BarChart>
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -524,8 +514,7 @@ export default function AnalyticsPage() {
                     }}
                     className="h-[350px] sm:h-[400px]"
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={regionalData}>
+                    <BarChart data={regionalData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="region" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -534,8 +523,7 @@ export default function AnalyticsPage() {
                         <Bar dataKey="emissions" fill="var(--color-emissions)" />
                         <Bar dataKey="recycling" fill="var(--color-recycling)" />
                         <Bar dataKey="value" fill="var(--color-value)" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    </BarChart>
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -592,8 +580,7 @@ export default function AnalyticsPage() {
                     }}
                     className="h-[350px] sm:h-[400px]"
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={industryComparison}>
+                    <BarChart data={industryComparison}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="industry" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -601,8 +588,7 @@ export default function AnalyticsPage() {
                         <Legend />
                         <Bar dataKey="conventional" fill="var(--color-conventional)" />
                         <Bar dataKey="sustainable" fill="var(--color-sustainable)" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    </BarChart>
                   </ChartContainer>
                 </CardContent>
               </Card>
@@ -652,8 +638,7 @@ export default function AnalyticsPage() {
                       }}
                       className="h-[300px] sm:h-[350px]"
                     >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart data={sustainabilityRadar}>
+                      <RadarChart data={sustainabilityRadar}>
                           <PolarGrid stroke="hsl(var(--border))" />
                           <PolarAngleAxis dataKey="metric" fontSize={12} />
                           <PolarRadiusAxis angle={90} domain={[0, 100]} fontSize={10} />
@@ -674,8 +659,7 @@ export default function AnalyticsPage() {
                             strokeWidth={2}
                           />
                           <Legend />
-                        </RadarChart>
-                      </ResponsiveContainer>
+                      </RadarChart>
                     </ChartContainer>
                   </CardContent>
                 </Card>
