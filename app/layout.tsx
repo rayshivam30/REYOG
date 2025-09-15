@@ -6,8 +6,8 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'MINECARE-India',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  description: 'A tool for calculating the environmental impact of products and services.',
+  generator: 'Next.js',
 }
 
 export default function RootLayout({
