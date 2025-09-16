@@ -366,11 +366,16 @@ export default function LCAPage() {
               </div>
             </div>
           </div>
-          <Badge variant="secondary" className="px-2 md:px-4 py-1 md:py-2 shadow-sm text-xs">
-            <Award className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">ISO 14040 Compliant</span>
-            <span className="sm:hidden">ISO 14040</span>
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Link href="/lca/mapping">
+              <Button variant="outline" size="sm" className="hover-lift">Mapping</Button>
+            </Link>
+            <Badge variant="secondary" className="px-2 md:px-4 py-1 md:py-2 shadow-sm text-xs">
+              <Award className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">ISO 14040 Compliant</span>
+              <span className="sm:hidden">ISO 14040</span>
+            </Badge>
+          </div>
         </div>
       </header>
 
