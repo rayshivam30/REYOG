@@ -19,9 +19,83 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
+import dynamic from 'next/dynamic';
+
+// Dynamically import the IndiaMap component with no SSR
+const IndiaMap = dynamic(() => import('@/components/dashboard/IndiaMap'), {
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center h-full">Loading map...</div>
+});
+
+// Sample data for minerals and their mines in India
+const mineralData: Record<string, { name: string; mines: Mine[] }> = {
+  aluminium: {
+    name: 'Aluminium',
+    mines: [
+      { id: 1, name: 'Nalco Mines', state: 'Odisha', lat: 20.8, lng: 85.8 },
+      { id: 2, name: 'Balco Mines', state: 'Chhattisgarh', lat: 22.0, lng: 82.5 },
+      { id: 3, name: 'Vedanta Lanjigarh', state: 'Odisha', lat: 19.7, lng: 83.4 },
+      { id: 4, name: 'Hindalco Belgaum', state: 'Karnataka', lat: 15.8, lng: 74.5 },
+      { id: 5, name: 'Korba Bauxite', state: 'Chhattisgarh', lat: 22.3, lng: 82.7 },
+    ]
+  },
+  copper: {
+    name: 'Copper',
+    mines: [
+      { id: 1, name: 'Khetri Copper Complex', state: 'Rajasthan', lat: 28.0, lng: 75.8 },
+      { id: 2, name: 'Malanjkhand Copper Project', state: 'Madhya Pradesh', lat: 22.1, lng: 80.7 },
+      { id: 3, name: 'Tuticorin Smelter', state: 'Tamil Nadu', lat: 8.8, lng: 78.1 },
+      { id: 4, name: 'Ghatsila Copper Mines', state: 'Jharkhand', lat: 22.6, lng: 86.5 },
+      { id: 5, name: 'Singhbhum Copper Belt', state: 'Jharkhand', lat: 22.8, lng: 86.2 },
+    ]
+  },
+  lithium: {
+    name: 'Lithium',
+    mines: [
+      { id: 1, name: 'Mandya Lithium Deposit', state: 'Karnataka', lat: 12.5, lng: 76.9 },
+      { id: 2, name: 'Marlagalla Lithium Belt', state: 'Karnataka', lat: 13.2, lng: 76.5 },
+    ]
+  },
+  steel: {
+    name: 'Steel',
+    mines: [
+      { id: 1, name: 'Bailadila Iron Ore Mine', state: 'Chhattisgarh', lat: 18.7, lng: 81.2 },
+      { id: 2, name: 'Noamundi Iron Mine', state: 'Jharkhand', lat: 22.2, lng: 85.5 },
+      { id: 3, name: 'Dalli Rajhara Mine', state: 'Chhattisgarh', lat: 20.6, lng: 81.1 },
+      { id: 4, name: 'Kudremukh Iron Ore', state: 'Karnataka', lat: 13.2, lng: 75.3 },
+      { id: 5, name: 'Kiriburu Iron Ore Mine', state: 'Jharkhand', lat: 22.1, lng: 85.3 },
+    ]
+  },
+  gold: {
+    name: 'Gold',
+    mines: [
+      { id: 1, name: 'Kolar Gold Fields', state: 'Karnataka', lat: 13.1, lng: 78.3 },
+      { id: 2, name: 'Hutti Gold Mines', state: 'Karnataka', lat: 16.2, lng: 76.7 },
+      { id: 3, name: 'Ramagiri Gold Field', state: 'Andhra Pradesh', lat: 13.9, lng: 77.6 },
+    ]
+  },
+  silver: {
+    name: 'Silver',
+    mines: [
+      { id: 1, name: 'Zawar Mines', state: 'Rajasthan', lat: 24.3, lng: 73.7 },
+      { id: 2, name: 'Tundoo Lead-Zinc Mine', state: 'Jharkhand', lat: 22.9, lng: 86.2 },
+      { id: 3, name: 'Rampura Agucha Mine', state: 'Rajasthan', lat: 25.6, lng: 74.7 },
+    ]
+  }
+} as const;
+
+// Define Mine type for TypeScript
+type Mine = {
+  id: number;
+  name: string;
+  state: string;
+  lat: number;
+  lng: number;
+};
 
 export default function HomePage() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<string>('aluminium');
 
   const materials = [
     {
@@ -292,6 +366,67 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-gradient-to-br from-muted/20 to-card/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">India Mineral Resources Map</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Explore the geographical distribution of key mineral resources across India
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-xl overflow-hidden max-w-6xl mx-auto">
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div>
+                  <h3 className="text-xl font-semibold mb-4">Mineral Type</h3>
+                  <select
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    value={selectedMaterial}
+                    onChange={(e) => setSelectedMaterial(e.target.value)}
+                  >
+                    {materials.map((material) => (
+                      <option key={material.name} value={material.name.toLowerCase()}>
+                        {material.name}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <div className="mt-8">
+                    <h4 className="text-lg font-medium mb-3">
+                      {materials.find(m => m.name.toLowerCase() === selectedMaterial)?.name} Mines in India
+                    </h4>
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                      {mineralData[selectedMaterial as keyof typeof mineralData]?.mines.map((mine) => (
+                        <Link 
+                          key={mine.id} 
+                          href={`/lca?material=${selectedMaterial}`}
+                          className="block hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="p-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm">
+                            <h5 className="font-medium text-gray-900">{mine.name}</h5>
+                            <p className="text-sm text-gray-600">{mine.state}</p>
+                          </div>
+                        </Link>
+                      )) || (
+                        <p className="text-gray-500">No mine data available for this mineral</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="lg:col-span-2 h-[500px] bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                  <IndiaMap 
+                    mines={mineralData[selectedMaterial as keyof typeof mineralData]?.mines || []} 
+                    mineral={materials.find(m => m.name.toLowerCase() === selectedMaterial)?.name || ''} 
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -47,6 +47,28 @@ export default function LCAPage() {
   const [inputMethod, setInputMethod] = useState<"manual" | "document" | null>(null)
   const [lcaResults, setLcaResults] = useState<any>(null)
   const [isCalculating, setIsCalculating] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Get material from URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const material = params.get('material')
+    
+    if (material) {
+      setSelectedMaterial(material.charAt(0).toUpperCase() + material.slice(1))
+      setAnalysisStep(2) // Skip to input method selection
+      
+      // Focus on the first input field after a short delay to allow render
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus()
+        }
+      }, 300)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   // Document upload (mock AI extraction)
   const [uploadedDoc, setUploadedDoc] = useState<string | null>(null)
   const [isParsingDoc, setIsParsingDoc] = useState(false)
@@ -55,14 +77,21 @@ export default function LCAPage() {
   // Government DB hints (mock integration)
   const [govHints, setGovHints] = useState<{ electricityEF?: number; waterStress?: number; mineralDepletion?: number }>({})
 
-  // Preselect material from query if present (client-only)
+  // Handle material selection from URL
   useEffect(() => {
-    if (typeof window !== "undefined" && !selectedMaterial) {
-      const sp = new URLSearchParams(window.location.search)
-      const param = sp.get("material")
-      if (param) setSelectedMaterial(param)
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const material = params.get('material');
+      
+      if (material) {
+        const formattedMaterial = material.charAt(0).toUpperCase() + material.slice(1);
+        if (formattedMaterial !== selectedMaterial) {
+          setSelectedMaterial(formattedMaterial);
+          setAnalysisStep(2); // Skip to input method selection
+        }
+      }
     }
-  }, [selectedMaterial])
+  }, []);
 
   // Fetch mock factors for hints whenever material changes
   useEffect(() => {
@@ -658,11 +687,12 @@ export default function LCAPage() {
                         <div className="space-y-2">
                           <Label htmlFor="production-volume">Annual Production Volume (t/yr)</Label>
                           <Input
-                            id="production-volume"
-                            type="number"
-                            placeholder="10,000"
+                            ref={inputRef}
+                            id="productionVolume"
                             value={formData.productionVolume}
                             onChange={(e) => handleInputChange("productionVolume", e.target.value)}
+                            placeholder="e.g. 10000"
+                            className="w-full"
                           />
                         </div>
                         <div className="space-y-2">
