@@ -8,7 +8,8 @@
     "dev:next": "next dev",
     "lint": "next lint",
     "start": "node server.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:redis": "tsx scripts/test-redis.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -49,6 +50,7 @@
     "@types/axios": "^0.14.4",
     "@types/leaflet": "^1.9.20",
     "@types/ws": "^8.18.1",
+    "@upstash/redis": "^1.35.4",
     "@vercel/blob": "latest",
     "autoprefixer": "^10.4.20",
     "axios": "^1.11.0",
