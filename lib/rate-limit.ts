@@ -49,7 +49,7 @@ export const rateLimiters = redis ? {
   // Public endpoints - 200 requests per minute
   public: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(200, '1 m'),
+    limiter: Ratelimit.slidingWindow(160, '1 m'),
     analytics: true,
     prefix: 'rate_limit:public',
   }),
