@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getAuthUserFromRequest } from "./lib/auth"
-import { rateLimitMiddleware } from "./lib/rate-limit-middleware"
-import {UserRole} from "@prisma/client"
+import { UserRole } from "@prisma/client"
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // Apply rate limiting first
-  const rateLimitResponse = await rateLimitMiddleware(request)
-  if (rateLimitResponse.status !== 200) {
-    return rateLimitResponse
-  }
 
   // Public routes that don't require authentication
   const publicRoutes = [
@@ -22,7 +15,7 @@ export async function middleware(request: NextRequest) {
     "/api/panchayats",
     "/api/uploads",  // Add uploads to public routes since we handle auth in the route
     "/api/offices",  // Add offices API to public routes
-    "/api/departments"  // Add departments API to public routes (needed for office search)
+    "/api/departments" // Add departments API to public routes (needed for office search)
   ]
   const isPublicRoute = publicRoutes.some((route) => 
     pathname === route || 
