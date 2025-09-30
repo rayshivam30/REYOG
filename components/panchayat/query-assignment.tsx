@@ -31,7 +31,9 @@ interface NGO {
 
 interface Assignment {
   id: string
+  officeId?: string
   office?: Office
+  ngoId?: string
   ngo?: NGO
 }
 
@@ -50,7 +52,6 @@ interface AssignmentItemProps {
   isChecked: boolean
   onToggle: (id: string) => void
 }
-
 // Inside components/panchayat/query-assignment.tsx
 
 function AssignmentItem({ id, name, details, isChecked, onToggle }: AssignmentItemProps) {
@@ -58,8 +59,8 @@ function AssignmentItem({ id, name, details, isChecked, onToggle }: AssignmentIt
   return (
     <div
       className={cn(
-        "flex items-start space-x-3 p-3 border rounded-lg transition-colors hover:bg-accent/50",
-        isChecked && "bg-blue-50 border-blue-200 hover:bg-blue-50/80"
+        "flex items-start space-x-3 p-3 border rounded-lg transition-colors hover:bg-accent/50 dark:hover:bg-gray-800/70",
+        isChecked && "bg-blue-50 border-blue-200 hover:bg-blue-50/80 dark:bg-gray-800 dark:border-blue-800 dark:hover:bg-gray-800"
       )}
     >
       <Checkbox
@@ -73,11 +74,11 @@ function AssignmentItem({ id, name, details, isChecked, onToggle }: AssignmentIt
       <div className="flex-1 min-w-0">
         <label
           htmlFor={uniqueId}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer dark:text-white"
         >
           {name}
         </label>
-        <div className="text-xs text-muted-foreground mt-1">{details}</div>
+        <div className="text-xs text-muted-foreground mt-1 dark:text-gray-300">{details}</div>
       </div>
     </div>
   )
@@ -241,18 +242,24 @@ export function QueryAssignment({ queryId, queryTitle, queryStatus, onAssignment
           <div>
             <h4 className="font-medium text-sm text-muted-foreground mb-2">Currently Assigned:</h4>
             <div className="flex flex-wrap gap-2">
-              {currentAssignments.offices.map(({ id, office }) => (
-                <Badge key={id} variant="secondary" className="bg-blue-100 text-blue-800">
-                  <Building className="h-3 w-3 mr-1.5" />
-                  {office.name}
-                </Badge>
-              ))}
-              {currentAssignments.ngos.map(({ id, ngo }) => (
-                <Badge key={id} variant="secondary" className="bg-green-100 text-green-800">
-                  <Users className="h-3 w-3 mr-1.5" />
-                  {ngo.name}
-                </Badge>
-              ))}
+              {currentAssignments.offices.map(({ id, office }) => {
+                if (!office) return null;
+                return (
+                  <Badge key={id} variant="secondary" className="bg-blue-100 text-blue-800">
+                    <Building className="h-3 w-3 mr-1.5" />
+                    {office.name}
+                  </Badge>
+                );
+              })}
+              {currentAssignments.ngos.map(({ id, ngo }) => {
+                if (!ngo) return null;
+                return (
+                  <Badge key={id} variant="secondary" className="bg-green-100 text-green-800">
+                    <Users className="h-3 w-3 mr-1.5" />
+                    {ngo.name}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         )}

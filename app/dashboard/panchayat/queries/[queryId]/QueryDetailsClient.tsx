@@ -246,13 +246,13 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                     </div>
                     <div className="space-y-2">
                       {currentAssignments.ngos.map((assignment: any) => (
-                        <div key={assignment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <div key={assignment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 dark:hover:bg-green-900">
                           <div>
                             <div className="font-medium text-green-900">{assignment.ngo.name}</div>
                             <div className="text-sm text-green-700">{assignment.ngo.focusArea}</div>
                             <div className="text-xs text-green-600">Contact: {assignment.ngo.contactName}</div>
                           </div>
-                          <Badge variant="outline" className="bg-green-100 text-green-800">NGO</Badge>
+                          <Badge variant="outline" className="bg-green-100 text-green-800 cursor-pointer hover:bg-green-100">NGO</Badge>
                         </div>
                       ))}
                     </div>
@@ -269,7 +269,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                 <CardTitle className="text-lg font-semibold">Assign Offices & NGOs</CardTitle>
                 <CardDescription>Assign offices and NGOs to handle this query</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 ">
                 <QueryAssignment 
                   queryId={query.id} 
                   queryTitle={query.title}
@@ -370,7 +370,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
                     onChange={(e) => setBudgetSpentDelta(e.target.value)}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={updating || !status || !note}>
+                <Button type="submit" className="w-full dark:bg-white cursor-pointer" disabled={updating || !status || !note}>
                   {updating ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Updating...</>) : ('Update Status')}
                 </Button>
               </form>
