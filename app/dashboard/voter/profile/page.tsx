@@ -238,7 +238,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-8 border border-blue-100">
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-8 border border-blue-100 dark:bg-none dark:bg-slate-900 dark:border-slate-700">
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
               <div className="relative">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
@@ -250,8 +250,8 @@ export default function ProfilePage() {
               </div>
               
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.name}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2 dark:text-white">{user.name}</h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 ">
                   <div className="flex items-center gap-1">
                     <Mail className="w-4 h-4" />
                     <span>{user.email}</span>
@@ -400,7 +400,7 @@ export default function ProfilePage() {
                                 placeholder="Enter your email" 
                                 {...field} 
                                 disabled
-                                className="bg-gray-50"
+                                className="bg-gray-50 dark:bg-black/20"
                               />
                             </FormControl>
                             <FormMessage />

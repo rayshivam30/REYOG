@@ -74,7 +74,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 h-16 flex items-center justify-between">
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 "
           aria-label="Open menu"
         >
           <Menu className="h-6 w-6" />
@@ -110,7 +110,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main content */}
       <div className="md:pl-64 flex flex-col min-h-screen pt-16 md:pt-0 bg-gray-50 dark:bg-black">
-        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 bg-white dark:bg-black">
+        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 bg-white dark:bg-black text-gray-900 dark:text-white">
           {children}
         </main>
         

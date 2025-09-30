@@ -148,14 +148,14 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
           </Link>
         </div>
 
-        <Card className="mb-8 shadow-sm border-gray-100">
-          <CardHeader className="pb-4 border-b border-gray-100">
+        <Card className="mb-8 shadow-sm border-gray-100 dark:border-gray-800">
+          <CardHeader className="pb-4 border-b border-gray-100 dark:border-gray-800">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <Badge className={`mb-3 ${statusVariant[query.status as keyof typeof statusVariant]} text-sm font-medium`}>
                   {query.status.replace('_', ' ')}
                 </Badge>
-                <CardTitle className="text-2xl md:text-3xl font-bold text-gray-900">{query.title}</CardTitle>
+                <CardTitle className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{query.title}</CardTitle>
                 <div className="flex items-center text-sm text-gray-500 mt-2">
                   <Calendar className="mr-2 h-4 w-4 text-gray-400" />
                   <span>Posted on {format(new Date(query.createdAt), 'MMMM d, yyyy')}</span>
@@ -175,14 +175,14 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
           
           <CardContent className="pt-6">
             <div className="prose max-w-none mb-8">
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Query Details</h3>
-                <p className="text-gray-700 text-base leading-relaxed">{query.description}</p>
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 dark:bg-black dark:border-gray-800">
+                <h3 className="text-sm font-medium text-gray-500 mb-2 bg:text-white dark:text-white">Query Details</h3>
+                <p className="text-gray-700 text-base leading-relaxed dark:text-white/500">{query.description}</p>
               </div>
             </div>
 
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Attachments</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-2 dark:text-white">Attachments</h3>
               {query.attachments?.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {query.attachments.map((file) => (
@@ -197,35 +197,35 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No attachments</p>
+                <p className="text-sm text-gray-500 dark:text-white/500">No attachments</p>
               )}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
+              <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm dark:bg-black dark:border-gray-800">
                 <h3 className="text-sm font-medium text-gray-500 flex items-center mb-3">
                   <MapPin className="mr-2 h-4 w-4 text-blue-500" />
                   Location Information
                 </h3>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Panchayat</p>
-                    <p className="text-gray-900">{query.panchayat?.name || 'N/A'}</p>
+                    <p className="text-sm font-medium text-gray-500 dark:text-white">Panchayat</p>
+                    <p className="text-gray-900 dark:text-white/50">{query.panchayat?.name || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Ward Number</p>
-                    <p className="text-gray-900">{query.wardNumber || 'N/A'}</p>
+                    <p className="text-sm font-medium text-gray-500 dark:text-white">Ward Number</p>
+                    <p className="text-gray-900 dark:text-white/50">{query.wardNumber || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">District & State</p>
-                    <p className="text-gray-900">
+                    <p className="text-sm font-medium text-gray-500 dark:text-white">District & State</p>
+                    <p className="text-gray-900 dark:text-white/50">
                       {query.panchayat?.district || 'N/A'}, {query.panchayat?.state || 'N/A'}
                     </p>
                   </div>
                   
                   {/* Map display when coordinates are available */}
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Location on Map</p>
+                  <div className="mt-4 dark:bg-black">
+                    <p className="text-sm font-medium text-gray-500 mb-2 dark:text-white/50">Location on Map</p>
                     <QueryLocationMap 
                       latitude={query.latitude} 
                       longitude={query.longitude} 
@@ -237,7 +237,7 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
               </div>
 
               {query.department && (
-                <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
+                <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm dark:bg-black dark:border-gray-800">
                   <h3 className="text-sm font-medium text-gray-500 flex items-center mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4 text-green-500">
                       <rect width="7" height="9" x="3" y="3" rx="1" />
@@ -248,7 +248,7 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                     Department
                   </h3>
                   <div className="flex items-center">
-                    <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium">
+                    <div className="bg-blue-50 text-blue-700 dark:bg-blue-800 dark:text-blue-100 px-3 py-1.5 rounded-full text-sm font-medium">
                       {query.department.name}
                     </div>
                   </div>
@@ -257,15 +257,15 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
               
               {/* Add Assigned Office Information */}
               {query.assignedOffices && query.assignedOffices.length > 0 && (
-                <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm mt-4 md:mt-0">
-                  <h3 className="text-sm font-medium text-gray-500 flex items-center mb-3">
+                <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm mt-4 md:mt-0 dark:bg-black dark:border-gray-800">
+                  <h3 className="text-sm font-medium text-gray-500 flex items-center mb-3 dark:text-white/50">
                     <Building className="mr-2 h-4 w-4 text-indigo-500" />
                     Assigned Office
                   </h3>
                   <div className="space-y-3">
                     {query.assignedOffices.map((assignment) => (
                       <div key={assignment.office.id} className="border-l-2 border-indigo-400 pl-3">
-                        <p className="font-medium text-gray-900">{assignment.office.name}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{assignment.office.name}</p>
                         <p className="text-sm text-gray-500">{assignment.office.address}</p>
                         <p className="text-xs text-gray-400 mt-1">
                           {assignment.office.department?.name || 'Department not specified'}
@@ -273,12 +273,12 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
                         
                         {/* Rating Section for Resolved Queries */}
                         {query.status === 'RESOLVED' && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center dark:text-white/50">
                               <Star className="h-4 w-4 text-yellow-500 mr-1" />
                               Rate this Office
                             </h4>
-                            <p className="text-xs text-gray-500 mb-2">
+                            <p className="text-xs text-gray-500 mb-2 dark:text-white/50">
                               How would you rate the service provided by {assignment.office.name}?
                             </p>
                             <RatingForm 
@@ -299,9 +299,9 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
         </Card>
 
         {query.updates && query.updates.length > 0 && (
-          <Card className="border-gray-100 shadow-sm">
-            <CardHeader className="border-b border-gray-100">
-              <CardTitle className="text-lg font-semibold flex items-center">
+          <Card className="border-gray-100 shadow-sm dark:bg-black dark:border-gray-800">
+            <CardHeader className="border-b border-gray-100 dark:border-gray-800">
+              <CardTitle className="text-lg font-semibold flex items-center dark:text-white/50">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-blue-500">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
@@ -309,23 +309,23 @@ export default async function QueryDetailsPage({ params }: { params: { id: strin
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {query.updates.map((update) => (
-                  <div key={update.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div key={update.id} className="p-6 hover:bg-gray-50 transition-colors dark:hover:bg-gray-800 dark:text-white/50">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-gray-900 dark:text-white/50">
                             {update.user.role === 'ADMIN' ? 'Administrator' : 'Official'}
                           </span>
-                          <span className="mx-2 text-gray-300">•</span>
-                          <span className="text-sm text-gray-500">
+                          <span className="mx-2 text-gray-300 dark:text-white/50">•</span>
+                          <span className="text-sm text-gray-500 dark:text-white/50">
                             {format(new Date(update.createdAt), 'MMM d, yyyy')}
                           </span>
                         </div>
-                        <p className="mt-2 text-gray-700">{update.note}</p>
+                        <p className="mt-2 text-gray-700 dark:text-white/50">{update.note}</p>
                       </div>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 dark:text-white/50">
                         {format(new Date(update.createdAt), 'h:mm a')}
                       </span>
                     </div>

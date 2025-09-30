@@ -373,7 +373,7 @@ export default function TopRatedOfficesPage() {
                   {office.recentRatings.length > 0 && (
                     <div className="mt-4 pt-4 border-t">
                       <p className="font-medium mb-2 text-sm">Recent Review:</p>
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-gray-50 rounded-lg p-3 dark:bg-gray-800">
                         <div className="flex items-center gap-2 mb-1">
                           <RatingStars rating={office.recentRatings[0].rating} />
                           <span className="text-xs text-muted-foreground">

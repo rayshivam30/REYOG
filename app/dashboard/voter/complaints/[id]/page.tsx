@@ -78,7 +78,7 @@ export default async function ComplaintDetailsPage({ params }: PageProps) {
           
           <CardContent>
             <div className="prose max-w-none">
-              <p className="text-gray-700 whitespace-pre-line">{complaint.description}</p>
+              <p className="text-gray-700 whitespace-pre-line dark:text-gray-200">{complaint.description}</p>
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">

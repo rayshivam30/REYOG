@@ -97,13 +97,13 @@ export default function VoterQueriesPage() {
     <div className="container mx-auto p-4 md:p-8 max-w-4xl">
       <div className="mb-6">
         <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Community Queries</h1>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Community Queries</h1>
           <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
         </div>
         
         <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-8 w-20 bg-gray-200 rounded-full animate-pulse"></div>
+            <div key={i} className="h-8 w-20 bg-gray-200 rounded-full animate-pulse dark:bg-black"></div>
           ))}
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function VoterQueriesPage() {
     <div className="container mx-auto p-4 md:p-8 max-w-4xl">
       <div className="mb-6">
         <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-800">Community Queries</h1>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Community Queries</h1>
           <Link href="/dashboard/voter/queries/new">
             <Button>Raise New Query</Button>
           </Link>
