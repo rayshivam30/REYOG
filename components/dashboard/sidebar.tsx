@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SOSModal } from "@/components/sos-modal"
 import { NotificationBell } from "@/components/ui/notification-bell"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Building2,
   FileText,
@@ -102,7 +103,7 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col bg-sidebar border-r border-sidebar-border transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col bg-sidebar dark:bg-black border-r border-sidebar-border transition-transform duration-300 ease-in-out md:relative md:translate-x-0",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Header */}
@@ -111,6 +112,7 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
             <Building2 className="h-8 w-8 text-sidebar-primary" />
             <span className="text-xl font-bold text-sidebar-foreground">ReYog</span>
           </Link>
+         
           <button className="md:hidden p-1 rounded-md text-sidebar-foreground" onClick={() => setIsSidebarOpen(false)}>
             <X className="h-6 w-6" />
           </button>
@@ -125,6 +127,7 @@ export function Sidebar({ userRole, userName, panchayatName, isSidebarOpen, setI
             </div>
             <div className="mt-1">
               <NotificationBell setIsSidebarOpen={setIsSidebarOpen} />
+                <ThemeToggle />
             </div>
           </div>
         </div>

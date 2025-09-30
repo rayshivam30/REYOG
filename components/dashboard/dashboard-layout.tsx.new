@@ -51,7 +51,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary dark:border-slate-200"></div>
       </div>
     )
@@ -109,8 +109,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Main content */}
-      <div className="md:pl-64 flex flex-col min-h-screen pt-16 md:pt-0 bg-gray-50 dark:bg-black">
-        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 bg-white dark:bg-black">
+      <div className="md:pl-64 flex flex-col min-h-screen pt-16 md:pt-0 bg-gray-50 dark:bg-slate-900">
+        <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8 bg-white dark:bg-slate-900">
           {children}
         </main>
         
@@ -137,13 +137,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   )}
                 >
                   <FileText className="h-5 w-5" />
-                  <span className="text-xs mt-1 text-center">All Queries</span>
+                  <span className="text-xs mt-1 text-center">Queries</span>
                 </Link>
                 <Link 
                   href="/dashboard/admin/complaints" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    "text-gray-600 hover:text-blue-600"
+                    "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <AlertCircle className="h-5 w-5" />
@@ -153,20 +153,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/admin/ngos" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    "text-gray-600 hover:text-blue-600"
+                    "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <User className="h-5 w-5" />
                   <span className="text-xs mt-1 text-center">NGOs</span>
                 </Link>
               </>
-            ) : user?.role === 'PANCHAYAT' ? (
+            ) : user.role === 'PANCHAYAT' ? (
               <>
                 <Link 
                   href="/dashboard/panchayat" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    "text-blue-600"
+                    pathname === "/dashboard/panchayat" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <Home className="h-5 w-5" />
@@ -176,7 +176,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/panchayat/queries/all" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/panchayat/queries/all" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <FileText className="h-5 w-5" />
@@ -186,7 +186,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/panchayat/queries" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/panchayat/queries" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <AlertCircle className="h-5 w-5" />
@@ -196,7 +196,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/panchayat/stats" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/panchayat/stats" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <User className="h-5 w-5" />
@@ -210,7 +210,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/voter" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    pathname === "/dashboard/voter" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/voter" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <Home className="h-5 w-5" />
@@ -220,7 +220,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/voter/queries" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    pathname === "/dashboard/voter/queries" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/voter/queries" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <FileText className="h-5 w-5" />
@@ -230,20 +230,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   href="/dashboard/voter/queries/new" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    pathname === "/dashboard/voter/queries/new" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/voter/queries/new" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span className="text-xs mt-1 text-center">Raise Query</span>
+                  <span className="text-xs mt-1 text-center">New Query</span>
                 </Link>
                 <Link 
                   href="/dashboard/voter/profile" 
                   className={cn(
                     "flex flex-col items-center p-2 min-h-16",
-                    pathname === "/dashboard/voter/profile" ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                    pathname === "/dashboard/voter/profile" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                   )}
                 >
                   <User className="h-5 w-5" />

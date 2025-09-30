@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} scroll-smooth`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
@@ -48,10 +48,12 @@ export default function RootLayout({
             --font-sans: ${GeistSans.variable};
             --font-mono: ${GeistMono.variable};
           }
-          html {
+          
+          body {
             font-family: ${GeistSans.style.fontFamily};
             -webkit-text-size-adjust: 100%;
             -webkit-tap-highlight-color: transparent;
+            @apply bg-white dark:bg-black text-slate-900 dark:text-slate-50 transition-colors duration-200;
           }
           
           /* Smooth scrolling for mobile */
@@ -60,26 +62,40 @@ export default function RootLayout({
               scroll-behavior: smooth;
             }
           }
-            /* STEP 2: Add CSS to position the translate button */
+          
+          /* Google Translate Container */
           .google-translate-container {
             position: fixed;
-            top: 0.5rem; /* 24px */
-            left: 9rem; /* 24px */
-            z-index: 50; /* Ensures it stays on top of other content */
+            top: 0.5rem;
+            left: 9rem;
+            z-index: 50;
+          }
+          
+          /* Ensure proper dark mode for content */
+          .dark {
+            color-scheme: dark;
+          }
+          
+          /* Fix for form elements in dark mode */
+          input, textarea, select {
+            @apply bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 rounded-md shadow-sm;
+          }
+          
+          /* Fix for buttons in dark mode */
+          button {
+            @apply transition-colors duration-200;
           }
         `}</style>
       </head>
-      <body className="antialiased text-foreground bg-background">
-        <div className="min-h-screen flex flex-col">
-          <AppProviders>
+      <body className="min-h-screen bg-background dark:bg-black text-foreground">
+        <AppProviders>
+          <div className="min-h-screen flex flex-col">
             {children}
-          </AppProviders>
-
-          {/* STEP 3: Add the component here */}
-        <div className="google-translate-container">
-          <GoogleTranslate />
-        </div>
-        </div>
+            <div className="google-translate-container">
+              <GoogleTranslate />
+            </div>
+          </div>
+        </AppProviders>
       </body>
     </html>
   )
