@@ -233,10 +233,10 @@ export default function NotificationsPage() {
               <Filter className="h-4 w-4" />
             </Button>
             {showFilterDropdown && (
-              <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border">
+              <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10 border dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-2">
                   <div 
-                    className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
+                    className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700"
                     onClick={() => {
                       setStatusFilter("all")
                       setShowFilterDropdown(false)
@@ -246,7 +246,7 @@ export default function NotificationsPage() {
                     All Notifications
                   </div>
                   <div 
-                    className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer"
+                    className="flex items-center px-2 py-1.5 text-sm rounded hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700"
                     onClick={() => {
                       setStatusFilter("unread")
                       setShowFilterDropdown(false)
@@ -286,7 +286,7 @@ export default function NotificationsPage() {
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8">
                   <div className="flex flex-col items-center justify-center space-y-2">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent dark:border-blue-400" />
                     <p className="text-sm text-muted-foreground">Loading notifications...</p>
                   </div>
                 </TableCell>
@@ -309,18 +309,18 @@ export default function NotificationsPage() {
               filteredNotifications.map((notification) => (
                 <TableRow 
                   key={notification.id}
-                  className={!notification.isRead ? 'bg-blue-50/50' : ''}
+                  className={`${!notification.isRead ? 'bg-blue-50/50 dark:bg-blue-900/30' : ''} dark:text-white`}
                 >
                   <TableCell>
                     <div className="flex items-center justify-center">
-                      <div className={`p-1.5 rounded-full ${!notification.isRead ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                      <div className={`p-1.5 rounded-full ${!notification.isRead ? 'bg-blue-100 text-blue-600 dark:bg-gray-600 dark:text-blue-100' : 'bg-gray-100 text-gray-400 dark:bg-gray-900 dark:text-gray-100'}`}>
                         {getNotificationIcon(notification.type)}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <p className={`font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-600'}`}>
+                      <p className={`font-medium ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                         {notification.title}
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ export default function NotificationsPage() {
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground">
+                  <TableCell className="text-right text-sm text-muted-foreground dark:text-gray-300">
                     {notification.createdAt ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true }) : 'N/A'}
                   </TableCell>
                   <TableCell>
