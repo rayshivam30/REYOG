@@ -29,7 +29,7 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2">
               Empowering Rural{' '}
-              <span className="bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Governance
               </span>
             </h1>
@@ -41,7 +41,7 @@ export default function HomePage() {
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 px-4">
               <Link href="/auth/register" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto min-h-12 text-base transition-all hover:shadow-lg hover:shadow-accent/20">
+                <Button size="lg" className="w-full sm:w-auto min-h-12 text-base transition-all hover:shadow-lg hover:shadow-accent/20 cursor-pointer">
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -50,7 +50,7 @@ export default function HomePage() {
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full sm:w-auto min-h-12 text-base bg-background/50 backdrop-blur-sm border-border/50 hover:bg-accent/5 hover:border-accent/30 transition-colors"
+                  className="w-full sm:w-auto min-h-12 text-base bg-background/50 backdrop-blur-sm border-border/50 hover:bg-accent/5 hover:border-accent/30 transition-colors cursor-pointer"
                 >
                   <MapPin className="mr-2 h-5 w-5" />
                   Explore Offices
@@ -199,7 +199,7 @@ export default function HomePage() {
               <Link href="/auth/register" className="w-full sm:w-auto group">
                 <Button
                   size="lg" 
-                  className="w-full sm:w-auto min-h-12 text-base bg-accent-foreground text-accent hover:bg-accent-foreground/90 hover:shadow-lg hover:shadow-accent-foreground/20 transition-all duration-300"
+                  className="w-full sm:w-auto min-h-12 text-base bg-accent-foreground text-accent hover:bg-accent-foreground/90 hover:shadow-lg hover:shadow-accent-foreground/20 transition-all duration-300 cursor-pointer"
                 >
                   <span className="relative z-10">Create Free Account</span>
                   <Users className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -210,7 +210,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto min-h-12 text-base bg-transparent border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/10 hover:border-accent-foreground/40 hover:shadow-sm transition-all duration-300"
+                  className="w-full sm:w-auto min-h-12 text-base bg-transparent border-accent-foreground/20 text-accent-foreground hover:bg-accent-foreground/10 hover:border-accent-foreground/40 hover:shadow-sm transition-all duration-300 cursor-pointer"
                 >
                   <MapPin className="mr-2 h-5 w-5 group-hover:animate-pulse" />
                   Find Offices

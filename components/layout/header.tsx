@@ -55,10 +55,10 @@ export function Header() {
               ) : (
                 <div className="flex items-center space-x-2">
                   <Link href="/auth/login">
-                    <Button variant="ghost">Sign In</Button>
+                    <Button className="cursor-pointer" variant="ghost">Sign In</Button>
                   </Link>
                   <Link href="/auth/register">
-                    <Button>Get Started</Button>
+                    <Button className="cursor-pointer">Get Started</Button>
                   </Link>
                 </div>
               )}

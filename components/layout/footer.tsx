@@ -3,7 +3,7 @@ import { Building2, Mail, Phone, MapPin } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="bg-background text-primar">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -12,7 +12,7 @@ export function Footer() {
               <Building2 className="h-8 w-8" />
               <span className="text-xl font-bold">ReYog</span>
             </Link>
-            <p className="text-primary-foreground/80 mb-4 max-w-md">
+            <p className="text-primary/80 mb-4 max-w-md">
               Empowering rural communities through transparent governance and efficient public service delivery across
               India.
             </p>
@@ -96,8 +96,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center">
-          <p className="text-primary-foreground/60 text-sm">
+        <div className="border-t border-primary/20 mt-8 pt-8 text-center">
+          <p className="text-/60 text-sm">
             © 2025 ReYog - Rural Governance Platform. All rights reserved. | Built for the people of India. -- By TEAM SMAR
           </p>
         </div>
