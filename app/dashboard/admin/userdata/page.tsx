@@ -261,7 +261,7 @@ const UserDataPage = () => {
             </TableRow>
           ) : (
             recentQueries.map((query) => (
-              <TableRow key={query.id} className="hover:bg-gray-50">
+              <TableRow key={query.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <TableCell className="font-medium">
                   <div className="max-w-[200px] truncate">
                     {query.title}
@@ -408,13 +408,13 @@ const UserDataPage = () => {
               onClick={() => setActiveTab("users")}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "users"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
             >
               New Users
               {recentUsers.length > 0 && (
-                <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-medium px-2 py-0.5 rounded-full">
                   {recentUsers.length}
                 </span>
               )}
@@ -423,13 +423,13 @@ const UserDataPage = () => {
               onClick={() => setActiveTab("queries")}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "queries"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
               }`}
             >
               Recent Queries
               {recentQueries.length > 0 && (
-                <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-medium px-2 py-0.5 rounded-full">
                   {recentQueries.length}
                 </span>
               )}
@@ -438,7 +438,7 @@ const UserDataPage = () => {
         </div>
         
         {/* Tab Content */}
-        <div className="bg-white rounded-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm dark:shadow-gray-700/20">
           {activeTab === "users" ? renderUserTable() : renderQueryTable()}
         </div>
       </div>

@@ -195,35 +195,35 @@ function ComplaintUpdateDialog({
   )
 }
 
-// --- NEW: Details Dialog Component ---
+// --- Details Dialog Component ---
 function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: Complaint; open: boolean; onOpenChange: (open: boolean) => void }) {
-    const DetailItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) => (
-        <div className="flex items-start">
-          <div className="flex-shrink-0 w-6 h-6 text-muted-foreground">{icon}</div>
-          <div className="ml-2">
-            <p className="text-sm font-semibold text-muted-foreground">{label}</p>
-            <p className="text-md">{value}</p>
-          </div>
-        </div>
-      );
+  const DetailItem = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) => (
+    <div className="flex items-start">
+      <div className="flex-shrink-0 w-6 h-6 text-muted-foreground">{icon}</div>
+      <div className="ml-2">
+        <p className="text-sm font-semibold text-muted-foreground">{label}</p>
+        <p className="text-md">{value}</p>
+      </div>
+    </div>
+  );
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl">{complaint.subject}</DialogTitle>
-                    <DialogDescription>Full details for complaint ID: {complaint.id}</DialogDescription>
-                </DialogHeader>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">{complaint.subject}</DialogTitle>
+          <DialogDescription>Full details for complaint ID: {complaint.id}</DialogDescription>
+        </DialogHeader>
                 <div className="py-4 space-y-6">
                     {/* Complaint Details */}
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                        <h4 className="font-semibold mb-2">Complaint Description</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{complaint.description}</p>
+                    <div className="p-4 bg-muted/50 dark:bg-gray-800/70 rounded-lg">
+                        <h4 className="font-semibold mb-2 dark:text-white">Complaint Description</h4>
+                        <p className="text-sm text-muted-foreground dark:text-gray-300 whitespace-pre-wrap">{complaint.description}</p>
                     </div>
                     
                     {/* Complainant Details */}
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <h4 className="font-semibold mb-3 flex items-center gap-2 dark:text-white">
                             <User className="h-4 w-4" />
                             Complainant Details
                         </h4>
@@ -255,8 +255,8 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
 
                     {/* Query Details (if complaint is related to a query) */}
                     {complaint.query && (
-                        <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
-                            <h4 className="font-semibold mb-3 flex items-center gap-2 text-red-800">
+                        <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-500 rounded-lg">
+                            <h4 className="font-semibold mb-3 flex items-center gap-2 text-red-800 dark:text-red-300">
                                 <FileText className="h-4 w-4" />
                                 Related Query Details (Declined Query)
                             </h4>
@@ -265,11 +265,11 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
                                 {/* Query Basic Info */}
                                 <div>
                                     <h5 className="font-medium text-red-700 mb-2">Query Information</h5>
-                                    <div className="bg-white p-3 rounded border">
-                                        <p className="font-medium text-gray-900 mb-1">{complaint.query.title}</p>
-                                        <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">{complaint.query.description}</p>
+                                        <div className="bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-700">
+                                        <p className="font-medium text-gray-900 dark:text-white mb-1">{complaint.query.title}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 whitespace-pre-wrap">{complaint.query.description}</p>
                                         <div className="flex items-center gap-2">
-                                            <Badge className="bg-red-100 text-red-800">
+                                            <Badge className="bg-red-100 text-red-800 dark:bg-red-700 dark:text-white">
                                                 {complaint.query.status.replace('_', ' ')}
                                             </Badge>
                                             {complaint.query.department && (
@@ -284,25 +284,25 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
                                 {/* Query Submitter Details */}
                                 <div>
                                     <h5 className="font-medium text-red-700 mb-2">Query Submitted By</h5>
-                                    <div className="bg-white p-3 rounded border">
+                                    <div className="bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-700">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             <div>
-                                                <p className="text-sm font-medium text-gray-700">Name</p>
-                                                <p className="text-sm text-gray-900">{complaint.query.user.name}</p>
+                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Name</p>
+                                                <p className="text-sm text-gray-900 dark:text-white">{complaint.query.user.name}</p>
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-700">Email</p>
-                                                <p className="text-sm text-gray-900">{complaint.query.user.email}</p>
+                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</p>
+                                                <p className="text-sm text-gray-900 dark:text-white">{complaint.query.user.email}</p>
                                             </div>
                                             {complaint.query.user.phone && (
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-700">Phone</p>
-                                                    <p className="text-sm text-gray-900">{complaint.query.user.phone}</p>
+                                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone</p>
+                                                    <p className="text-sm text-gray-900 dark:text-white">{complaint.query.user.phone}</p>
                                                 </div>
                                             )}
                                             <div>
-                                                <p className="text-sm font-medium text-gray-700">Panchayat</p>
-                                                <p className="text-sm text-gray-900">
+                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Panchayat</p>
+                                                <p className="text-sm text-gray-900 dark:text-white">
                                                     {complaint.query.user.panchayat ? 
                                                         `${complaint.query.user.panchayat.name}, ${complaint.query.user.panchayat.district}, ${complaint.query.user.panchayat.state}` : 
                                                         "Not available"
@@ -317,7 +317,7 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
                                 {complaint.query.attachments && complaint.query.attachments.length > 0 && (
                                     <div>
                                         <h5 className="font-medium text-red-700 mb-2">Query Attachments</h5>
-                                        <div className="bg-white p-3 rounded border">
+                                        <div className="bg-white p-3 rounded border dark:border-gray-700">
                                             <div className="flex flex-wrap gap-2">
                                                 {complaint.query.attachments.map((attachment) => (
                                                     <a
@@ -325,7 +325,7 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
                                                         href={attachment.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="inline-flex items-center px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                                                        className="inline-flex items-center px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full transition-colors dark:bg-gray-800 dark:hover:bg-gray-700"
                                                     >
                                                         <FileText className="h-3 w-3 mr-1" />
                                                         {attachment.filename}
@@ -340,19 +340,19 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
                                 {(complaint.query.office || complaint.query.panchayat) && (
                                     <div>
                                         <h5 className="font-medium text-red-700 mb-2">Query Assignment</h5>
-                                        <div className="bg-white p-3 rounded border">
+                                        <div className="bg-white p-3 rounded border dark:border-gray-700 dark:bg-gray-800">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 {complaint.query.office && (
                                                     <div>
-                                                        <p className="text-sm font-medium text-gray-700">Office</p>
-                                                        <p className="text-sm text-gray-900">{complaint.query.office.name}</p>
-                                                        <p className="text-xs text-gray-600">{complaint.query.office.address}</p>
+                                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Office</p>
+                                                        <p className="text-sm text-gray-900 dark:text-white">{complaint.query.office.name}</p>
+                                                        <p className="text-xs text-gray-600 dark:text-gray-400">{complaint.query.office.address}</p>
                                                     </div>
                                                 )}
                                                 {complaint.query.panchayat && (
                                                     <div>
-                                                        <p className="text-sm font-medium text-gray-700">Query Panchayat</p>
-                                                        <p className="text-sm text-gray-900">
+                                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Query Panchayat</p>
+                                                        <p className="text-sm text-gray-900 dark:text-white">
                                                             {complaint.query.panchayat.name}, {complaint.query.panchayat.district}
                                                         </p>
                                                     </div>
@@ -370,9 +370,9 @@ function ComplaintDetailsDialog({ complaint, open, onOpenChange }: { complaint: 
                     )}
 
                      {complaint.resolution && (
-                        <div className="p-4 bg-green-50 rounded-lg">
+                        <div className="p-4 bg-green-50 rounded-lg dark:bg-gray-800">
                             <h4 className="font-semibold mb-2">Resolution Note</h4>
-                            <p className="text-sm text-green-800 whitespace-pre-wrap">{complaint.resolution}</p>
+                            <p className="text-sm text-green-800 whitespace-pre-wrap dark:text-white/500">{complaint.resolution}</p>
                         </div>
                     )}
                     
