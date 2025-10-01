@@ -30,10 +30,10 @@ export const createQuerySchema = z.object({
   
   wardNumber: z.number().int().min(1, "Ward number must be a positive integer"),
   
-  departmentId: z.string().optional(),
-  officeId: z.string().optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  departmentId: z.string().min(1, "Please select a department"),
+  officeId: z.string().nullable().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   attachments: z
     .array(
       z.object({

@@ -2,11 +2,12 @@ import { useCallback, useState } from "react"
 import { useDropzone, FileWithPath } from "react-dropzone"
 import { Upload, X, FileText, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { string } from "zod"
 
 type UploadedFile = {
   id: string
   url: string
-  filename: string
+  name: string
   type: string
   size: number
   publicId: string
@@ -96,7 +97,7 @@ export function FileUpload({
       return {
         id: result.data.file.publicId,
         url: result.data.file.url,
-        filename: file.name,
+        name: file.name,
         type: file.type,
         size: file.size,
         publicId: result.data.file.publicId,
@@ -211,7 +212,7 @@ export function FileUpload({
 
                 {/* --- FILE INFO (Name & Size) --- */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{file.filename}</p>
+                  <p className="text-sm font-medium truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {(file.size / 1024).toFixed(1)} KB
                   </p>

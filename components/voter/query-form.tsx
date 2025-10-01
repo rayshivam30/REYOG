@@ -9,16 +9,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { FileUpload } from "@/components/ui/file-upload"
 import { LocationPicker } from "@/components/maps/location-picker"
 import { createQuerySchema } from "@/lib/validations"
-import { MapPin, Mic, MicOff } from "lucide-react"
+import { MapPin, Mic, MicOff, AlertCircle, CheckCircle2, Info, Loader2, ArrowRight } from "lucide-react"
 import type { z } from "zod"
 import { useAuth } from "@/lib/auth-context"
-import { FileText, Image as ImageIcon, X } from "lucide-react"
+import { FileText, Image as ImageIcon, X, Upload, Camera, Send } from "lucide-react"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Progress } from "@/components/ui/progress"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 type QueryFormData = z.infer<typeof createQuerySchema>
 
@@ -65,24 +68,42 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [selectedDepartment, setSelectedDepartment] = useState("default")
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [formStep, setFormStep] = useState(0)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const titleRef = useRef<HTMLInputElement | null>(null)
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
+  
+  // Initialize form with useForm
+  const form = useForm<QueryFormData>({
+    resolver: zodResolver(createQuerySchema),
+    defaultValues: {
+      title: initialData?.title || "",
+      description: initialData?.description || "",
+      departmentId: initialData?.departmentId || "",
+      officeId: initialData?.officeId || "",
+      panchayatId: initialData?.panchayatId || user?.panchayat?.id || "",
+      wardNumber: initialData?.wardNumber || user?.wardNumber || 1,
+      latitude: initialData?.latitude || null,
+      longitude: initialData?.longitude || null,
+      attachments: initialData?.attachments || []
+    },
+    mode: "onChange"
+  });
+
   const { 
     register, 
     handleSubmit, 
     setValue, 
     watch, 
-    reset, 
-    formState: { errors } 
-  } = useForm<QueryFormData>({
-    resolver: zodResolver(createQuerySchema),
-    defaultValues: initialData || {
-      panchayatId: user?.panchayat?.id || "",
-      wardNumber: user?.wardNumber || 1,
-    },
-  })
+    reset,
+    trigger,
+    formState: { errors, isValid },
+    getValues,
+    control
+  } = form;
+  
   const [attachments, setAttachments] = useState<Array<{
     id: string
     url: string
@@ -91,12 +112,13 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     size: number
     publicId: string
   }>>([])
+  
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const [departments, setDepartments] = useState<Department[]>([])
   const [offices, setOffices] = useState<Office[]>([])
   const [panchayats, setPanchayats] = useState<Panchayat[]>([])
+  const [location, setLocation] = useState<{lat: number; lng: number} | null>(null)
   const router = useRouter()
-
 
   // Speech recognition hooks for title and description with explicit language support
   const {
@@ -132,14 +154,22 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
   // Handle speech recognition results for title
   useEffect(() => {
     if (!isInitialMount.current && titleTranscript) {
-      setValue('title', titleTranscript, { shouldValidate: true });
+      setValue('title', titleTranscript, { 
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true
+      });
     }
   }, [titleTranscript, setValue]);
 
   // Handle speech recognition results for description
   useEffect(() => {
     if (!isInitialMount.current && descriptionTranscript) {
-      setValue('description', descriptionTranscript, { shouldValidate: true });
+      setValue('description', descriptionTranscript, { 
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true
+      });
     }
   }, [descriptionTranscript, setValue]);
 
@@ -198,7 +228,6 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     }
   };
 
-
   useEffect(() => {
     if (initialData) {
       reset(initialData);
@@ -212,7 +241,15 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     }
   }, [initialData, reset]);
 
+  // Watch all form values
+  const formValues = watch()
   const watchedDepartmentId = watch("departmentId")
+  const watchedTitle = watch("title")
+  const watchedDescription = watch("description")
+  const watchedPanchayatId = watch("panchayatId")
+  const watchedWardNumber = watch("wardNumber")
+  const watchedLatitude = watch("latitude")
+  const watchedLongitude = watch("longitude")
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -288,11 +325,11 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
         },
         (error) => {
           console.error("Error getting location:", error)
-          alert("Unable to get your location. Please check your browser settings.")
+          setError("Unable to get your location. Please check your browser settings.")
         }
       )
     } else {
-      alert("Geolocation is not supported by this browser.")
+      setError("Geolocation is not supported by this browser.")
     }
   }
 
@@ -302,434 +339,711 @@ export function QueryForm({ initialData, resubmitId }: QueryFormProps) {
     setValue("longitude", selectedLocation.lng)
   }
 
-  const handleFilesChange = (files: Array<{
-    id: string
-    url: string
-    filename: string
-    type: string
-    size: number
-    publicId: string
-  }>) => {
-    setAttachments(files)
+  const handleFileUpload = (files: UploadedFile[]) => {
+    // Simulate upload progress
+    setUploadProgress(0)
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          return 100
+        }
+        return prev + 10
+      })
+    }, 200)
+
+    // Add files to attachments
+    setAttachments(prev => [
+      ...prev,
+      ...files.map(file => ({
+        id: file.publicId,
+        url: file.url,
+        filename: file.name,
+        type: file.type,
+        size: file.size,
+        publicId: file.publicId
+      }))
+    ])
+  }
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(att => att.id !== id))
   }
 
   const onSubmit = async (data: QueryFormData) => {
-    setIsLoading(true)
-    setError(null)
-
     try {
-      // Get the selected panchayat's name
-      const selectedPanchayat = panchayats.find(p => p.id === data.panchayatId);
+      setIsLoading(true);
+      setError(null);
+      setSuccess(null);
       
-      if (!selectedPanchayat) {
-        throw new Error('Please select a valid panchayat');
-      }
-
-      const queryData = {
+      // Prepare form data
+      const formData = {
         ...data,
-        panchayatName: selectedPanchayat.name, // Add panchayatName to the request
-        attachments: attachments.map((file) => ({
-          url: file.url,
-          filename: file.filename,
-          type: file.type,
-          size: file.size,
-          publicId: file.publicId,
+        // Convert empty strings to null for optional fields
+        officeId: data.officeId || null,
+        // Add attachments
+        attachments: attachments.map(att => ({
+          url: att.url,
+          filename: att.filename,
+          type: att.type,
+          size: att.size,
+          publicId: att.publicId
         })),
-      }
-
-      const response = await fetch("/api/queries", {
+        // Add location if available
+        ...(location && {
+          latitude: location.lat,
+          longitude: location.lng
+        })
+      };
+      
+      // Determine the API endpoint based on whether this is a new query or resubmission
+      const endpoint = resubmitId 
+        ? `/api/queries/resubmit/${resubmitId}` 
+        : "/api/queries"
+      
+      console.log('Submitting form data:', formData);
+      
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(queryData),
+        body: JSON.stringify(formData),
       })
-
-      const result = await response.json()
-
+      
       if (!response.ok) {
-        setError(result.error?.message || "Failed to create query")
-        return
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to submit query")
       }
-
-      // If this was a resubmission, delete the old query
-      if (resubmitId) {
-        await fetch(`/api/queries/${resubmitId}`, {
-          method: 'DELETE',
-        });
-      }
-
-      router.push("/dashboard/voter/queries")
+      
+      setSuccess("Your query has been submitted successfully!")
+      
+      // Reset form after successful submission
+      reset()
+      setAttachments([])
+      setLocation(null)
+      setFormStep(0)
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push("/dashboard/voter")
+        router.refresh()
+      }, 2000)
+      
     } catch (err) {
-      setError("An error occurred. Please try again.")
+      console.error("Error submitting query:", err)
+      setError(err instanceof Error ? err.message : "Failed to submit query. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader className="p-4 md:p-6">
-        <CardTitle className="text-lg md:text-xl">{initialData ? 'Resubmit Query' : 'Raise a New Query'}</CardTitle>
-        <CardDescription>
-          {initialData 
-            ? 'Review and edit the details of your declined query before submitting again.'
-            : 'Submit your concerns, requests, or complaints about government services in your area'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 md:p-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+  // Handle moving to the step with validation
+  const nextStep = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Next button clicked, current step:', formStep);
+    
+    try {
+      console.log('Starting validation for step:', formStep);
+      let isValid = false;
+      
+      // Get current form values
+      const currentValues = getValues();
+      console.log('Current form values:', currentValues);
+      
+      if (formStep === 0) {
+        console.log('Validating step 1 fields...');
+        // Manually validate required fields for step 1
+        const titleValid = !!currentValues.title?.trim();
+        const descriptionValid = !!currentValues.description?.trim();
+        
+        console.log('Title valid:', titleValid);
+        console.log('Description valid:', descriptionValid);
+        
+        if (!titleValid) {
+          setError('Please enter a title for your query');
+        } else if (!descriptionValid) {
+          setError('Please enter a description for your query');
+        }
+        
+        isValid = titleValid && descriptionValid;
+      } else if (formStep === 1) {
+        console.log('Validating step 2 fields...');
+        // Manually validate required fields for step 2
+        const deptValid = !!currentValues.departmentId;
+        const panchayatValid = !!currentValues.panchayatId;
+        
+        console.log('Department valid:', deptValid);
+        console.log('Panchayat valid:', panchayatValid);
+        
+        if (!deptValid) {
+          setError('Please select a department');
+        } else if (!panchayatValid) {
+          setError('Please select a panchayat');
+        }
+        
+        isValid = deptValid && panchayatValid;
+      }
+      
+      console.log('Validation result:', isValid);
+      
+      if (isValid) {
+        // Get current form state
+        const values = getValues();
+        console.log('Form values before next step:', values);
+        
+        setFormStep(prev => {
+          const nextStep = Math.min(prev + 1, 2); // Ensure we don't go beyond step 2
+          console.log('Moving to step:', nextStep);
+          
+          // Scroll to top when step changes
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+          
+          return nextStep;
+        });
+      } else {
+        console.log('Validation failed. Current errors:', errors);
+        setError('Please fill in all required fields correctly.');
+      }
+    } catch (error) {
+      console.error('Error in nextStep:', error);
+      setError('Failed to proceed to the next step. Please check your inputs and try again.');
+    }
+  }
 
-          <div className="space-y-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="title">Query Title *</Label>
-                {hasRecognitionSupport && (
-                  <Button
-                    type="button"
-                    variant={isTitleListening ? 'destructive' : 'ghost'}
-                    size="sm"
-                    className="h-8 px-2 text-xs gap-1"
-                    onClick={toggleTitleListening}
-                  >
-                    {isTitleListening ? (
-                      <MicOff className="h-4 w-4" />
-                    ) : (
-                      <Mic className="h-4 w-4" />
-                    )}
-                    {isTitleListening ? 'Stop' : 'Speak'}
-                  </Button>
-                )}
-              </div>
-              <div className="relative">
-                <Input 
-                  id="title" 
-                  placeholder="Brief description of your query"
-                  {...register("title")}
-                  className={isTitleListening ? 'ring-2 ring-blue-500' : ''}
+  const prevStep = () => {
+    setFormStep(prev => prev - 1)
+  }
+
+  const getFormProgress = () => {
+    if (formStep === 0) return 33
+    if (formStep === 1) return 66
+    return 100
+  }
+
+  return (
+    <div>
+    <Card className="w-full max-w-4xl mx-auto shadow-lg border-border/60 overflow-hidden">
+      <CardHeader className="bg-muted/30 border-b border-border/60 pb-3">
+        <CardTitle className="text-xl font-bold">
+          {resubmitId ? "Resubmit Query" : "Submit New Query"}
+        </CardTitle>
+        <CardDescription>
+          Fill out the form below to submit your query to the panchayat office
+        </CardDescription>
+        <Progress value={getFormProgress()} className="h-2 mt-2" />
+      </CardHeader>
+      
+      <CardContent className="p-6">
+        {error && (
+          <Alert variant="destructive" className="mb-4 animate-in fade-in-50">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950/20">
+            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertTitle className="text-green-800 dark:text-green-200">Success!</AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-300">
+              {success} You will be redirected to the dashboard shortly...
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <form id="query-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+          {formStep === 0 && (
+            <div className="space-y-4 animate-in slide-in-from-left">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="title" className="text-base font-medium">
+                    Query Title
+                  </Label>
+                  {hasRecognitionSupport && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={toggleTitleListening}
+                            className={`${isTitleListening ? 'text-primary' : 'text-muted-foreground'}`}
+                          >
+                            {isTitleListening ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                            {isTitleListening ? 'Stop' : 'Speak'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isTitleListening ? 'Stop voice input' : 'Use voice input for title'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+                <Input
+                  id="title"
+                  placeholder="Enter a clear title for your query"
+                  {...register("title", { required: true })}
                   ref={(e) => {
                     titleRef.current = e;
-                    return register("title").ref(e);
+                    register("title").ref(e);
                   }}
+                  className={`${errors.title ? 'border-red-300 focus-visible:ring-red-200' : ''}`}
                 />
+                {errors.title && (
+                  <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
+                )}
                 {isTitleListening && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <div className="h-3 w-3 rounded-full bg-red-500 animate-ping"></div>
+                  <div className="text-xs text-primary animate-pulse mt-1">
+                    Listening... Speak clearly
                   </div>
                 )}
               </div>
-              {isTitleListening && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                  Listening... Speak now
-                </p>
-              )}
-              {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
-            </div>
-            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="description">Detailed Description *</Label>
-                {hasRecognitionSupport && (
-                  <Button
-                    type="button"
-                    variant={isDescriptionListening ? 'destructive' : 'ghost'}
-                    size="sm"
-                    className="h-8 px-2 text-xs gap-1"
-                    onClick={toggleDescriptionListening}
-                  >
-                    {isDescriptionListening ? (
-                      <MicOff className="h-4 w-4" />
-                    ) : (
-                      <Mic className="h-4 w-4" />
-                    )}
-                    {isDescriptionListening ? 'Stop' : 'Dictate'}
-                  </Button>
-                )}
-              </div>
-              <div className="relative">
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description" className="text-base font-medium">
+                    Query Description
+                  </Label>
+                  {hasRecognitionSupport && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={toggleDescriptionListening}
+                            className={`${isDescriptionListening ? 'text-primary' : 'text-muted-foreground'}`}
+                          >
+                            {isDescriptionListening ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                            {isDescriptionListening ? 'Stop' : 'Speak'}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isDescriptionListening ? 'Stop voice input' : 'Use voice input for description'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
                 <Textarea
                   id="description"
-                  placeholder="Provide detailed information about your query, including any relevant context"
-                  rows={4}
-                  className={isDescriptionListening ? 'ring-2 ring-blue-500' : ''}
-                  {...register("description")}
+                  placeholder="Provide a detailed description of your query or issue"
+                  {...register("description", { required: true })}
                   ref={(e) => {
                     descriptionRef.current = e;
-                    return register("description").ref(e);
+                    register("description").ref(e);
                   }}
+                  className={`min-h-[150px] ${errors.description ? 'border-red-300 focus-visible:ring-red-200' : ''}`}
                 />
+                {errors.description && (
+                  <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>
+                )}
                 {isDescriptionListening && (
-                  <div className="absolute top-3 right-3">
-                    <div className="h-3 w-3 rounded-full bg-red-500 animate-ping"></div>
+                  <div className="text-xs text-primary animate-pulse mt-1">
+                    Listening... Speak clearly
                   </div>
                 )}
               </div>
-              {isDescriptionListening && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                  Listening... Speak now
-                </p>
-              )}
-              {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
             </div>
-            {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="panchayatId">Panchayat</Label>
-              <Select 
-                value={watch("panchayatId")}
-                onValueChange={(value) => setValue("panchayatId", value)}
-                disabled={!!user?.panchayat?.id || isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={
-                    isLoading ? "Loading panchayats..." : 
-                    user?.panchayat?.name || "Select panchayat"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {panchayats.length > 0 ? (
-                    panchayats.map((panchayat) => (
-                      <SelectItem key={panchayat.id} value={panchayat.id}>
-                        {panchayat.name} 
-                        {panchayat.district ? `, ${panchayat.district}` : ''}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-muted-foreground">
-                      {isLoading ? 'Loading...' : 'No panchayats available'}
-                    </div>
+          )}
+          
+          {formStep === 1 && (
+            <div className="space-y-4 animate-in slide-in-from-left">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="departmentId" className="text-base font-medium">
+                    Department
+                  </Label>
+                  <Select
+                    value={watchedDepartmentId}
+                    onValueChange={(value) => setValue("departmentId", value, { shouldValidate: true })}
+                  >
+                    <SelectTrigger className={`${errors.departmentId ? 'border-red-300 focus-visible:ring-red-200' : ''}`}>
+                      <SelectValue placeholder="Select a department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((department) => (
+                        <SelectItem key={department.id} value={department.id}>
+                          {department.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.departmentId && (
+                    <p className="text-sm text-red-500 mt-1">{errors.departmentId.message}</p>
                   )}
-                </SelectContent>
-              </Select>
-              {user?.panchayat?.id && (
-                <p className="text-xs text-muted-foreground">
-                  Your panchayat is set based on your profile
-                </p>
-              )}
-              {errors.panchayatId && (
-                <p className="text-sm text-destructive">{errors.panchayatId.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="wardNumber">Ward Number</Label>
-              <Input
-                id="wardNumber"
-                type="number"
-                min="1"
-                placeholder="Enter ward number"
-                {...register("wardNumber", { valueAsNumber: true })}
-                defaultValue={user?.wardNumber || 1}
-                disabled={!!user?.wardNumber}
-              />
-              {user?.wardNumber && (
-                <p className="text-xs text-muted-foreground">
-                  Your ward number is set based on your profile
-                </p>
-              )}
-              {errors.wardNumber && (
-                <p className="text-sm text-destructive">{errors.wardNumber.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Department (Optional)</Label>
-              <Select
-                value={selectedDepartment}
-                onValueChange={(value) => {
-                  setSelectedDepartment(value)
-                  setValue("departmentId", value === "default" ? undefined : value)
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">Let app suggest</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Specific Office (Optional)</Label>
-              <Select
-                value={watch("officeId") || "default"}
-                onValueChange={(value) => setValue("officeId", value === "default" ? undefined : value)}
-                disabled={!watchedDepartmentId || watchedDepartmentId === "default"}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={watchedDepartmentId && watchedDepartmentId !== "default" ? "Select office" : "Select department first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">Any office in department</SelectItem>
-                  {offices.map((office) => (
-                    <SelectItem key={office.id} value={office.id}>
-                      {office.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Location (Optional)</Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button type="button" variant="outline" onClick={getCurrentLocation} className="w-full sm:w-auto bg-transparent">
-                <MapPin className="h-4 w-4 mr-2" />
-                Use Current Location
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowLocationPicker(!showLocationPicker)} className="w-full sm:w-auto">
-                Pick on Map
-              </Button>
-              {location && (
-                <div className="flex-1 p-2 bg-muted rounded-md text-sm">
-                  Location: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
                 </div>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">Adding your location helps us route your query to the nearest office</p>
-            
-            {/* Location Picker Dialog */}
-            {showLocationPicker && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                <div className="bg-white rounded-lg p-4 w-full max-w-3xl max-h-[90vh] flex flex-col">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Select a location on the map</h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setShowLocationPicker(false)}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                  <div className="flex-1 relative">
-                    <LocationPicker 
-                      initialLocation={location || undefined}
-                      onLocationSelect={handleLocationSelect}
-                      className="h-full w-full"
-                    />
-                  </div>
-                  <div className="mt-4 flex flex-col sm:flex-row justify-end gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setShowLocationPicker(false)}
-                      className="w-full sm:w-auto order-2 sm:order-1"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="button"
-                      onClick={() => {
-                        if (location) {
-                          setShowLocationPicker(false);
-                        } else {
-                          alert('Please select a location on the map');
-                        }
-                      }}
-                      className="w-full sm:w-auto order-1 sm:order-2"
-                    >
-                      Confirm Location
-                    </Button>
-                  </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="officeId" className="text-base font-medium">
+                    Office (Optional)
+                  </Label>
+                  <Select
+                    value={watch("officeId") || ""}
+                    onValueChange={(value) => setValue("officeId", value, { shouldValidate: true })}
+                    disabled={!watchedDepartmentId || offices.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={offices.length === 0 ? "No offices available" : "Select an office"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {offices.map((office) => (
+                        <SelectItem key={office.id} value={office.id}>
+                          {office.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label>Attachments (Optional)</Label>
-              <p className="text-sm text-muted-foreground mb-2">
-                Upload supporting documents or images (max 10MB each)
-              </p>
-              <FileUpload
-                onFilesChange={handleFilesChange}
-                maxFiles={5}
-                maxSize={10}
-                acceptedTypes={["image/*", "application/pdf", ".doc", ".docx", ".xls", ".xlsx"]}
-              />
-            </div>
-
-            {/* ====== MODIFIED SECTION START ====== */}
-            {/* Attachments Preview */}
-            {attachments.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Attachments ({attachments.length}/5)</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  {attachments.map((file) => (
-                    <div 
-                      key={file.id}
-                      className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50"
-                    >
-                      {/* --- ICON --- */}
-                      <div className="flex-shrink-0 p-2 rounded-md bg-white border">
-                        {file.type.startsWith('image/') ? (
-                          <ImageIcon className="h-5 w-5 text-blue-500" />
-                        ) : (
-                          <FileText className="h-5 w-5 text-blue-500" />
-                        )}
+                  <Label htmlFor="panchayatId" className="text-base font-medium">
+                    Panchayat
+                  </Label>
+                  <Select
+                    value={watchedPanchayatId}
+                    onValueChange={(value) => setValue("panchayatId", value, { shouldValidate: true })}
+                  >
+                    <SelectTrigger className={`${errors.panchayatId ? 'border-red-300 focus-visible:ring-red-200' : ''}`}>
+                      <SelectValue placeholder="Select a panchayat" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {panchayats.map((panchayat) => (
+                        <SelectItem key={panchayat.id} value={panchayat.id}>
+                          {panchayat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.panchayatId && (
+                    <p className="text-sm text-red-500 mt-1">{errors.panchayatId.message}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="wardNumber" className="text-base font-medium">
+                    Ward Number
+                  </Label>
+                  <Input
+                    id="wardNumber"
+                    type="number"
+                    min={1}
+                    {...register("wardNumber", { valueAsNumber: true })}
+                    className={`${errors.wardNumber ? 'border-red-300 focus-visible:ring-red-200' : ''}`}
+                  />
+                  {errors.wardNumber && (
+                    <p className="text-sm text-red-500 mt-1">{errors.wardNumber.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {formStep === 2 && (
+            <div className="space-y-6 animate-in slide-in-from-left">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">Location</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={getCurrentLocation}
+                    className="flex items-center gap-1"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Use Current Location
+                  </Button>
+                </div>
+                
+                <div className="border rounded-md p-4 bg-muted/30">
+                  {location ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">
+                          <span className="font-medium">Latitude:</span> {location.lat.toFixed(6)}
+                          <br />
+                          <span className="font-medium">Longitude:</span> {location.lng.toFixed(6)}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowLocationPicker(!showLocationPicker)}
+                        >
+                          {showLocationPicker ? "Hide Map" : "Show Map"}
+                        </Button>
                       </div>
                       
-                      {/* --- TEXT INFO --- */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.filename}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </p>
-                      </div>
-                      
-                      {/* --- REMOVE BUTTON --- */}
+                      {showLocationPicker && (
+                        <div className="h-[300px] w-full rounded-md overflow-hidden border">
+                          <LocationPicker
+                            initialLocation={location}
+                            onLocationSelect={handleLocationSelect}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">No location selected</p>
                       <Button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => {
-                          setAttachments(attachments.filter((f) => f.id !== file.id))
-                        }}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowLocationPicker(!showLocationPicker)}
+                        className="mt-2"
                       >
-                        <X className="h-4 w-4" />
+                        {showLocationPicker ? "Hide Map" : "Select on Map"}
                       </Button>
+                      
+                      {showLocationPicker && (
+                        <div className="h-[300px] w-full rounded-md overflow-hidden border mt-4">
+                          <LocationPicker
+                            initialLocation={undefined}
+                            onLocationSelect={handleLocationSelect}
+                          />
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
-            )}
-            {/* ====== MODIFIED SECTION END ====== */}
-          </div>
+              
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Attachments</Label>
+                <FileUpload onFilesChange={handleFileUpload} maxFiles={5} maxSize={5} />
+                
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="space-y-1 mt-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span>Uploading...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <Progress value={uploadProgress} className="h-1" />
+                  </div>
+                )}
+                
+                {attachments.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    {attachments.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center justify-between p-2 border rounded-md bg-muted/30"
+                      >
+                        <div className="flex items-center space-x-2 overflow-hidden">
+                          {file.type.startsWith("image/") ? (
+                            <ImageIcon className="h-4 w-4 text-blue-500" />
+                          ) : (
+                            <FileText className="h-4 w-4 text-orange-500" />
+                          )}
+                          <span className="text-sm truncate max-w-[180px]">
+                            {file.filename}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAttachment(file.id)}
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="space-y-4">
+                  <Label className="text-lg font-semibold">Review Submission</Label>
+                  <div className="border rounded-lg p-6 space-y-6 bg-card">
+                    {/* Query Details */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-foreground/80">Query Details</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Title</p>
+                          <div className="p-3 bg-background rounded-md border">
+                            <p className="text-foreground">
+                              {formValues.title ? (
+                                formValues.title
+                              ) : (
+                                <span className="text-muted-foreground">No title provided</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Description</p>
+                          <div className="p-3 bg-background rounded-md border min-h-[80px]">
+                            <p className="text-foreground whitespace-pre-wrap">
+                              {formValues.description ? (
+                                formValues.description
+                              ) : (
+                                <span className="text-muted-foreground">No description provided</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button type="submit" disabled={isLoading} className="flex-1 order-1">
-              {isLoading ? "Submitting..." : "Submit Query"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1 order-2">
-              Cancel
-            </Button>
-          </div>
+                    {/* Department & Location */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-foreground/80">Department & Location</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Department</p>
+                          <div className="p-3 bg-background rounded-md border">
+                            <p className="text-foreground">
+                              {departments.find(d => d.id === watchedDepartmentId)?.name || 
+                               <span className="text-muted-foreground">Not selected</span>}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Panchayat</p>
+                          <div className="p-3 bg-background rounded-md border">
+                            <p className="text-foreground">
+                              {panchayats.find(p => p.id === watchedPanchayatId)?.name || 
+                               <span className="text-muted-foreground">Not selected</span>}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Ward Number</p>
+                          <div className="p-3 bg-background rounded-md border">
+                            <p className="text-foreground">
+                              {watchedWardNumber || <span className="text-muted-foreground">Not specified</span>}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {(location || (watchedLatitude && watchedLongitude)) && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Location</p>
+                            <div className="p-3 bg-background rounded-md border space-y-1">
+                              <p className="text-foreground">
+                                <span className="font-mono">
+                                  Lat: {(location?.lat || watchedLatitude)?.toFixed(6)}
+                                </span>
+                              </p>
+                              <p className="text-foreground">
+                                <span className="font-mono">
+                                  Lng: {(location?.lng || watchedLongitude)?.toFixed(6)}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Attachments */}
+                    <div>
+                      <h3 className="font-medium text-foreground/80 mb-2">Attachments</h3>
+                      {attachments.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {attachments.map((file) => (
+                            <div key={file.id} className="flex items-center justify-between p-3 bg-background rounded-md border">
+                              <div className="flex items-center space-x-2 overflow-hidden">
+                                {file.type.startsWith("image/") ? (
+                                  <ImageIcon className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                                ) : (
+                                  <FileText className="h-4 w-4 flex-shrink-0 text-orange-500" />
+                                )}
+                                <span className="text-sm truncate">
+                                  {file.filename}
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeAttachment(file.id)}
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-background rounded-md border text-center">
+                          <p className="text-sm text-muted-foreground">No attachments</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </form>
       </CardContent>
+      
+      <CardFooter className="flex justify-between p-6 border-t border-border/60 bg-muted/30">
+        {formStep > 0 ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={prevStep}
+            disabled={isLoading}
+          >
+            Previous
+          </Button>
+        ) : (
+          <div></div>
+        )}
+        
+        {formStep < 2 ? (
+          <Button
+            type="button"
+            onClick={(e) => {
+              console.log('Button onClick triggered');
+              nextStep(e);
+            }}
+            disabled={isLoading}
+            className="min-w-[120px] bg-blue-600 hover:bg-blue-700"
+          >
+            Next
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            form="query-form"
+            disabled={isLoading}
+            className="flex items-center gap-1"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Submit Query
+              </>
+            )}
+          </Button>
+        )}
+      </CardFooter>
     </Card>
+  </div>
   )
 }

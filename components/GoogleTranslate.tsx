@@ -1,16 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
+import { Globe } from 'lucide-react';
 
 export function GoogleTranslate() {
+  const [isOpen, setIsOpen] = useState(false);
+  
   const handleClick = () => {
-    const mainButton = document.querySelector('.goog-te-gadget-simple');
+    const mainButton = document.querySelector<HTMLElement>('.goog-te-gadget-simple');
     if (mainButton) {
       mainButton.click();
     } else {
       console.error('Google Translate button not found.');
     }
+    setIsOpen(!isOpen);
   };
 
   useEffect(() => {
@@ -22,19 +26,19 @@ export function GoogleTranslate() {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 16px;
+        padding: 8px 12px;
 
         /* Appearance */
-        background-color: #ffffff;
-        color: #333333;
-        border: 1px solid #dddddd;
+        background-color: var(--background);
+        color: var(--foreground);
+        border: 1px solid var(--border);
         border-radius: 8px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         
         /* Font */
         font-size: 14px;
         font-weight: 500;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: var(--font-sans);
 
         /* Interaction */
         cursor: pointer;
@@ -43,9 +47,9 @@ export function GoogleTranslate() {
 
       /* Hover effect for the button */
       .custom-translate-button:hover {
+        background-color: var(--accent);
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-color: #cccccc;
       }
 
       /* Click effect for the button */
@@ -64,6 +68,21 @@ export function GoogleTranslate() {
       }
       .goog-te-banner-frame.skiptranslate { display: none !important; }
       body { top: 0px !important; }
+      
+      /* === ACCESSIBILITY === */
+      .custom-translate-button:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      
+      /* === DARK MODE SUPPORT === */
+      @media (prefers-color-scheme: dark) {
+        .custom-translate-button {
+          background-color: var(--background);
+          color: var(--foreground);
+          border-color: var(--border);
+        }
+      }
     `;
     document.head.appendChild(style);
 
@@ -75,10 +94,15 @@ export function GoogleTranslate() {
   }, []);
 
   return (
-    <div>
-      {/* The text inside this button has been changed */}
-      <button className="custom-translate-button" onClick={handleClick}>
-        <span>A/अ language</span>
+    <div className="relative">
+      <button 
+        className="custom-translate-button" 
+        onClick={handleClick}
+        aria-label="Translate page"
+        aria-expanded={isOpen}
+      >
+        <Globe className="h-4 w-4" />
+        <span>Translate</span>
       </button>
 
       {/* The hidden wrapper for the real widget */}
@@ -107,7 +131,7 @@ export function GoogleTranslate() {
         }}
       />
       <Script
-        id="google-translate-api"
+        id="google-translate-script"
         strategy="afterInteractive"
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
       />

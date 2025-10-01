@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { AppProviders } from "@/components/providers/app-providers"
-import { GoogleTranslate } from "@/components/GoogleTranslate" // STEP 1: Import the component
+import { GoogleTranslate } from "@/components/GoogleTranslate"
 import "./globals.css"
 import '@/app/leaflet.css'
 
@@ -66,9 +66,15 @@ export default function RootLayout({
           /* Google Translate Container */
           .google-translate-container {
             position: fixed;
-            top: 0.5rem;
-            left: 9rem;
+            bottom: 1.5rem;
+            right: 1.5rem;
             z-index: 50;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            transition: transform 0.3s ease;
+          }
+          
+          .google-translate-container:hover {
+            transform: translateY(-2px);
           }
           
           /* Ensure proper dark mode for content */
@@ -84,6 +90,30 @@ export default function RootLayout({
           /* Fix for buttons in dark mode */
           button {
             @apply transition-colors duration-200;
+          }
+          
+          /* Improved focus styles for accessibility */
+          a:focus, button:focus, input:focus, textarea:focus, select:focus {
+            @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+          }
+          
+          /* Animation classes */
+          .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+          }
+          
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          
+          .animate-slide-up {
+            animation: slideUp 0.5s ease-out;
+          }
+          
+          @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
           }
         `}</style>
       </head>

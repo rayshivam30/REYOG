@@ -160,45 +160,54 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const data = await request.json()
-    const { attachments = [], ...queryData } = data
+    const data = await request.json();
+    const { attachments = [], ...formData } = data;
 
-    const { title, description, panchayatId: panchayatIdFromRequest, departmentId, officeId, latitude, longitude } =
-      createQuerySchema.parse(queryData)
+    const parsedData = createQuerySchema.parse(formData);
+    const { title, description, panchayatId: panchayatIdFromRequest, departmentId, officeId, latitude, longitude } = parsedData;
 
-    // Get user to get ward number
+    // Get user to get ward number and panchayat info
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { wardNumber: true, panchayatId: true }
+      select: { 
+        wardNumber: true, 
+        panchayatId: true,
+        name: true,
+        email: true
+      }
     });
 
     // Use the user's panchayatId if not provided in the request
-    const panchayatId = panchayatIdFromRequest || user?.panchayatId;
+    const finalPanchayatId = panchayatIdFromRequest || user?.panchayatId;
 
-    if (!panchayatId) {
+    if (!finalPanchayatId) {
       return NextResponse.json(
         { error: { code: "VALIDATION_ERROR", message: "Panchayat information is required" } },
         { status: 400 }
-      )
+      );
     }
 
-    // Use the provided panchayat ID
-    let finalPanchayatId = panchayatId;
+    // Prepare query data with all required fields
+    const createQueryData = {
+      title,
+      description,
+      userId,
+      departmentId,
+      panchayatId: finalPanchayatId,
+      status: 'PENDING_REVIEW' as const,
+      wardNumber: user?.wardNumber || 1, // Use user's ward number or default to 1
+      ...(officeId && officeId !== '' && { officeId }), // Only include officeId if provided and not empty
+      ...(latitude && longitude && { 
+        latitude: Number(latitude), 
+        longitude: Number(longitude) 
+      }), // Only include location if provided
+    };
 
-    // Create the query with the user's ward number
+    console.log('Creating query with data:', createQueryData);
+    
+    // Create the query first
     const newQuery = await prisma.query.create({
-      data: {
-        title,
-        description,
-        userId,
-        departmentId,
-        officeId,
-        panchayatId: finalPanchayatId,
-        latitude,
-        longitude,
-        status: 'PENDING_REVIEW',
-        wardNumber: user?.wardNumber || 1, // Use user's ward number or default to 1
-      },
+      data: createQueryData,
       include: {
         user: {
           select: {
@@ -211,13 +220,13 @@ export async function POST(request: NextRequest) {
         office: true,
         panchayat: true,
       },
-    })
+    });
 
     // Handle attachments if any
-    if (attachments?.length > 0) {
-      const BATCH_SIZE = 5
+    if (Array.isArray(attachments) && attachments.length > 0) {
+      const BATCH_SIZE = 5;
       for (let i = 0; i < attachments.length; i += BATCH_SIZE) {
-        const batch = attachments.slice(i, i + BATCH_SIZE)
+        const batch = attachments.slice(i, i + BATCH_SIZE);
         await prisma.attachment.createMany({
           data: batch.map((file: any) => ({
             url: file.url,
@@ -228,7 +237,7 @@ export async function POST(request: NextRequest) {
             queryId: newQuery.id,
           })),
           skipDuplicates: true,
-        })
+        });
       }
     }
 

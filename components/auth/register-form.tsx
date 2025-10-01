@@ -6,13 +6,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { registerSchema } from "@/lib/validations"
 import type { z } from "zod"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { AlertCircle, Loader2, UserPlus, Mail, Phone, Lock, MapPin, Eye, EyeOff, Home } from "lucide-react"
+import Link from "next/link"
 
 type RegisterFormData = z.infer<typeof registerSchema>
 
@@ -27,6 +28,7 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [panchayats, setPanchayats] = useState<Panchayat[]>([])
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   const form = useForm<RegisterFormData>({
@@ -99,156 +101,218 @@ export function RegisterForm() {
     }
   }
 
+  const togglePasswordVisibility = () => setShowPassword(!showPassword)
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl sm:text-2xl font-bold">Join ReYog</CardTitle>
-        <CardDescription className="text-sm sm:text-base">Create your voter account to get started</CardDescription>
+    <Card className="w-full max-w-lg mx-auto shadow-lg border-border/60 animate-fade-in">
+      <CardHeader className="text-center space-y-2">
+        <CardTitle className="text-xl sm:text-2xl font-bold">Create an Account</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
+          Register to access government services and raise queries
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-4 sm:p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="animate-shake">
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Name Field */}
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your full name" {...field} />
-                    </FormControl>
+                    <div className="relative">
+                      <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your full name" 
+                          className="pl-10" 
+                          {...field} 
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="space-y-2">
+              {/* Email Field */}
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Enter your email" {...field} />
-                    </FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="Enter your email" 
+                          className="pl-10" 
+                          {...field} 
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="space-y-2">
+              {/* Phone Field */}
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number (Optional)</FormLabel>
-                    <FormControl>
-                      <Input type="tel" placeholder="Enter your phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <FormField
-                control={form.control}
-                name="panchayatId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Panchayat</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <FormLabel>Phone Number</FormLabel>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your panchayat" />
-                        </SelectTrigger>
+                        <Input 
+                          placeholder="Enter your phone number" 
+                          className="pl-10" 
+                          {...field} 
+                          disabled={isLoading}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {panchayats.map((panchayat) => (
-                          <SelectItem key={panchayat.id} value={panchayat.id}>
-                            {panchayat.name}, {panchayat.district}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <FormField
-                control={form.control}
-                name="wardNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ward Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="Enter your ward number"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-2">
+              {/* Password Field */}
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Create a password" {...field} />
-                    </FormControl>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Create a password" 
+                          className="pl-10" 
+                          {...field} 
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <button
+                        type="button"
+                        onClick={togglePasswordVisibility}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Panchayat Field */}
+              <FormField
+                control={form.control}
+                name="panchayatId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Panchayat</FormLabel>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value} 
+                        disabled={isLoading}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="pl-10">
+                            <SelectValue placeholder="Select your panchayat" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {panchayats.length > 0 ? (
+                            panchayats.map((panchayat) => (
+                              <SelectItem key={panchayat.id} value={panchayat.id}>
+                                {panchayat.name}, {panchayat.district}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="loading" disabled>
+                              No panchayats available
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Ward Number Field */}
+              <FormField
+                control={form.control}
+                name="wardNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ward Number</FormLabel>
+                    <div className="relative">
+                      <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Enter your ward number" 
+                          className="pl-10" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating Account..." : "Create Account"}
+            <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create Account
+                </>
+              )}
             </Button>
           </form>
         </Form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Button variant="link" className="p-0 h-auto" onClick={() => router.push("/auth/login")}>
-              Sign In
-            </Button>
-          </p>
-        </div>
-
-        <div className="mt-4 p-4 bg-muted rounded-lg">
-          <p className="text-xs text-muted-foreground">
-            <strong>Note:</strong> Only voters can self-register. Panchayat and Admin accounts are created by
-            administrators.
-          </p>
-        </div>
       </CardContent>
+      <CardFooter className="flex justify-center p-4 border-t">
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link href="/auth/login" className="text-primary font-medium hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </CardFooter>
     </Card>
   )
 }
