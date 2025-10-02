@@ -121,7 +121,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
 
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-5xl">
+    <div className="container mx-auto p-4 md:p-8 max-w">
       <div className="mb-6">
         <Button variant="outline" asChild>
           <Link href="/dashboard/panchayat/queries" className="flex items-center gap-2">

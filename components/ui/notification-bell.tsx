@@ -190,7 +190,7 @@ export function NotificationBell({ setIsSidebarOpen }: NotificationBellProps) {
       {!isMobile && (
         <div 
           data-notification-dropdown
-          className={`fixed sm:absolute left-0 w-[calc(100vw-4rem)] sm:w-96 bg-white rounded-xl border border-gray-200 overflow-hidden z-[10000] transform transition-all duration-300 ease-in-out ${
+          className={`fixed sm:absolute right-0 w-[calc(100vw-4rem)] sm:w-96 bg-white rounded-xl border border-gray-200 overflow-hidden z-[10000] transform transition-all duration-300 ease-in-out ${
             isOpen 
               ? 'opacity-100 translate-y-0 scale-100' 
               : 'opacity-0 -translate-y-2 scale-95 pointer-events-none hidden'
