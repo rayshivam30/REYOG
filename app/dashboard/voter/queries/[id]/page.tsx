@@ -20,7 +20,7 @@ interface QueryDetails {
 }
 
 export default function QueryDetailPage() {
-  const params = useParams<{ id: string }>()
+  const params = useParams() as { id: string }
   const [query, setQuery] = useState<QueryDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +73,7 @@ export default function QueryDetailPage() {
 
   if (error) {
     return (
-      <div className="p-6 max-w-2xl mx-auto">
+      <div className="p-6 max-w mx-auto">
         <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-md">
           <p className="font-medium">Error loading query</p>
           <p className="text-sm mt-1">{error}</p>

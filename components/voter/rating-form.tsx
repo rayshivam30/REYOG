@@ -9,13 +9,20 @@ import { useAuth } from "@/lib/auth-context"
 
 interface RatingFormProps {
   officeId: string
-  officeName: string
-  departmentName: string
-  queryId: string
+  officeName?: string
+  departmentName?: string
+  queryId?: string
+  initialRating?: number
 }
 
-export function RatingForm({ officeId, officeName, departmentName, queryId }: RatingFormProps) {
-  const [rating, setRating] = useState(0)
+export function RatingForm({ 
+  officeId, 
+  officeName = '', 
+  departmentName = '', 
+  queryId = '',
+  initialRating = 0 
+}: RatingFormProps) {
+  const [rating, setRating] = useState(initialRating)
   const [hover, setHover] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasRated, setHasRated] = useState(false)

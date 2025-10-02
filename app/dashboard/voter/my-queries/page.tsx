@@ -91,7 +91,7 @@ export default function VoterMyQueriesPage() {
   }, [authUser, statusFilter]);
 
   if (loading) return (
-    <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+    <div className="container mx-auto p-4 md:p-8 max-w">
       <div className="mb-6">
         <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-4">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white">My Queries</h1>

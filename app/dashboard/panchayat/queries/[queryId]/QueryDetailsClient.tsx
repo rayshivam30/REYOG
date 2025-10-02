@@ -114,7 +114,7 @@ export default function QueryDetailsClient({ query }: QueryDetailsClientProps) {
     }).format(amount);
   };
 
-  const allocatedBudget = query.budget || 0;
+  const allocatedBudget = query.budgetIssued || 0;
   const spentBudget = query.budgetSpent || 0;
   const hasBudgetData = allocatedBudget > 0 || spentBudget > 0;
   const percentageSpent = allocatedBudget > 0 ? (spentBudget / allocatedBudget) * 100 : 0;
